@@ -99,6 +99,23 @@ npx shadcn@latest add @glass/glass-providers
 
 `.github/workflows/registry-smoke.yml` 会在干净的 Next.js 工程里实测两种安装方式并构建。
 
+## 对比度审计
+
+PROJECT_SPEC §13 要求所有文本在**材质档位 0（最通透）+ 最不利背景**下仍满足 WCAG AA。
+检查真的去渲染、截图、读像素 —— 玻璃的有效背景是 `backdrop-filter` 合成出来的，
+按 CSS 变量算不出人眼看到的那个颜色。
+
+```bash
+node scripts/contrast-audit.mjs --verbose
+```
+
+覆盖 2 主题 × 3 档位 × 3 Tier × 6 背景 = 108 组合 × 14 测点。
+采用**棘轮基线**（`scripts/contrast-baseline.json`）：达标点按 AA 卡死，
+未达标点按当前值卡死，只许变好。基线是「不许更糟」，不是豁免。
+
+> ⚠️ 当前有 11 个测点在「暗色主题 + 亮背景」下达不到 AA，
+> 根因是元素级明暗自适应未实现。详见 [STATUS.md](docs/research/STATUS.md) §1。
+
 ## 阶段纪律
 
 按 `LIQUID_GLASS_UI_PROMPT.md` 第二部分的任务卡逐个 Phase 推进，不跨 Phase 抢跑。

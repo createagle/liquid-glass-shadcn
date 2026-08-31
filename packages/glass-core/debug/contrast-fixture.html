@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN" data-glass-theme="light" data-glass-tier="a">
+<head>
+<meta charset="utf-8">
+<title>对比度检查夹具</title>
+<link rel="stylesheet" href="../src/tokens/theme.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+
+  /* ── 最不利背景 ───────────────────────────────────────────────────
+     亮色主题下文字是黑的、底座是白的 → 最不利的是**暗**背景（合成后压暗）
+     暗色主题下文字是白的、底座是暗的 → 最不利的是**亮**背景
+     所以两个极端都要覆盖，另加高频与高饱和图案（模糊也抹不平）。 */
+  #bg{position:fixed;inset:0;z-index:0}
+  #bg[data-bg="black"]{background:#000}
+  #bg[data-bg="white"]{background:#fff}
+  #bg[data-bg="mid"]{background:#808080}
+  #bg[data-bg="checker"]{background:
+    repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 0 0/16px 16px}
+  #bg[data-bg="saturated"]{background:
+    conic-gradient(from 210deg at 50% 50%,#af52de,#0a84ff,#30d158,#ffcc00,#ff2d55,#af52de)}
+  #bg[data-bg="photo"]{background:
+    radial-gradient(40% 55% at 12% 18%,#ff2d55 0%,transparent 60%),
+    radial-gradient(45% 60% at 84% 14%,#ffcc00 0%,transparent 60%),
+    radial-gradient(55% 50% at 78% 86%,#001133 0%,transparent 62%),
+    radial-gradient(45% 55% at 18% 88%,#30d158 0%,transparent 60%),
+    linear-gradient(115deg,#000 0%,#fff 35%,#0a84ff 70%,#000 100%)}
+
+  .stage{position:relative;z-index:1;padding:24px;display:flex;flex-direction:column;gap:16px}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .pad{padding:14px 18px}
+  /* 正文 14px；大字按 WCAG 定义：≥24px，或 ≥18.66px 且加粗 */
+  .body{font-size:14px;font-weight:400}
+  .large{font-size:24px;font-weight:400}
+  .largebold{font-size:19px;font-weight:700}
+
+  /* 隐藏待测文字以采样其背后的真实像素。
+     visibility:hidden 保留布局，元素盒子位置不变。 */
+  html[data-hide-text="1"] [data-contrast-check]{visibility:hidden}
+</style>
+</head>
+<body>
+<div id="bg" data-bg="saturated"></div>
+
+<div class="stage">
+  <!-- Layer B 磨砂底座 -->
+  <div class="lg-surface pad row" data-layer="base" style="--lg-surface-radius:22px">
+    <span data-contrast-check data-where="base/primary" data-size="body" class="body"
+          style="color:var(--lg-label-primary)">底座 · 正文</span>
+    <span data-contrast-check data-where="base/secondary" data-size="body" class="body"
+          style="color:var(--lg-label-secondary)">底座 · 次级</span>
+    <span data-contrast-check data-where="base/large" data-size="large" class="large"
+          style="color:var(--lg-label-primary)">大字</span>
+    <span data-contrast-check data-where="base/largebold" data-size="large" class="largebold"
+          style="color:var(--lg-label-primary)">粗大字</span>
+  </div>
+
+  <!-- Layer B 底座 + Layer I 指示器（真实的分段控件形态） -->
+  <div class="lg-surface row" data-layer="base"
+       style="--lg-surface-radius:26px;padding:6px;gap:4px;width:fit-content">
+    <span class="lg-surface pad body" data-layer="indicator" style="--lg-surface-radius:20px">
+      <span data-contrast-check data-where="indicator/primary" data-size="body"
+            style="color:var(--lg-label-primary)">指示器 · 正文</span>
+    </span>
+    <span class="pad body" data-contrast-check data-where="base-inline/secondary" data-size="body"
+          style="color:var(--lg-label-secondary)">未选 · 次级</span>
+  </div>
+
+  <!-- 弹层 -->
+  <div class="lg-surface pad row" data-layer="elevated" style="--lg-surface-radius:18px">
+    <span data-contrast-check data-where="elevated/primary" data-size="body" class="body"
+          style="color:var(--lg-label-primary)">弹层 · 正文</span>
+    <span data-contrast-check data-where="elevated/secondary" data-size="body" class="body"
+          style="color:var(--lg-label-secondary)">弹层 · 次级</span>
+  </div>
+
+  <!-- 内容层四档标准材质 -->
+  <div class="row" id="contentRow"></div>
+
+  <!-- 系统色文字（着色标签，例如链接 / 主行动的文字形态） -->
+  <div class="lg-surface pad row" data-layer="base" style="--lg-surface-radius:18px">
+    <span data-contrast-check data-where="base/tint-blue" data-size="body" class="body"
+          style="color:var(--lg-blue)">蓝色标签</span>
+    <span data-contrast-check data-where="base/tint-red" data-size="body" class="body"
+          style="color:var(--lg-red)">红色标签</span>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const root = document.documentElement;
+
+const theme = params.get('theme') ?? 'light';
+const tint = Number(params.get('tint') ?? '0');
+const tier = params.get('tier') ?? 'a';
+document.getElementById('bg').dataset.bg = params.get('bg') ?? 'saturated';
+
+root.setAttribute('data-glass-theme', theme);
+root.classList.toggle('dark', theme === 'dark');
+root.setAttribute('data-glass-tier', tier);
+
+/* 材质档位插值 —— 与 GlassProvider 的 resolveMaterial 用同一张表。
+   检查必须在**档位 0（最通透）**下跑，那是 PROJECT_SPEC §13 点名的最不利条件。 */
+const STOPS = {
+  light: [[0.34,8,1.9,0.5],[0.62,14,1.7,1.0],[0.78,20,1.35,1.3],[0.96,26,1.05,1.6]],
+  dark:  [[0.22,8,1.8,0.6],[0.44,14,1.6,1.0],[0.62,20,1.3,1.35],[0.94,26,1.0,1.7]],
+};
+const s = STOPS[theme === 'dark' ? 'dark' : 'light'];
+const pos = Math.min(1, Math.max(0, tint)) * 3;
+const i = Math.min(2, Math.floor(pos)), t = pos - i;
+const L = (a,b) => a + (b-a)*t;
+root.style.setProperty('--lg-tint', String(tint));
+root.style.setProperty('--lg-base-alpha', L(s[i][0], s[i+1][0]).toFixed(4));
+root.style.setProperty('--lg-base-blur',  L(s[i][1], s[i+1][1]).toFixed(2) + 'px');
+root.style.setProperty('--lg-base-saturate', L(s[i][2], s[i+1][2]).toFixed(3));
+root.style.setProperty('--lg-stroke-strength', L(s[i][3], s[i+1][3]).toFixed(3));
+
+// 内容层四档
+document.getElementById('contentRow').innerHTML =
+  ['ultrathin','thin','regular','thick'].map(m => `
+    <span class="lg-content pad body" data-material="${m}" style="border-radius:14px">
+      <span data-contrast-check data-where="content-${m}/primary" data-size="body"
+            style="color:var(--lg-label-primary)">${m}</span>
+    </span>`).join('');
+
+/** 供审计脚本调用：隐藏/显示全部待测文字 */
+window.__setTextHidden = (hidden) => {
+  root.setAttribute('data-hide-text', hidden ? '1' : '0');
+};
+
+/** 供审计脚本调用：列出所有待测点及其解析后的文字颜色 */
+window.__collect = () => [...document.querySelectorAll('[data-contrast-check]')].map((el) => {
+  const r = el.getBoundingClientRect();
+  const cs = getComputedStyle(el);
+  return {
+    where: el.dataset.where,
+    size: el.dataset.size,
+    color: cs.color,
+    fontSize: parseFloat(cs.fontSize),
+    fontWeight: cs.fontWeight,
+    box: { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) },
+  };
+});
+
+window.__ready = true;
+</script>
+</body>
+</html>

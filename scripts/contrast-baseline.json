@@ -1,0 +1,89 @@
+{
+  "$comment": "由 scripts/contrast-audit.mjs --update-baseline 生成。达标项按 AA 卡死，未达标项按实测值卡死。",
+  "points": {
+    "base-inline/secondary": {
+      "ratio": 1,
+      "threshold": 4.5,
+      "meetsAA": false,
+      "worstCombo": "dark/tint0.34/tiera/white"
+    },
+    "base/large": {
+      "ratio": 1.62,
+      "threshold": 3,
+      "meetsAA": false,
+      "worstCombo": "dark/tint0/tiera/white"
+    },
+    "base/largebold": {
+      "ratio": 1.62,
+      "threshold": 3,
+      "meetsAA": false,
+      "worstCombo": "dark/tint0/tiera/white"
+    },
+    "base/primary": {
+      "ratio": 1.62,
+      "threshold": 4.5,
+      "meetsAA": false,
+      "worstCombo": "dark/tint0/tiera/white"
+    },
+    "base/secondary": {
+      "ratio": 1.21,
+      "threshold": 4.5,
+      "meetsAA": false,
+      "worstCombo": "dark/tint0/tiera/white"
+    },
+    "base/tint-blue": {
+      "ratio": 1.13,
+      "threshold": 4.5,
+      "meetsAA": false,
+      "worstCombo": "dark/tint0/tierc/white"
+    },
+    "base/tint-red": {
+      "ratio": 1,
+      "threshold": 4.5,
+      "meetsAA": false,
+      "worstCombo": "dark/tint0/tiera/photo"
+    },
+    "content-regular/primary": {
+      "ratio": 8.98,
+      "threshold": 4.5,
+      "meetsAA": true,
+      "worstCombo": "dark/tint0/tiera/white"
+    },
+    "content-thick/primary": {
+      "ratio": 14.52,
+      "threshold": 4.5,
+      "meetsAA": true,
+      "worstCombo": "dark/tint0/tiera/white"
+    },
+    "content-thin/primary": {
+      "ratio": 5.48,
+      "threshold": 4.5,
+      "meetsAA": true,
+      "worstCombo": "dark/tint0/tiera/white"
+    },
+    "content-ultrathin/primary": {
+      "ratio": 3.32,
+      "threshold": 4.5,
+      "meetsAA": false,
+      "worstCombo": "dark/tint0/tiera/white"
+    },
+    "elevated/primary": {
+      "ratio": 2.09,
+      "threshold": 4.5,
+      "meetsAA": false,
+      "worstCombo": "dark/tint0/tiera/white"
+    },
+    "elevated/secondary": {
+      "ratio": 1.43,
+      "threshold": 4.5,
+      "meetsAA": false,
+      "worstCombo": "dark/tint0/tiera/white"
+    },
+    "indicator/primary": {
+      "ratio": 2.52,
+      "threshold": 4.5,
+      "meetsAA": false,
+      "worstCombo": "dark/tint0/tiera/white"
+    }
+  }
+}

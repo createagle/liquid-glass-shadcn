@@ -1,0 +1,49 @@
+name: WCAG AA 对比度审计
+
+# PROJECT_SPEC §13：
+#   「所有文本在材质档位 0（最通透）+ 最不利背景下仍需满足 WCAG AA
+#     （正文 4.5:1，大字 3:1）…… 写一个自动化检查脚本，在 CI 里对每个组件的
+#     截图做采样检测，不通过就 fail。」
+#
+# 检查真的去渲染、真的截图、真的读像素 —— 玻璃的有效背景是
+# backdrop-filter 合成出来的，光按 CSS 变量算不出人眼看到的那个颜色。
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  contrast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 安装 Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: 跑对比度审计（棘轮基线：只许变好）
+        run: node scripts/contrast-audit.mjs --verbose
+
+      # 基线是「不许更糟」，不是豁免。若哪次改动把某个测点修到达标了，
+      # 这一步会提示需要收紧棘轮 —— 收紧动作要人工做（跑 --update-baseline 并提交），
+      # 避免 CI 自动放宽或自动收紧掩盖真实变化。
+      - name: 提示基线是否需要收紧
+        if: always()
+        run: |
+          echo "若日志里出现「记得跑 --update-baseline 收紧棘轮」，"
+          echo "请在本地执行 node scripts/contrast-audit.mjs --update-baseline 并提交基线变更。"

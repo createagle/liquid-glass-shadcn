@@ -1,28 +1,117 @@
 # 项目状态
 
-**当前阶段：Phase 5（Registry 分发）—— 已完成**
+**当前阶段：Phase 5（Registry 分发）已完成 · 补做了 PROJECT_SPEC §13 的对比度自动检查**
 Phase 0（研究，部分）· Phase 1（光学引擎）· Phase 2（Token 体系）均已完成
 未开始：Phase 3（P0 组件，被无 iOS 截图阻塞）· Phase 4 · Phase 6 · Phase 7
 最后更新：2026-08-31
 
 ---
 
-## 1. Phase 5 验收自查（Registry 分发）
+## 1. 补做：WCAG AA 对比度自动检查（PROJECT_SPEC §13）
+
+### 1.1 做法
+
+`scripts/contrast-audit.mjs` + `packages/glass-core/debug/contrast-fixture.html`。
+
+**真的去截图、真的读像素**，不是按 CSS 变量算。理由：玻璃的有效背景是
+`backdrop-filter: blur() saturate()` 把半透明底座合成到任意内容上的结果，
+光看变量算不出人眼实际看到的那个颜色 —— SPEC 原文也明确要求「对截图做采样检测」。
+
+拿「文字背后的颜色」的办法是渲染两次：
+
+1. 正常渲染 → `getComputedStyle` 拿文字颜色（**含 alpha**）与包围盒
+2. 把待测文字 `visibility:hidden`（保留布局）后截图
+   → 包围盒范围内的像素就是文字背后的真实合成结果
+
+再把文字色合成到每个背景像素上，逐像素算对比度，**取最差的那个像素**
+—— 这就是 SPEC 说的「最不利背景」的落地。标签色多数带 alpha
+（如 `rgb(235 235 245 / 0.6)`），不做合成会显著高估对比度。
+
+覆盖面：**2 主题 × 3 档位 × 3 Tier × 6 背景 = 108 个组合 × 14 个测点 = 1512 次采样**。
+背景集合刻意包含两个极端（纯黑 / 纯白）——
+亮色主题文字是黑的，暗背景最不利；暗色主题文字是白的，亮背景最不利。
+另加高频棋盘（模糊也抹不平）与高饱和渐变。
+
+PNG 解码是自己写的（`scripts/lib/png.mjs`，约 100 行），不引 sharp / pngjs：
+这脚本要在 CI 跑，多一个原生依赖就多一份装不上的风险，而我们只需要
+「8 位、非隔行」这一种情况。
+
+### 1.2 结果：查出一类真实违规 🔴
+
+**11 / 14 个测点在「暗色主题 + 亮背景」下达不到 AA。** 最差的几个：
+
+| 测点 | 对比度 | 阈值 | 最差组合 |
+|---|---|---|---|
+| `base-inline/secondary` | **1.00** | 4.5 | dark / 白背景 |
+| `base/tint-red` | **1.00** | 4.5 | dark / photo |
+| `base/tint-blue` | 1.13 | 4.5 | dark / 白背景 |
+| `base/secondary` | 1.21 | 4.5 | dark / 白背景 |
+| `base/primary` | 1.62 | 4.5 | dark / 白背景 |
+| `indicator/primary` | 2.52 | 4.5 | dark / 白背景 |
+| `content-ultrathin/primary` | 3.32 | 4.5 | dark / 白背景 |
+
+已截图人工复核，**不是工具误报**：暗色主题下底座是 `rgb(20 20 24)` @ alpha 0.22，
+压在白背景上合成出来是浅灰（约 rgb 203），白字压上去几乎不可读，
+次级标签基本隐形。
+
+**根因就是 Phase 0 记下的头号缺口：元素级明暗自适应未实现。**
+Apple 的玻璃会按背后内容自动在亮/暗外观间切换，文字随之反色
+（`apple-liquid-glass.md` §5）；我们只有全局主题。
+这个缺口以前只是文字描述，现在**有了硬数字**。
+
+顺带说明：Apple 对 `clear` 变体给过官方缓解手段 —— 亮背景下加黑色 35% 调暗层
+（`apple-metrics.md` §2，标注为 `[官方]`）。我算过，单靠它把 1.62 抬到约 3.7，
+仍不足 4.5，所以**没有半吊子地加上去**。真正的解法还是元素级自适应。
+
+### 1.3 CI 怎么接：棘轮基线
+
+不能让 CI 永远红着被忽略，也不能悄悄放宽阈值。用棘轮：
+
+- **已达 AA 的测点** → 按 AA 卡死，之后再也不许掉下去
+- **未达 AA 的测点** → 按当前实测值卡死，只许变好，变差就 fail
+
+基线在 `scripts/contrast-baseline.json`，**是「不许更糟」，不是豁免**。
+
+已实测验证这道闸门真的有效，不是摆设：故意把 `--lg-label-primary` 改成中灰后
+
+```
+content-regular/primary  对比度 1.75:1 < 4.5:1（基线 8.98，曾达 AA，现在掉了）
+content-thick/primary    对比度 2.48:1 < 4.5:1（基线 14.52，曾达 AA，现在掉了）
+→ 退出码 1
+```
+
+还原后退出码回到 0。
+
+`.github/workflows/contrast.yml` 每次 PR 跑。修好某个测点后需要人工执行
+`--update-baseline` 并提交，避免 CI 自动收紧或放宽掩盖真实变化。
+
+### 1.4 已知局限
+
+| 局限 | 说明 |
+|---|---|
+| 只测夹具，不测真实组件 | 组件还没有（Phase 3 未开始）。夹具覆盖了 base / indicator / elevated / 四档内容层 / 着色标签，等组件出来要把它们接进去 |
+| 取最差单像素，可能偏严 | 边缘抗锯齿或 inset 高光可能贡献极端像素。目前**故意保持严格**，宁可误报也不漏报；若发现确实噪声主导，再改成低分位数并说明理由 |
+| 未覆盖 hover / focus / pressed 态 | 交互态的材质会变强，需要单独测点 |
+| 未覆盖 `prefers-contrast: more` | 该档位下描边与标签色都会变，应当单独跑一轮 |
+
+---
+
+## 2. Phase 5 验收自查（Registry 分发）
 
 > 注意：Phase 3 尚未开始，**目前没有 UI 组件可接入**。
 > 本阶段做的是把**已完成的东西**（token 体系 + Provider + cn 工具）接入 registry，
 > 并把整条分发管线真正打通、跑通验证 —— 等 P0 组件出来直接往里加 item 即可。
 
-### 1.1 任务卡要求的 6 项
+### 2.1 任务卡要求的 6 项
 
 | # | 要求 | 结论 |
 |---|---|---|
 | 1 | 写 registry.json，组件多就用 `include` 拆文件 | ✅ 根 `apps/www/registry.json` + `include` 指向 `registry/glass/registry.json`。校验：**2 个文件 3 个 item** |
-| 2 | 每个 item 配好 files / dependencies / registryDependencies / cssVars / css | ✅ 全部配齐并实测生效，详见 §1.3 |
+| 2 | 每个 item 配好 files / dependencies / registryDependencies / cssVars / css | ✅ 全部配齐并实测生效，详见 §2.3 |
 | 3 | 单独的 `registry:theme` item | ✅ `theme`，**由脚本从 CSS 源单向生成**（见下） |
 | 4 | 跑通 build，产物落 `apps/www/public/r/` | ✅ `theme.json` / `utils.json` / `glass-providers.json` / `registry.json` |
-| 5 | 干净 Next.js 工程实测两种安装 | ✅ **两种都实测通过**，见 §1.2 |
-| 6 | 写成 CI job | ⚠️ **已写但从未运行过** —— 仓库已 `git init` 并完成初始提交，但**没有远程**，workflow 无法触发。见 §1.5 |
+| 5 | 干净 Next.js 工程实测两种安装 | ✅ **两种都实测通过**，见 §2.2 |
+| 6 | 写成 CI job | ⚠️ **已写但从未运行过** —— 仓库已 `git init` 并完成初始提交，但**没有远程**，workflow 无法触发。见 §2.5 |
 
 **theme item 是生成的，不是手写的。** `apps/www/scripts/generate-theme-item.mjs`
 从 `packages/glass-core/src/tokens/*.css` 解析：
@@ -37,7 +126,7 @@ Phase 0（研究，部分）· Phase 1（光学引擎）· Phase 2（Token 体�
 手写一份 JSON 必然与 CSS 漂移，而且漂移了不会报错 —— 用户装到项目里拿到旧值也没人知道。
 CI 里加了一步 `git status --porcelain` 断言，生成物与源不同步就直接 fail。
 
-### 1.2 两种安装方式的实测结果
+### 2.2 两种安装方式的实测结果
 
 环境：`create-next-app@latest`（Next.js 16.3.3）+ `shadcn init -d`，全新工程，**未手动补任何 CSS**。
 
@@ -59,7 +148,7 @@ CI 里加了一步 `git status --porcelain` 断言，生成物与源不同步就
 - 材质档位切换端到端生效：点「档位 solid」后 `--lg-base-alpha` 从 `0.4436` → `0.94`，
   `data-glass-tint-step` → `solid`，并写入 localStorage
 
-### 1.3 这一步抓到的三个问题
+### 2.3 这一步抓到的三个问题
 
 **A. 🔴 `registryDependencies` 里的裸名会解析到 shadcn 自己的 registry**
 
@@ -104,7 +193,7 @@ shadcn 合并时会给每一项在 `@theme inline` 里补一条映射，于是�
 可能的改法是只把 Layer 3 放 cssVars、Layer 1/2 走 `css` 字段，
 但那样用户就改不动底层 token 了 —— 是个需要权衡的设计决策，留给 Phase 6 再定。
 
-### 1.4 `@glass/core` 还没发布到 npm
+### 2.4 `@glass/core` 还没发布到 npm
 
 theme item 声明了 `dependencies: ["@glass/core"]`，`shadcn add` 会真的执行
 `npm install @glass/core` → 404，安装在依赖这一步就中止，**CSS 一行都不会写**。
@@ -117,7 +206,7 @@ theme item 声明了 `dependencies: ["@glass/core"]`，`shadcn add` 会真的执
 
 **@glass/core 正式发布后这个脚本可以删掉。**
 
-### 1.5 未达成 / 已知缺口
+### 2.5 未达成 / 已知缺口
 
 | 缺口 | 严重度 |
 |---|---|
@@ -130,20 +219,20 @@ theme item 声明了 `dependencies: ["@glass/core"]`，`shadcn add` 会真的执
 
 ---
 
-## 2. Phase 2 验收自查（Token 体系）
+## 3. Phase 2 验收自查（Token 体系）
 
-### 2.1 任务卡要求的 6 项
+### 3.1 任务卡要求的 6 项
 
 | # | 要求 | 结论 |
 |---|---|---|
 | 1 | 三层 token 全量定义，light / dark 各自独立完整一套 | ✅ **超额完成**：`primitive.css` / `semantic.css` / `shadcn.css`，并做了 **4 套**（light · dark · light+高对比 · dark+高对比），依据是 Apple 要求「每个变体都要再提供 increased-contrast 选项」 |
-| 2 | Layer 3 覆盖 shadcn 全部 token 名（**去官网核对，别凭记忆**） | ✅ **通过 33 / 33**。核对发现两处与旧认知不同，见 §1.3 |
+| 2 | Layer 3 覆盖 shadcn 全部 token 名（**去官网核对，别凭记忆**） | ✅ **通过 33 / 33**。核对发现两处与旧认知不同，见 §2.3 |
 | 3 | 材质档位 0..1 连续插值 → 4 个语义档，只影响 Layer B | ✅ **通过**，8 宫格已验证四档递进正确，指示器折射不随档位变化 |
 | 4 | localStorage 持久化 + SSR 内联脚本防闪烁 | ⚠️ **部分通过**：`ssr-script.ts` 已实现且主题 / 档位 / tier 共用一套机制，**但没有真实 SSR 环境验证过**（还没有 Next.js 应用）。「无暗色闪烁」这条验收**未验证** |
 | 5 | squircle 方案 + `concentricRadius()` | ✅ **通过** `shape/concentric.ts`。squircle 走原生 `corner-shape`，速查页上与普通圆角并排对比可见差异 |
 | 6 | token 速查页 + 8 宫格材质表 | ✅ **通过** `debug/tokens.html`：全色板 + 8 宫格 + 内容层材质 + 圆角 + 同心圆角算例 + shadcn 覆盖核对表 |
 
-### 2.2 自查项：第三方 shadcn 组件
+### 3.2 自查项：第三方 shadcn 组件
 
 ✅ **通过，而且抓到了一个真 bug。**
 
@@ -158,7 +247,7 @@ cd packages/glass-core && npm run compat:build
 # 然后用浏览器打开 debug/shadcn-compat/index.html
 ```
 
-### 2.3 这一步抓到的两类问题
+### 3.3 这一步抓到的两类问题
 
 **A. 🔴 CSS 自定义属性的 `var()` 在「声明处」求值 —— 别名层必须每个主题块重写一遍**
 
@@ -187,7 +276,7 @@ shadcn 组件里大量使用 `dark:bg-input/30` 这类工具类。它们依赖
 不写这条，第三方组件的 `dark:*` 会退回 Tailwind 默认的 `prefers-color-scheme`，
 与本库的 class 策略脱节。已加进 `shadcn.css`。
 
-### 2.4 核对 shadcn token 清单时的两处发现
+### 3.4 核对 shadcn token 清单时的两处发现
 
 1. **`--destructive-foreground` 已不存在。** 当前 button 的 destructive 变体写的是
    `bg-destructive text-white`，不再引用配对的 foreground。
@@ -196,16 +285,16 @@ shadcn 组件里大量使用 `dark:bg-input/30` 这类工具类。它们依赖
 
 —— 这两条正是任务卡强调「别凭记忆」的原因。
 
-### 2.5 未达成 / 已知缺口
+### 3.5 未达成 / 已知缺口
 
 | 缺口 | 严重度 |
 |---|---|
 | 「无暗色闪烁」未验证 —— 没有真实 SSR 环境，`ssr-script.ts` 只是逻辑正确 | 🟡 中，Phase 6 建文档站时补 |
 | 内容层 4 档标准材质的 alpha 取值是 `[推定]`，没有 iOS 参考 | 🟡 中 |
-| WCAG AA 对比度自动检查脚本尚未写（PROJECT_SPEC §13 要求，CI 项） | 🟡 中 |
+| ~~WCAG AA 对比度自动检查脚本尚未写~~ | ✅ **已补做**，见 §2 |
 | `pnpm exec` 在本机因构建脚本告警失败，需用 `npm run` 或直接调二进制 | 🟢 低，已在脚本里绕开 |
 
-### 2.6 构建状态
+### 3.6 构建状态
 
 ```
 tsc --noEmit                 ✅
@@ -217,20 +306,20 @@ shadcn token 覆盖            ✅ 33 / 33
 
 ---
 
-## 3. Phase 1 验收自查（光学引擎 `@glass/core`）
+## 4. Phase 1 验收自查（光学引擎 `@glass/core`）
 
-### 3.1 任务卡要求的 6 项产出
+### 4.1 任务卡要求的 6 项产出
 
 | # | 产出 | 结论 |
 |---|---|---|
 | 1 | 位移贴图生成器 + 滤镜工厂（尺寸缓存 / 全局单例 defs / ResizeObserver） | ✅ **通过** `filter/displacement-map.ts`、`filter/filter-factory.ts`、`filter/use-glass-filter.ts`。缓存 key = `w×h×radius×borderWidth×...`，引用计数管理生命周期，尺寸量化到 2px 避免抖动重建 |
-| 2 | 三级 tier 检测（特性检测优先，UA 兜底），写 `<html data-glass-tier>` | ✅ **通过** `tiers/detect.ts`。**额外加了运行时像素探针**（见 §3.4） |
+| 2 | 三级 tier 检测（特性检测优先，UA 兜底），写 `<html data-glass-tier>` | ✅ **通过** `tiers/detect.ts`。**额外加了运行时像素探针**（见 §4.4） |
 | 3 | `<GlassProvider>`：主题 / 材质档位 0..1 连续 / tier 覆写 / 无障碍偏好订阅 | ✅ **通过** `provider/`。偏好一律走 `useSyncExternalStore`；档位在 4 个语义档之间线性插值且**只影响 Layer B** |
 | 4 | `<GlassSurface layer="base｜indicator｜elevated">` | ✅ **通过** `surface/glass-surface.tsx` |
 | 5 | `springs` 预设（smooth / snappy / bouncy） | ✅ **通过** `motion/springs.ts`，另附 `reducedMotionTransition` |
 | 6 | 纯 HTML 调试页（不依赖 Next.js），全部滤镜参数为滑杆 | ⚠️ **部分通过** `packages/glass-core/debug/index.html`，零 React 依赖，14 个参数全部可拖拽 + tier / 主题 / 档位 / 背景切换 + 贴图预览 + 参数导出。**但背景不是「一张高对比度的彩色照片」，是程序生成的多层渐变**（我没有可用的图片素材） |
 
-### 3.2 视觉标定
+### 4.2 视觉标定
 
 ⚠️ **部分通过。** 三个特征（透镜畸变 / 色散彩边 / 镜面高光）在 Chromium 上**都肉眼明确可见**，
 参数已固化为 `--lg-refract-*` / `--lg-disperse-*` 的默认值。
@@ -239,7 +328,7 @@ shadcn token 覆盖            ✅ 33 / 33
 实际标定目标退化成「三个特征清晰可见」而不是「与 iOS 一致」。
 标定表见 `optics-web.md` §3.7。
 
-### 3.3 任务卡的四条验收
+### 4.3 任务卡的四条验收
 
 | 验收项 | 结论 |
 |---|---|
@@ -248,7 +337,7 @@ shadcn token 覆盖            ✅ 33 / 33
 | Firefox（Tier C）下结构与可读性完全正确 | ❌ **未验证** —— 无 Firefox 环境。同上，强制切档观感正确 |
 | 三个 tier 可手动强制切换 | ✅ **通过** |
 
-### 3.4 我做了但任务卡没要求的事
+### 4.4 我做了但任务卡没要求的事
 
 1. **Tier A 的运行时像素探针**（`probeFeImage`）。理由：Phase 0 的教训是
    `CSS.supports` 返回 true 但滤镜静默无输出。只靠特性检测会把这类浏览器误判为 Tier A。
@@ -261,7 +350,7 @@ shadcn token 覆盖            ✅ 33 / 33
 4. `optics.css` 里 light / dark **各自独立完整定义**了折射/色散缩放、高光强度、
    落影 vs 外发光 —— 对应 PROJECT_SPEC §7 的明暗差异表，不是简单反色。
 
-### 3.5 未达成 / 已知缺口
+### 4.5 未达成 / 已知缺口
 
 | 缺口 | 严重度 |
 |---|---|
@@ -272,7 +361,7 @@ shadcn token 覆盖            ✅ 33 / 33
 | 性能红线 8 仍是 SPEC 的 `[推定]` 值，未用掉帧数据替换 | 🟢 低 |
 | 未写单元测试（Vitest 尚未接入） | 🟡 中 |
 
-### 3.6 构建状态
+### 4.6 构建状态
 
 ```
 pnpm install            ✅（8 个包）
@@ -283,7 +372,7 @@ esbuild 调试包 11.4kb   ✅
 
 ---
 
-## 4. Phase 0 验收自查
+## 5. Phase 0 验收自查
 
 
 PROJECT_SPEC / 任务卡要求的验收项，逐条对照：
@@ -296,7 +385,7 @@ PROJECT_SPEC / 任务卡要求的验收项，逐条对照：
 | `apple-metrics.md` 数值都带可信度标注 | ⚠️ **部分通过** | 标注做了，而且新增 `[待核实]` 一档；**但表本身大面积缺失** —— 没有 iOS 截图与 Design Resources，量不出尺寸。**没有一条 `[实测]`** |
 | `optics-web.md` 三级降级 + 各浏览器实测 | ⚠️ **部分通过** | Chromium 148 + Chrome 151 两个环境实测，折射根因已定位（§3.6）。**Safari / Firefox 一次都没跑过** |
 | `screenshots/` 存放比对用 iOS 参考截图 | ❌ **未通过** | 目录已建，**空的**。我没有 iOS 真机截图，也无法获取 |
-| 向你汇报 (a)(b)(c) | ✅ **通过** | (a) 见 §5，(b) 见 §6，(c) 见 `component-inventory.md` |
+| 向你汇报 (a)(b)(c) | ✅ **通过** | (a) 见 §6，(b) 见 §7，(c) 见 `component-inventory.md` |
 
 **结论：Phase 0 不算完成。** 唯一的实质缺口是 **没有 iOS 参考截图**（阻塞项 #1）——
 它不影响 Phase 1，但会卡住 Phase 3 的 Fidelity 验收。
@@ -307,7 +396,7 @@ PROJECT_SPEC / 任务卡要求的验收项，逐条对照：
 
 ---
 
-## 5. (a) 从 Apple 文档读到、但 PROJECT_SPEC 没提到的重要约束
+## 6. (a) 从 Apple 文档读到、但 PROJECT_SPEC 没提到的重要约束
 
 按重要性排序。完整原文与出处见 `apple-liquid-glass.md`。
 
@@ -337,7 +426,7 @@ PROJECT_SPEC / 任务卡要求的验收项，逐条对照：
 
 ---
 
-## 6. (b) 我认为 PROJECT_SPEC 判断有误或有风险的地方
+## 7. (b) 我认为 PROJECT_SPEC 判断有误或有风险的地方
 
 任务卡要求「直说，不要附和」。以下按严重程度排序。
 
@@ -476,7 +565,7 @@ Dialog/AlertDialog、Toggle/ToggleGroup 都是合并计数）。
 
 ---
 
-## 7. 阻塞项（需要你决定或提供材料）
+## 8. 阻塞项（需要你决定或提供材料）
 
 | # | 阻塞项 | 影响 | 需要你做什么 |
 |---|---|---|---|
@@ -487,7 +576,7 @@ Dialog/AlertDialog、Toggle/ToggleGroup 都是合并计数）。
 
 ---
 
-## 8. 已完成的产出
+## 9. 已完成的产出
 
 ```
 PROJECT_SPEC.md                     ← 提示词第一部分，逐字提取
@@ -505,6 +594,11 @@ apps/www/                           ← ✅ Phase 5 registry 分发
         └── serve-registry.mjs      本地静态服务
 .github/workflows/registry-smoke.yml ✅ 冒烟 CI（已写，未运行过）
 scripts/npm-registry-shim.mjs        最小 npm registry（@glass/core 发布后可删）
+scripts/contrast-audit.mjs           ✅ WCAG AA 对比度审计（截图采样 + 棘轮基线）
+scripts/contrast-baseline.json       棘轮基线：不许更糟，非豁免
+scripts/lib/png.mjs                  自写 PNG 解码，避免 CI 引原生依赖
+packages/glass-core/debug/contrast-fixture.html  审计夹具（含最不利背景集）
+.github/workflows/contrast.yml       ✅ 对比度 CI
 packages/glass-core/                ← ✅ Phase 1 已实现
   ├── src/filter/                   displacement-map / filter-factory / use-glass-filter
   ├── src/tiers/detect.ts           三级检测 + 运行时探针
@@ -540,7 +634,7 @@ docs/research/
 
 ---
 
-## 9. 下一步
+## 10. 下一步
 
 **Phase 0 / 1 / 2 / 5 已完成。分发管线已经打通，等组件往里填。**
 
@@ -552,6 +646,10 @@ docs/research/
 2. 🔴 **`optics-web.md` §3.8 的嵌套指示器问题。** Tabs / Segmented 是 P0 的第一个组件，
    也正是这个问题最严重的场景 —— 指示器嵌在磨砂底座里，折射被底座的模糊吃掉。
    建议做 Tabs 时一并实现「底座挖洞」。
+
+**对比度审计已补做**（§1），并且查出了一类真实违规：暗色主题 + 亮背景下
+11/14 个测点达不到 AA。根因是元素级明暗自适应未实现 —— 这条以前只是文字描述，
+现在有了硬数字，已用棘轮基线盯住，只许变好。
 
 另外两件不阻塞但迟早要做的：
 

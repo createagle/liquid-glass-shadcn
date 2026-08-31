@@ -1,0 +1,11 @@
+# 统一用 LF 入库。
+#
+# 必须这么做的直接原因：CI 里有一步用 `git status --porcelain` 断言
+# apps/www/registry/glass/registry.json 与 CSS 源同步。生成脚本写的是 LF，
+# 若仓库按平台自动转 CRLF，Windows 上开发时这条检查会误报漂移。
+* text=auto eol=lf
+
+# 二进制与产物不做行尾转换
+*.png binary
+*.jpg binary
+*.tgz binary

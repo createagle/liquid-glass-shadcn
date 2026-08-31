@@ -1,0 +1,98 @@
+/**
+ * `@glass/core/theme.css` —— 唯一入口，按顺序引入完整 token 体系与渲染路径。
+ *
+ * 用法：
+ * ```css
+ * @import "tailwindcss";
+ * @import "@glass/core/theme.css";
+ * ```
+ *
+ * 三层严格分层（PROJECT_SPEC §6）：
+ *   Layer 1 primitive.css  原始值，与语义无关
+ *   Layer 2 semantic.css   材质与角色，light / dark / 高对比各自完整一套
+ *   Layer 3 shadcn.css     对 Layer 2 的**别名映射**，保证 shadcn CLI 生态兼容
+ *
+ * 顺序不能调换：后者依赖前者。
+ */
+
+@import './primitive.css';
+@import './semantic.css';
+@import './shadcn.css';
+@import './optics.css';
+
+/* ══════════════════════════════════════════════════════════════════════
+   内容层标准材质
+   Apple 明令 "Don't use Liquid Glass in the content layer."
+   内容型组件（Card / Table / List / Accordion 正文区）用这一组，不用玻璃。
+   ══════════════════════════════════════════════════════════════════════ */
+
+.lg-content {
+  background-color: var(--lg-content-regular);
+  color: var(--lg-label-primary);
+}
+.lg-content[data-material='ultrathin'] {
+  background-color: var(--lg-content-ultrathin);
+}
+.lg-content[data-material='thin'] {
+  background-color: var(--lg-content-thin);
+}
+.lg-content[data-material='regular'] {
+  background-color: var(--lg-content-regular);
+}
+.lg-content[data-material='thick'] {
+  background-color: var(--lg-content-thick);
+}
+
+/* 标准材质在支持时用模糊增强层次；Tier C 下自然退化为不透明度更高的纯色 */
+[data-glass-tier='a'] .lg-content,
+[data-glass-tier='b'] .lg-content {
+  backdrop-filter: blur(var(--lg-content-blur)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--lg-content-blur)) saturate(1.4);
+}
+
+[data-glass-tier='c'] .lg-content {
+  /* 无模糊时提高不透明度补偿，否则背景会糊掉前景文字 */
+  background-color: var(--lg-content-thick);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   连续曲率（squircle）
+   Chromium 148+ 原生支持 `corner-shape`，实测 getComputedStyle 能读回 "squircle"，
+   与普通 border-radius 并排对比肉眼差异明显。
+   不支持的浏览器自然回退普通圆角 —— 这是渐进增强，不需要 SVG path 或 Houdini。
+   （取代了 PROJECT_SPEC §6 的原方案，见 docs/research/STATUS.md 质疑 #3）
+   ══════════════════════════════════════════════════════════════════════ */
+
+@supports (corner-shape: squircle) {
+  .lg-continuous {
+    corner-shape: squircle;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   无障碍降级（PROJECT_SPEC §13）
+   媒体查询作为兜底：即使没有挂 GlassProvider，纯 CSS 也能正确降级。
+   挂了 Provider 时，属性选择器分支优先级更高，两者结果一致。
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --lg-base-alpha: 0.98;
+    --lg-refract-scale: 0;
+    --lg-disperse-scale: 0;
+  }
+  .lg-surface,
+  .lg-content {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .lg-surface[data-layer='indicator'] {
+    background-color: rgb(var(--lg-base-color) / 0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-surface {
+    transition-duration: 120ms;
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "@glass/core",
+  "version": "0.0.0",
+  "description": "Liquid Glass UI 的光学引擎：位移贴图 / 滤镜工厂 / 能力分级 / Provider / 材质 token",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./theme.css": "./src/tokens/theme.css",
+    "./primitive.css": "./src/tokens/primitive.css",
+    "./semantic.css": "./src/tokens/semantic.css",
+    "./shadcn.css": "./src/tokens/shadcn.css",
+    "./optics.css": "./src/tokens/optics.css"
+  },
+  "files": [
+    "dist",
+    "src/tokens"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "debug:build": "esbuild src/debug-entry.ts --bundle --format=iife --global-name=GlassOptics --outfile=debug/glass-optics.js",
+    "debug": "npm run debug:build && echo 打开 packages/glass-core/debug/index.html",
+    "compat:build": "tailwindcss -i debug/shadcn-compat/input.css -o debug/shadcn-compat/tailwind.css"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0",
+    "tailwindcss": "^4.3.0",
+    "@tailwindcss/cli": "^4.3.0"
+  }
+}

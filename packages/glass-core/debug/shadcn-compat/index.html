@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN" data-glass-theme="light" data-glass-tier="a">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>第三方 shadcn 组件兼容性验证</title>
+<link rel="stylesheet" href="./tailwind.css">
+<style>
+  body{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+  .panel{padding:26px}
+  h1{font-size:20px;font-weight:700;margin:0 0 4px}
+  h2{font-size:14px;font-weight:700;margin:26px 0 10px;opacity:.65}
+  .rowset{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .split{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+  @media(max-width:860px){.split{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="split">
+  <!-- ══════════ LIGHT ══════════ -->
+  <div class="panel bg-background text-foreground">
+    <h1>第三方 shadcn 组件 · Light</h1>
+    <p class="text-sm text-muted-foreground">
+      class 字符串取自官方 registry 源码，一字未改。颜色全部来自 <code>@glass/core</code> 的 Layer 3。
+    </p>
+
+    <h2>Button · 全部 variant</h2>
+    <div class="rowset">
+      <button data-slot="button" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 h-9 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90">default</button>
+      <button data-slot="button" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40">destructive</button>
+      <button data-slot="button" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50">outline</button>
+      <button data-slot="button" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80">secondary</button>
+      <button data-slot="button" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50">ghost</button>
+      <button data-slot="button" class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none h-9 px-4 py-2 text-primary underline-offset-4 hover:underline">link</button>
+      <button data-slot="button" disabled class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-primary text-primary-foreground">disabled</button>
+    </div>
+
+    <h2>Button · 尺寸</h2>
+    <div class="rowset">
+      <button class="inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-medium h-8 px-3 bg-secondary text-secondary-foreground">sm</button>
+      <button class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-9 px-4 py-2 bg-secondary text-secondary-foreground">default</button>
+      <button class="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium h-10 px-6 bg-secondary text-secondary-foreground">lg</button>
+      <button class="inline-flex items-center justify-center rounded-md text-sm font-medium size-9 bg-secondary text-secondary-foreground">◎</button>
+    </div>
+
+    <h2>Card</h2>
+    <div data-slot="card" class="flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm max-w-md">
+      <div data-slot="card-header" class="grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6">
+        <div data-slot="card-title" class="leading-none font-semibold">Card 标题</div>
+        <div data-slot="card-description" class="text-sm text-muted-foreground">
+          描述文字用 text-muted-foreground，应当是次级标签色。
+        </div>
+      </div>
+      <div data-slot="card-content" class="px-6 text-sm">
+        正文区。Card 属于**内容层**，按 Apple 的规则不应该堆玻璃。
+      </div>
+      <div data-slot="card-footer" class="flex items-center px-6 gap-2">
+        <button class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-primary text-primary-foreground">确认</button>
+        <button class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 border bg-background hover:bg-accent">取消</button>
+      </div>
+    </div>
+
+    <h2>Dialog（静态展开，含 overlay）</h2>
+    <div class="relative h-64 overflow-hidden rounded-lg border">
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div data-slot="dialog-content" class="absolute top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg outline-none sm:max-w-sm">
+        <div class="flex flex-col gap-2 text-center sm:text-left">
+          <div class="text-lg leading-none font-semibold">对话框标题</div>
+          <div class="text-sm text-muted-foreground">bg-background + border + shadow-lg 全部来自本库 token。</div>
+        </div>
+        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 border bg-background hover:bg-accent">取消</button>
+          <button class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-primary text-primary-foreground">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <h2>其余 token 抽查</h2>
+    <div class="rowset text-xs">
+      <span class="rounded px-2 py-1 bg-muted text-muted-foreground">muted</span>
+      <span class="rounded px-2 py-1 bg-accent text-accent-foreground">accent</span>
+      <span class="rounded px-2 py-1 bg-popover text-popover-foreground border">popover</span>
+      <span class="rounded px-2 py-1 bg-sidebar text-sidebar-foreground border">sidebar</span>
+      <span class="rounded px-2 py-1 bg-chart-1 text-white">chart-1</span>
+      <span class="rounded px-2 py-1 bg-chart-2 text-white">chart-2</span>
+      <span class="rounded px-2 py-1 bg-chart-3 text-white">chart-3</span>
+      <span class="rounded px-2 py-1 bg-chart-4 text-white">chart-4</span>
+      <span class="rounded px-2 py-1 bg-chart-5 text-white">chart-5</span>
+      <span class="rounded px-2 py-1 border border-input">input 描边</span>
+      <span class="rounded px-2 py-1 ring-2 ring-ring">ring</span>
+    </div>
+  </div>
+
+  <!-- ══════════ DARK ══════════ -->
+  <div class="dark panel bg-background text-foreground" data-glass-theme="dark">
+    <h1>第三方 shadcn 组件 · Dark</h1>
+    <p class="text-sm text-muted-foreground">
+      同样的 class，只是外层多了 <code>.dark</code>。验证 <code>dark:</code> 变体与类驱动暗色是否生效。
+    </p>
+
+    <h2>Button · 全部 variant</h2>
+    <div class="rowset">
+      <button class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none h-9 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90">default</button>
+      <button class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none h-9 px-4 py-2 bg-destructive text-white hover:bg-destructive/90 dark:bg-destructive/60">destructive</button>
+      <button class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none h-9 px-4 py-2 border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50">outline</button>
+      <button class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none h-9 px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80">secondary</button>
+      <button class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none h-9 px-4 py-2 hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50">ghost</button>
+      <button class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none h-9 px-4 py-2 text-primary underline-offset-4 hover:underline">link</button>
+    </div>
+
+    <h2>Card</h2>
+    <div class="flex flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm max-w-md">
+      <div class="grid auto-rows-min gap-2 px-6">
+        <div class="leading-none font-semibold">Card 标题</div>
+        <div class="text-sm text-muted-foreground">描述文字应当仍然可读，不是灰糊一片。</div>
+      </div>
+      <div class="px-6 text-sm">正文区。</div>
+      <div class="flex items-center px-6 gap-2">
+        <button class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-primary text-primary-foreground">确认</button>
+        <button class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 border bg-background hover:bg-accent">取消</button>
+      </div>
+    </div>
+
+    <h2>Dialog</h2>
+    <div class="relative h-64 overflow-hidden rounded-lg border">
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="absolute top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg outline-none sm:max-w-sm">
+        <div class="flex flex-col gap-2 text-center sm:text-left">
+          <div class="text-lg leading-none font-semibold">对话框标题</div>
+          <div class="text-sm text-muted-foreground">暗色下 bg-background 应当是纯黑（iOS systemBackground）。</div>
+        </div>
+        <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 border bg-background hover:bg-accent">取消</button>
+          <button class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 bg-primary text-primary-foreground">确认</button>
+        </div>
+      </div>
+    </div>
+
+    <h2>其余 token 抽查</h2>
+    <div class="rowset text-xs">
+      <span class="rounded px-2 py-1 bg-muted text-muted-foreground">muted</span>
+      <span class="rounded px-2 py-1 bg-accent text-accent-foreground">accent</span>
+      <span class="rounded px-2 py-1 bg-popover text-popover-foreground border">popover</span>
+      <span class="rounded px-2 py-1 bg-sidebar text-sidebar-foreground border">sidebar</span>
+      <span class="rounded px-2 py-1 bg-chart-1 text-white">chart-1</span>
+      <span class="rounded px-2 py-1 bg-chart-2 text-white">chart-2</span>
+      <span class="rounded px-2 py-1 bg-chart-3 text-white">chart-3</span>
+      <span class="rounded px-2 py-1 bg-chart-4 text-white">chart-4</span>
+      <span class="rounded px-2 py-1 bg-chart-5 text-white">chart-5</span>
+      <span class="rounded px-2 py-1 border border-input">input 描边</span>
+      <span class="rounded px-2 py-1 ring-2 ring-ring">ring</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

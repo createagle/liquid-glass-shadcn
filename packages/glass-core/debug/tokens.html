@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN" data-glass-theme="light" data-glass-tier="a">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>@glass/core Token 速查</title>
+<link rel="stylesheet" href="../src/tokens/theme.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+       background:var(--background);color:var(--foreground);padding:28px 26px 80px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 4px}
+  h2{font-size:17px;margin:36px 0 4px;padding-top:18px;border-top:1px solid var(--lg-separator)}
+  .sub{color:var(--lg-label-secondary);font-size:13.5px;margin:0 0 8px}
+  .note{font-size:12.5px;color:var(--lg-label-secondary);margin:6px 0 14px;line-height:1.55}
+
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
+  .sw{border-radius:12px;overflow:hidden;border:1px solid var(--lg-separator)}
+  .sw .chip{height:58px}
+  .sw .meta{padding:6px 8px;font:11.5px/1.4 ui-monospace,Consolas,monospace;
+            background:var(--card);color:var(--lg-label-secondary)}
+  .sw .meta b{display:block;color:var(--foreground);font-size:12px}
+
+  /* ── 8 宫格材质表 ───────────────────────────────────────────────── */
+  .matrix{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  @media(max-width:900px){.matrix{grid-template-columns:repeat(2,1fr)}}
+  .cell{border-radius:16px;overflow:hidden;border:1px solid var(--lg-separator)}
+  .cell .bed{position:relative;height:158px;display:grid;place-items:center;
+    background:
+      radial-gradient(60% 80% at 15% 20%, #ff2d55 0%, transparent 55%),
+      radial-gradient(55% 70% at 85% 15%, #ffcc00 0%, transparent 55%),
+      radial-gradient(70% 60% at 80% 85%, #0a84ff 0%, transparent 60%),
+      radial-gradient(55% 65% at 20% 88%, #30d158 0%, transparent 58%),
+      conic-gradient(from 210deg at 50% 50%, #af52de, #0a84ff, #30d158, #ffcc00, #ff2d55, #af52de)}
+  .cell .txt{position:absolute;inset:0;padding:10px;font-size:8px;line-height:1.3;color:#fff;
+    text-shadow:0 1px 2px rgb(0 0 0/.5);overflow:hidden;pointer-events:none}
+  .cell .cap{padding:7px 10px;font:11.5px/1.4 ui-monospace,Consolas,monospace;
+    background:var(--card);color:var(--lg-label-secondary)}
+  .cell .cap b{color:var(--foreground)}
+  .pill{position:relative;z-index:2;display:flex;gap:4px;padding:6px}
+  .pill .s{padding:8px 15px;font-size:13px;font-weight:600;color:#fff;
+           text-shadow:0 1px 1px rgb(0 0 0/.45);border-radius:15px}
+  .darkcell{color-scheme:dark}
+
+  /* ── 圆角 ─────────────────────────────────────────────────────────── */
+  .radii{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end}
+  .rbox{width:104px;height:104px;background:var(--lg-blue);display:grid;place-items:center;
+        color:#fff;font:11.5px ui-monospace,Consolas,monospace;text-align:center}
+
+  table{border-collapse:collapse;width:100%;font-size:13px;margin-top:8px}
+  td,th{border:1px solid var(--lg-separator);padding:7px 10px;text-align:left}
+  th{background:var(--muted);font-weight:600}
+  code{background:var(--muted);padding:1px 5px;border-radius:4px;
+       font:12px ui-monospace,Consolas,monospace}
+  .toggle{position:fixed;right:20px;top:18px;z-index:99;display:flex;gap:8px}
+  .toggle button{background:var(--primary);color:var(--primary-foreground);border:0;
+    padding:8px 14px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="toggle">
+  <button id="themeBtn">切换明暗</button>
+  <button id="contrastBtn">切换高对比</button>
+</div>
+<div class="wrap">
+
+<h1>@glass/core Token 速查</h1>
+<p class="sub">Phase 2 产出。三层 token 体系 + 材质档位 × 明暗的 8 宫格表现。</p>
+
+<h2>1. 材质表现：4 档位 × 明暗 = 8 宫格</h2>
+<p class="note">
+  这是 Phase 2 的核心验收项。每格是同一个「Layer B 磨砂底座 + Layer I 指示器」压在同一张彩色背景上，
+  只有材质档位与主题不同。<b>档位只影响底座，不影响指示器的折射强度</b>（PROJECT_SPEC §8）——
+  所以四格里指示器的玻璃感应当保持一致，变化的是底座的通透度。
+</p>
+<div class="matrix" id="matrixLight"></div>
+<div class="matrix" id="matrixDark" style="margin-top:14px"></div>
+
+<h2>2. iOS 系统色</h2>
+<p class="note">
+  ⚠️ 可信度 <b>[待核实 · 社区通行值]</b>，不是 [官方]。Apple 明确写着
+  “Avoid hard-coding system color values… The actual color values may fluctuate from release to release.”
+  这里硬编码是 Web 端的无奈选择，取值随主题自动切换。
+</p>
+<div class="swatches" id="systemColors"></div>
+
+<h2>3. 灰阶（systemGray 家族）</h2>
+<div class="swatches" id="grays"></div>
+
+<h2>4. 标签色 / 分隔线 / 填充</h2>
+<p class="note">
+  这些必须是<b>带 alpha 的形式</b>而不是实色 —— 它们要透出下面的玻璃材质，
+  换成实色会立刻失去 iOS 的观感（PROJECT_SPEC §6）。
+</p>
+<div class="swatches" id="labels"></div>
+
+<h2>5. 内容层标准材质</h2>
+<p class="note">
+  PROJECT_SPEC 未覆盖，研究阶段补入。Apple 原文：内容层继续提供
+  ultra-thin / thin / regular / thick 四档标准材质。
+  <b>内容型组件（Card / Table / List）用这一组，不用 Liquid Glass。</b>
+</p>
+<div class="matrix" id="contentMaterials" style="grid-template-columns:repeat(4,1fr)"></div>
+
+<h2>6. 圆角与连续曲率</h2>
+<p class="note" id="cornerNote"></p>
+<div class="radii" id="radii"></div>
+
+<h2>7. 同心圆角 <code>concentricRadius()</code></h2>
+<p class="note">
+  Apple 的定义是「子角与父角<b>共圆心</b>」，推出 <code>子半径 = 父半径 − 内缩</code>。
+  但还有两条 PROJECT_SPEC 没写的：<b>逐角解析</b>，以及<b>离容器角太远时半径归零</b>（变方角），
+  逃生口是 <code>minimum</code>。
+</p>
+<table id="concentricTable"></table>
+
+<h2>8. Layer 3 · shadcn 兼容层覆盖核对</h2>
+<p class="note">
+  逐项对照 <code>ui.shadcn.com/docs/theming</code>（2026-08-31 抓取）。
+  绿色 = 已定义且解析出有效值。
+</p>
+<table id="shadcnTable"></table>
+
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const root = document.documentElement;
+
+/* ── 8 宫格 ──────────────────────────────────────────────────────────
+   插值表与 GlassProvider 的 resolveMaterial 保持一致 */
+const STOPS = {
+  light: [[0.34,8,1.9,0.5],[0.62,14,1.7,1.0],[0.78,20,1.35,1.3],[0.96,26,1.05,1.6]],
+  dark:  [[0.22,8,1.8,0.6],[0.44,14,1.6,1.0],[0.62,20,1.3,1.35],[0.94,26,1.0,1.7]],
+};
+const STEP_NAMES = ['0 clear','1 default','2 tinted','3 solid'];
+const TINTS = [0, 1/3, 2/3, 1];
+
+function materialAt(tint, scheme){
+  const s = STOPS[scheme];
+  const pos = Math.min(1, Math.max(0, tint)) * 3;
+  const i = Math.min(2, Math.floor(pos)), t = pos - i;
+  const L = (a,b) => a + (b-a)*t;
+  return {alpha:L(s[i][0],s[i+1][0]), blur:L(s[i][1],s[i+1][1]),
+          sat:L(s[i][2],s[i+1][2]), stroke:L(s[i][3],s[i+1][3])};
+}
+
+function buildMatrix(container, scheme){
+  container.innerHTML = '';
+  TINTS.forEach((tint, idx) => {
+    const m = materialAt(tint, scheme);
+    const cell = document.createElement('div');
+    cell.className = 'cell' + (scheme === 'dark' ? ' dark darkcell' : '');
+    cell.style.setProperty('--lg-base-alpha', m.alpha.toFixed(4));
+    cell.style.setProperty('--lg-base-blur', m.blur.toFixed(2) + 'px');
+    cell.style.setProperty('--lg-base-saturate', m.sat.toFixed(3));
+    cell.style.setProperty('--lg-stroke-strength', m.stroke.toFixed(3));
+    cell.innerHTML = `
+      <div class="bed">
+        <div class="txt">${'LEGIBILITY 0123456789 the quick brown fox jumps over the lazy dog. '.repeat(40)}</div>
+        <div class="lg-surface pill" data-layer="base" style="--lg-surface-radius:22px">
+          <div class="lg-surface s" data-layer="indicator" style="--lg-surface-radius:15px">选中</div>
+          <div class="s">未选</div>
+        </div>
+      </div>
+      <div class="cap"><b>${STEP_NAMES[idx]}</b> · ${scheme}<br>
+        alpha ${m.alpha.toFixed(2)} · blur ${m.blur.toFixed(0)}px · sat ${m.sat.toFixed(2)}</div>`;
+    container.appendChild(cell);
+  });
+}
+buildMatrix($('matrixLight'), 'light');
+buildMatrix($('matrixDark'), 'dark');
+
+/* ── 色板 ─────────────────────────────────────────────────────────── */
+function swatches(container, entries){
+  container.innerHTML = entries.map(([name, varName]) => {
+    const val = getComputedStyle(root).getPropertyValue(varName).trim();
+    return `<div class="sw">
+      <div class="chip" style="background:var(${varName})"></div>
+      <div class="meta"><b>${name}</b>${varName}<br>${val || '(未解析)'}</div>
+    </div>`;
+  }).join('');
+}
+
+const SYSTEM = [['blue','--lg-blue'],['green','--lg-green'],['red','--lg-red'],
+  ['orange','--lg-orange'],['yellow','--lg-yellow'],['pink','--lg-pink'],
+  ['purple','--lg-purple'],['indigo','--lg-indigo'],['teal','--lg-teal']];
+const GRAYS = [1,2,3,4,5,6].map(n => [`gray ${n}`, `--lg-gray-${n}`]);
+const LABELS = [['label','--lg-label-primary'],['secondary','--lg-label-secondary'],
+  ['tertiary','--lg-label-tertiary'],['quaternary','--lg-label-quaternary'],
+  ['separator','--lg-separator'],['separator opaque','--lg-separator-opaque'],
+  ['fill','--lg-fill-primary'],['fill 2','--lg-fill-secondary'],
+  ['fill 3','--lg-fill-tertiary'],['fill 4','--lg-fill-quaternary']];
+
+/* ── 内容层材质 ───────────────────────────────────────────────────── */
+function buildContent(){
+  $('contentMaterials').innerHTML = ['ultrathin','thin','regular','thick'].map(m => `
+    <div class="cell">
+      <div class="bed">
+        <div class="lg-content" data-material="${m}"
+             style="position:relative;z-index:2;padding:16px 20px;border-radius:14px;
+                    font-size:13px;font-weight:600">${m}</div>
+      </div>
+      <div class="cap"><b>${m}</b> · --lg-content-${m}</div>
+    </div>`).join('');
+}
+
+/* ── 圆角 ─────────────────────────────────────────────────────────── */
+const supportsSquircle = CSS.supports('corner-shape','squircle');
+$('cornerNote').innerHTML = supportsSquircle
+  ? '本浏览器<b>原生支持</b> <code>corner-shape: squircle</code> —— 右侧两块对比可见连续曲率与普通圆弧的差别。'
+  : '本浏览器<b>不支持</b> <code>corner-shape</code>，连续曲率自然回退为普通 <code>border-radius</code>（渐进增强，不影响可用性）。';
+$('radii').innerHTML =
+  ['sm','md','lg','xl'].map(k =>
+    `<div><div class="rbox" style="border-radius:var(--lg-radius-${k})">${k}</div></div>`).join('') +
+  `<div><div class="rbox lg-continuous" style="border-radius:34px;background:var(--lg-purple)">
+      continuous<br>(squircle)</div></div>
+   <div><div class="rbox" style="border-radius:34px;background:var(--lg-gray-1)">
+      普通<br>border-radius</div></div>`;
+
+/* ── 同心圆角 ─────────────────────────────────────────────────────── */
+const CASES = [
+  [26, 7, {}, 'tab bar 外壳 26px，指示器内缩 7px'],
+  [34, 12, {}, 'sheet 34px，内容内缩 12px'],
+  [22, 22, {}, '内缩等于父半径 → 归零（变方角）'],
+  [22, 30, {}, '内缩超过父半径 → 归零'],
+  [22, 30, {minimum: 8}, '同上但指定 minimum:8 → 保底 8px'],
+  [26, 0, {}, '无内缩 → 与父同半径'],
+];
+function concentricRadius(parentRadius, inset, o = {}){
+  const {minimum = 0, falloff = parentRadius} = o;
+  if (inset < 0) return Math.max(minimum, parentRadius - inset);
+  if (inset >= falloff) return minimum;
+  return Math.max(minimum, parentRadius - inset);
+}
+$('concentricTable').innerHTML =
+  '<tr><th>父半径</th><th>内缩</th><th>options</th><th>结果</th><th>场景</th></tr>' +
+  CASES.map(([p,i,o,d]) =>
+    `<tr><td>${p}px</td><td>${i}px</td><td><code>${JSON.stringify(o)}</code></td>
+     <td><b>${concentricRadius(p,i,o)}px</b></td><td>${d}</td></tr>`).join('');
+
+/* ── shadcn 覆盖核对 ──────────────────────────────────────────────── */
+const SHADCN_TOKENS = ['radius','background','foreground','card','card-foreground',
+ 'popover','popover-foreground','primary','primary-foreground','secondary',
+ 'secondary-foreground','muted','muted-foreground','accent','accent-foreground',
+ 'destructive','destructive-foreground','border','input','ring',
+ 'chart-1','chart-2','chart-3','chart-4','chart-5',
+ 'sidebar','sidebar-foreground','sidebar-primary','sidebar-primary-foreground',
+ 'sidebar-accent','sidebar-accent-foreground','sidebar-border','sidebar-ring'];
+
+function buildShadcnTable(){
+  const cs = getComputedStyle(root);
+  let ok = 0;
+  const rows = SHADCN_TOKENS.map(t => {
+    const v = cs.getPropertyValue('--' + t).trim();
+    const good = v !== '';
+    if (good) ok++;
+    return `<tr><td><code>--${t}</code></td>
+      <td style="color:${good ? 'var(--lg-green)' : 'var(--lg-red)'}">${good ? '✓' : '✗ 缺失'}</td>
+      <td><code>${v || '—'}</code></td></tr>`;
+  }).join('');
+  $('shadcnTable').innerHTML =
+    `<tr><th>Token</th><th>状态</th><th>解析值</th></tr>${rows}` +
+    `<tr><th colspan="3">覆盖 ${ok} / ${SHADCN_TOKENS.length}
+       （<code>--destructive-foreground</code> 当前 shadcn 已不使用，本库为兼容第三方组件保留）</th></tr>`;
+}
+
+function refresh(){
+  swatches($('systemColors'), SYSTEM);
+  swatches($('grays'), GRAYS);
+  swatches($('labels'), LABELS);
+  buildContent();
+  buildShadcnTable();
+}
+refresh();
+
+$('themeBtn').onclick = () => {
+  const dark = root.getAttribute('data-glass-theme') === 'dark';
+  root.setAttribute('data-glass-theme', dark ? 'light' : 'dark');
+  root.classList.toggle('dark', !dark);
+  refresh();
+};
+$('contrastBtn').onclick = () => {
+  const more = root.getAttribute('data-glass-contrast') === 'more';
+  root.setAttribute('data-glass-contrast', more ? 'normal' : 'more');
+  refresh();
+};
+</script>
+</body>
+</html>

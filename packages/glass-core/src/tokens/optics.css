@@ -1,0 +1,216 @@
+/**
+ * 渲染路径 —— `.lg-surface` 原语在 Tier A / B / C 下的三套实现。
+ *
+ * 本文件**不再定义 token**：Layer 1 在 primitive.css，Layer 2 在 semantic.css。
+ * 单独引本文件时请先引那两个（或直接引 theme.css）。
+ *
+ * 所有分支一律用属性选择器：
+ *   [data-glass-tier="a|b|c"]       三级渲染路径
+ *   [data-glass-theme="light|dark"] 明暗（与 .dark class 并行写，兼容 shadcn 生态）
+ *   [data-glass-contrast="more"]    prefers-contrast: more
+ *   [data-glass-motion="reduced"]   prefers-reduced-motion
+ */
+
+/* ══════════════════════════════════════════════════════════════════════
+   GlassSurface 基础
+   ══════════════════════════════════════════════════════════════════════ */
+
+.lg-surface {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--lg-surface-radius, var(--lg-radius-md));
+  color: var(--lg-label);
+  transition:
+    background-color 240ms linear,
+    box-shadow 240ms linear;
+}
+
+/* 大圆角容器用连续曲率。Chromium 148+ 原生支持；其余浏览器自然回退普通圆角。
+   —— 这取代了 PROJECT_SPEC §6 的 SVG path / paint() worklet 方案，见 STATUS.md 质疑 #3 */
+@supports (corner-shape: squircle) {
+  .lg-surface[data-continuous='true'] {
+    corner-shape: squircle;
+  }
+}
+
+:root[data-glass-motion='reduced'] .lg-surface {
+  transition-duration: 120ms;
+}
+
+/* ── Layer B · 磨砂底座 ────────────────────────────────────────────────
+   首要职责是可读性。**禁止**对底座使用 feDisplacementMap（PROJECT_SPEC §15.2）——
+   底座扭曲会直接毁掉其上文字的可读性。 */
+.lg-surface[data-layer='base'] {
+  background-color: rgb(var(--lg-base-color) / var(--lg-base-alpha));
+  box-shadow:
+    inset 0 1px 0 0 var(--lg-stroke-top),
+    inset 0 -1px 0 0 var(--lg-stroke-bottom),
+    var(--lg-shadow);
+}
+
+.lg-surface[data-layer='elevated'] {
+  background-color: rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)));
+  box-shadow:
+    inset 0 1px 0 0 var(--lg-stroke-top),
+    inset 0 -1px 0 0 var(--lg-stroke-bottom),
+    var(--lg-shadow),
+    var(--lg-glow);
+}
+
+/* ── Layer I · 强玻璃指示器 ────────────────────────────────────────────
+   关键：指示器区域看到的背景应当比底座**更清晰**，而不是更模糊。
+   所以这里不再叠加 blur（Tier A 完全不叠，Tier B 仅 1px），
+   只叠折射 + 高光 + 提亮。 */
+.lg-surface[data-layer='indicator'] {
+  background-color: transparent;
+  box-shadow:
+    /* 上缘镜面高光 */
+    inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),
+    /* 下缘暗边，制造厚度 */
+    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.28),
+    /* 侧缘微亮，暗示曲面 */
+    inset 1px 0 1px -0.5px var(--lg-stroke-side),
+    inset -1px 0 1px -0.5px var(--lg-stroke-side),
+    0 3px 10px rgb(0 0 0 / 0.26);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Tier A —— 完整方案：SVG 折射 + 三通道色散
+   ══════════════════════════════════════════════════════════════════════ */
+
+[data-glass-tier='a'] .lg-surface[data-layer='base'],
+[data-glass-tier='a'] .lg-surface[data-layer='elevated'] {
+  backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+}
+
+/* 指示器的完整 backdrop-filter（含运行时生成的 filter id）由 JS 以**内联样式**注入，
+   会覆盖这条规则。这里是折射尚未就绪时的兜底：只提亮与饱和。
+   注意**没有 blur** —— 叠加模糊会让分层立刻塌掉。
+
+   （不用 `var(--lg-indicator-filter, none) brightness(...)` 的写法：
+     变量缺省时会展开成 `none brightness(...)`，那是无效值，整条声明会被丢弃。） */
+[data-glass-tier='a'] .lg-surface[data-layer='indicator'] {
+  backdrop-filter: brightness(1.06) saturate(1.22);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Tier B —— 无真折射：多层 inset 阴影模拟边缘透镜 + 渐变边框模拟色散彩边
+   这不是「坏掉的版本」，它必须自己看起来是完成度很高的设计。
+   ══════════════════════════════════════════════════════════════════════ */
+
+[data-glass-tier='b'] .lg-surface[data-layer='base'],
+[data-glass-tier='b'] .lg-surface[data-layer='elevated'] {
+  backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+}
+
+[data-glass-tier='b'] .lg-surface[data-layer='indicator'] {
+  /* ≤2px 的微模糊 + 提亮，模拟「透镜把背景拉近」的观感 */
+  backdrop-filter: blur(1px) brightness(1.12) saturate(1.3);
+  -webkit-backdrop-filter: blur(1px) brightness(1.12) saturate(1.3);
+  box-shadow:
+    inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),
+    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),
+    /* 多层递减的 inset，模拟边缘透镜的压缩感 */
+    inset 0 0 2px 1px rgb(255 255 255 / 0.16),
+    inset 0 0 8px 3px rgb(255 255 255 / 0.08),
+    0 3px 10px rgb(0 0 0 / 0.26);
+}
+
+/* 折射未生效时（Tier A 但超过性能红线 / 滤镜尚未就绪）借用 Tier B 的处理，
+   这样降级实例仍然是一个完成度正确的设计，而不是一块空白。 */
+.lg-surface[data-layer='indicator'][data-refraction='off'] {
+  backdrop-filter: blur(1px) brightness(1.12) saturate(1.3);
+  -webkit-backdrop-filter: blur(1px) brightness(1.12) saturate(1.3);
+  box-shadow:
+    inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),
+    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),
+    inset 0 0 2px 1px rgb(255 255 255 / 0.16),
+    inset 0 0 8px 3px rgb(255 255 255 / 0.08),
+    0 3px 10px rgb(0 0 0 / 0.26);
+}
+
+/* 用渐变边框模拟色散彩边。Tier B 拿不到真色散，但能拿到「边缘有彩色」这个信号。 */
+[data-glass-tier='b'] .lg-surface[data-layer='indicator']::before,
+.lg-surface[data-layer='indicator'][data-refraction='off']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    rgb(255 110 180 / 0.55) 0%,
+    rgb(120 200 255 / 0.15) 35%,
+    rgb(140 255 220 / 0.12) 60%,
+    rgb(180 130 255 / 0.5) 100%
+  );
+  /* 只保留描边部分 */
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Tier C —— 无 backdrop-filter：半透明纯色 + 描边 + 渐变高光
+   结构与可读性必须完全正确，只是没有玻璃感。
+   ══════════════════════════════════════════════════════════════════════ */
+
+[data-glass-tier='c'] .lg-surface[data-layer='base'],
+[data-glass-tier='c'] .lg-surface[data-layer='elevated'] {
+  /* 不透明度拉高来补偿没有模糊 —— 否则背景内容会直接糊掉前景文字 */
+  background-color: rgb(var(--lg-base-color) / min(1, calc(var(--lg-base-alpha) + 0.26)));
+}
+
+[data-glass-tier='c'] .lg-surface[data-layer='indicator'] {
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.32) 0%,
+    rgb(255 255 255 / 0.16) 46%,
+    rgb(255 255 255 / 0.22) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.75),
+    inset 0 -1px 0 0 rgb(0 0 0 / 0.2),
+    0 2px 8px rgb(0 0 0 / 0.22);
+}
+
+[data-glass-tier='c'][data-glass-theme='dark'] .lg-surface[data-layer='indicator'] {
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.2) 0%,
+    rgb(255 255 255 / 0.08) 46%,
+    rgb(255 255 255 / 0.13) 100%
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   交互态 —— 静止态弱、交互态强，这是核心节奏
+   对应 Apple: "the knob transforms into Liquid Glass during interaction"
+   ══════════════════════════════════════════════════════════════════════ */
+
+.lg-surface[data-layer='indicator'][data-pressed='true'] {
+  box-shadow:
+    inset 0 2px 1.5px -0.5px rgb(255 255 255 / var(--lg-specular-opacity)),
+    inset 0 -1.5px 1.5px -0.5px rgb(0 0 0 / 0.34),
+    inset 1px 0 1.5px -0.5px var(--lg-stroke-side),
+    inset -1px 0 1.5px -0.5px var(--lg-stroke-side),
+    0 5px 16px rgb(0 0 0 / 0.32);
+}
+
+[data-glass-tier='a'] .lg-surface[data-layer='indicator'][data-pressed='true'] {
+  backdrop-filter: brightness(1.12) saturate(1.4);
+}
+
+/* 焦点环必须在玻璃上清晰可见 */
+.lg-surface:focus-visible {
+  outline: 2px solid var(--lg-ring, rgb(10 132 255));
+  outline-offset: 2px;
+}

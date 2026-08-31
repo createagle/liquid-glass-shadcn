@@ -1,0 +1,112 @@
+/**
+ * Layer 1 · Primitive —— 原始值，与语义无关。
+ * 对应 PROJECT_SPEC §6。
+ *
+ * 本层只放**常量**：不随主题变化的原始阶梯，以及 iOS 调色板的
+ * light / dark 两套原始取值（用 `-light` / `-dark` 后缀区分）。
+ * 「当前主题下该用哪一个」由 Layer 2（semantic.css）决定 —— 这是分层的关键。
+ *
+ * ⚠️ 关于 iOS 系统色的可信度：Apple 明确写着
+ *   "Avoid hard-coding system color values in your app. Documented color values are for
+ *    your reference during the app design process. The actual color values may fluctuate
+ *    from release to release."
+ *   —— https://developer.apple.com/design/human-interface-guidelines/color
+ * Web 端没有系统色 API，硬编码是唯一选择，但这组值的可信度是
+ * **[待核实 · 社区通行值]**，不是 [官方]。详见 docs/research/apple-metrics.md §9。
+ */
+
+:root {
+  /* ── 模糊阶梯 ──────────────────────────────────────────────────────── */
+  --lg-blur-1: 4px;
+  --lg-blur-2: 8px;
+  --lg-blur-3: 14px;
+  --lg-blur-4: 20px;
+  --lg-blur-5: 30px;
+
+  /* ── 饱和度阶梯 ────────────────────────────────────────────────────── */
+  --lg-sat-1: 1.2;
+  --lg-sat-2: 1.7;
+  --lg-sat-3: 2.2;
+
+  /* ── 折射 / 色散阶梯 ───────────────────────────────────────────────
+     来自 Phase 1 视觉标定（docs/research/optics-web.md §3.7）。
+     [实测]，非 [官方] —— 标定时没有 iOS 参考截图。 */
+  --lg-refract-1: -110;
+  --lg-refract-2: -180;
+  --lg-refract-3: -260;
+
+  --lg-disperse-1: 19;
+  --lg-disperse-2: 38;
+  --lg-disperse-3: 58;
+
+  /* ── 圆角 ──────────────────────────────────────────────────────────
+     --lg-radius-continuous 由 shape/concentric.ts 与 `corner-shape` 配合使用 */
+  --lg-radius-sm: 8px;
+  --lg-radius-md: 14px;
+  --lg-radius-lg: 22px;
+  --lg-radius-xl: 34px;
+  --lg-radius-continuous: 34px;
+
+  /* ── iOS 系统色 · light ────────────────────────────────────────────── */
+  --lg-ios-blue-light: #007aff;
+  --lg-ios-green-light: #34c759;
+  --lg-ios-red-light: #ff3b30;
+  --lg-ios-orange-light: #ff9500;
+  --lg-ios-yellow-light: #ffcc00;
+  --lg-ios-pink-light: #ff2d55;
+  --lg-ios-purple-light: #af52de;
+  --lg-ios-indigo-light: #5856d6;
+  --lg-ios-teal-light: #30b0c7;
+
+  --lg-gray-1-light: #8e8e93;
+  --lg-gray-2-light: #aeaeb2;
+  --lg-gray-3-light: #c7c7cc;
+  --lg-gray-4-light: #d1d1d6;
+  --lg-gray-5-light: #e5e5ea;
+  --lg-gray-6-light: #f2f2f7;
+
+  /* ── iOS 系统色 · dark ─────────────────────────────────────────────── */
+  --lg-ios-blue-dark: #0a84ff;
+  --lg-ios-green-dark: #30d158;
+  --lg-ios-red-dark: #ff453a;
+  --lg-ios-orange-dark: #ff9f0a;
+  --lg-ios-yellow-dark: #ffd60a;
+  --lg-ios-pink-dark: #ff375f;
+  --lg-ios-purple-dark: #bf5af2;
+  --lg-ios-indigo-dark: #5e5ce6;
+  --lg-ios-teal-dark: #40c8e0;
+
+  --lg-gray-1-dark: #8e8e93;
+  --lg-gray-2-dark: #636366;
+  --lg-gray-3-dark: #48484a;
+  --lg-gray-4-dark: #3a3a3c;
+  --lg-gray-5-dark: #2c2c2e;
+  --lg-gray-6-dark: #1c1c1e;
+
+  /* ── 标签 / 分隔线的原始通道值 ──────────────────────────────────────
+     必须保留为「基色 + alpha」的形式：这些颜色要**透出下面的玻璃材质**，
+     换成实色会立刻失去 iOS 的观感（PROJECT_SPEC §6）。 */
+  --lg-label-base-light: 0 0 0;
+  --lg-label-base-dark: 255 255 255;
+  --lg-label-tint-light: 60 60 67; /* #3C3C43 */
+  --lg-label-tint-dark: 235 235 245; /* #EBEBF5 */
+  --lg-separator-tint-light: 60 60 67;
+  --lg-separator-tint-dark: 84 84 88; /* #545458 */
+  --lg-separator-opaque-light: #c6c6c8;
+  --lg-separator-opaque-dark: #38383a;
+
+  /* systemFill 家族的基色（iOS 用同一个基色配不同 alpha） */
+  --lg-fill-base-light: 120 120 128; /* #787880 */
+  --lg-fill-base-dark: 120 120 128;
+
+  /* ── 材质档位插值端点 ──────────────────────────────────────────────
+     GlassProvider 会在这 4 个档位之间**连续插值**并写入
+     --lg-base-alpha / --lg-base-blur / --lg-base-saturate / --lg-stroke-strength。
+     这里列出端点值，既作为文档，也作为无 JS 时的参考。
+     命名：0=clear 1=default 2=tinted 3=solid */
+  --lg-stop-alpha-light: 0.34, 0.62, 0.78, 0.96;
+  --lg-stop-alpha-dark: 0.22, 0.44, 0.62, 0.94;
+  --lg-stop-blur: 8px, 14px, 20px, 26px;
+  --lg-stop-saturate-light: 1.9, 1.7, 1.35, 1.05;
+  --lg-stop-saturate-dark: 1.8, 1.6, 1.3, 1;
+}

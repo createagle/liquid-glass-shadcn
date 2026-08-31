@@ -1,0 +1,198 @@
+/**
+ * Layer 2 · Semantic —— 材质与角色。
+ * 对应 PROJECT_SPEC §6 / §7。
+ *
+ * 本层把 Layer 1 的原始值解析成「当前主题下的语义值」。
+ *
+ * **四套完整定义**，不是两套：
+ *   light · dark · light+高对比 · dark+高对比
+ * 依据 Apple 原文：
+ *   "If you define a custom color, make sure to supply light and dark variants,
+ *    **and an increased contrast option for each variant**…"
+ *   —— https://developer.apple.com/design/human-interface-guidelines/color
+ * PROJECT_SPEC §7 只要求 light / dark 两套，这是本项目在研究阶段补上的一条。
+ * 见 docs/research/STATUS.md §3 第 9 条。
+ *
+ * 明暗不是「暗色 = 亮色降透明度」—— 玻璃在明暗下的物理表现本来就不同，
+ * 折射强度、色散偏向、高光强度、落影 vs 外发光都各自独立取值（PROJECT_SPEC §7 的差异表）。
+ */
+
+:root {
+  /* ── 系统色（light） ───────────────────────────────────────────────── */
+  --lg-blue: var(--lg-ios-blue-light);
+  --lg-green: var(--lg-ios-green-light);
+  --lg-red: var(--lg-ios-red-light);
+  --lg-orange: var(--lg-ios-orange-light);
+  --lg-yellow: var(--lg-ios-yellow-light);
+  --lg-pink: var(--lg-ios-pink-light);
+  --lg-purple: var(--lg-ios-purple-light);
+  --lg-indigo: var(--lg-ios-indigo-light);
+  --lg-teal: var(--lg-ios-teal-light);
+
+  --lg-gray-1: var(--lg-gray-1-light);
+  --lg-gray-2: var(--lg-gray-2-light);
+  --lg-gray-3: var(--lg-gray-3-light);
+  --lg-gray-4: var(--lg-gray-4-light);
+  --lg-gray-5: var(--lg-gray-5-light);
+  --lg-gray-6: var(--lg-gray-6-light);
+
+  /* ── 标签色（带 alpha，必须透出玻璃） ──────────────────────────────── */
+  --lg-label-primary: rgb(var(--lg-label-base-light));
+  --lg-label-secondary: rgb(var(--lg-label-tint-light) / 0.6);
+  --lg-label-tertiary: rgb(var(--lg-label-tint-light) / 0.3);
+  --lg-label-quaternary: rgb(var(--lg-label-tint-light) / 0.18);
+
+  --lg-separator: rgb(var(--lg-separator-tint-light) / 0.29);
+  --lg-separator-opaque: var(--lg-separator-opaque-light);
+
+  --lg-fill-primary: rgb(var(--lg-fill-base-light) / 0.2);
+  --lg-fill-secondary: rgb(var(--lg-fill-base-light) / 0.16);
+  --lg-fill-tertiary: rgb(var(--lg-fill-base-light) / 0.12);
+  --lg-fill-quaternary: rgb(var(--lg-fill-base-light) / 0.08);
+
+  /* ── 玻璃材质（控件与导航层） ──────────────────────────────────────
+     --lg-base-* 由 GlassProvider 按材质档位连续插值写入；
+     这里给出 default 档的兜底值，保证无 JS 时也能看。 */
+  --lg-tint: 0.34;
+  --lg-base-alpha: 0.62;
+  --lg-base-blur: 14px;
+  --lg-base-saturate: 1.7;
+  --lg-stroke-strength: 1;
+
+  --lg-base-color: 255 255 255;
+  --lg-elevated-color: 255 255 255;
+
+  --lg-material-base: rgb(var(--lg-base-color) / var(--lg-base-alpha));
+  --lg-material-elevated: rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)));
+  /* 指示器本身不带底色 —— 它是「浮在磨砂板上的玻璃透镜」，靠折射与高光成形 */
+  --lg-material-indicator: transparent;
+
+  /* ── 内容层标准材质（PROJECT_SPEC 未覆盖，由研究阶段补入） ──────────
+     Apple 原文："iOS and iPadOS continue to provide four standard materials —
+     ultra-thin, thin, regular (default), and thick — which you can use in the
+     content layer to help create visual distinction."
+     内容型组件（Card / Table / List / Accordion）用这一组，**不用 Liquid Glass**。
+     见 docs/research/apple-liquid-glass.md §7。 */
+  --lg-content-ultrathin: rgb(255 255 255 / 0.44);
+  --lg-content-thin: rgb(255 255 255 / 0.62);
+  --lg-content-regular: rgb(255 255 255 / 0.78);
+  --lg-content-thick: rgb(255 255 255 / 0.92);
+  --lg-content-blur: 20px;
+
+  /* ── 描边 ──────────────────────────────────────────────────────────
+     light：上缘白色高光更强、下缘深色阴影弱 */
+  --lg-stroke-top: rgb(255 255 255 / calc(0.62 * var(--lg-stroke-strength)));
+  --lg-stroke-bottom: rgb(0 0 0 / calc(0.1 * var(--lg-stroke-strength)));
+  --lg-stroke-side: rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)));
+
+  /* ── 光学表现的明暗差异（PROJECT_SPEC §7 差异表） ──────────────────── */
+  --lg-specular-opacity: 0.72; /* light 下高光要克制，白底上易过曝 */
+  --lg-shadow: 0 8px 26px rgb(16 22 40 / 0.18), 0 1px 2px rgb(16 22 40 / 0.1);
+  --lg-glow: none; /* light 用落影分离层级 */
+  --lg-refract-scale: 0.85; /* light 下折射略低：浅背景上畸变太显脏 */
+  --lg-disperse-scale: 0.9; /* light 下色散偏冷 */
+
+  /* ── 焦点环：在玻璃上必须清晰可见 ──────────────────────────────────── */
+  --lg-ring: var(--lg-blue);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Dark —— 独立完整定义一套，不是亮色降透明度
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root[data-glass-theme='dark'],
+.dark {
+  --lg-blue: var(--lg-ios-blue-dark);
+  --lg-green: var(--lg-ios-green-dark);
+  --lg-red: var(--lg-ios-red-dark);
+  --lg-orange: var(--lg-ios-orange-dark);
+  --lg-yellow: var(--lg-ios-yellow-dark);
+  --lg-pink: var(--lg-ios-pink-dark);
+  --lg-purple: var(--lg-ios-purple-dark);
+  --lg-indigo: var(--lg-ios-indigo-dark);
+  --lg-teal: var(--lg-ios-teal-dark);
+
+  --lg-gray-1: var(--lg-gray-1-dark);
+  --lg-gray-2: var(--lg-gray-2-dark);
+  --lg-gray-3: var(--lg-gray-3-dark);
+  --lg-gray-4: var(--lg-gray-4-dark);
+  --lg-gray-5: var(--lg-gray-5-dark);
+  --lg-gray-6: var(--lg-gray-6-dark);
+
+  --lg-label-primary: rgb(var(--lg-label-base-dark));
+  --lg-label-secondary: rgb(var(--lg-label-tint-dark) / 0.6);
+  --lg-label-tertiary: rgb(var(--lg-label-tint-dark) / 0.3);
+  /* 注意 dark 的 quaternary 是 16% 不是 18% —— 不是笔误，iOS 两侧确实不对称 */
+  --lg-label-quaternary: rgb(var(--lg-label-tint-dark) / 0.16);
+
+  --lg-separator: rgb(var(--lg-separator-tint-dark) / 0.65);
+  --lg-separator-opaque: var(--lg-separator-opaque-dark);
+
+  --lg-fill-primary: rgb(var(--lg-fill-base-dark) / 0.36);
+  --lg-fill-secondary: rgb(var(--lg-fill-base-dark) / 0.32);
+  --lg-fill-tertiary: rgb(var(--lg-fill-base-dark) / 0.24);
+  --lg-fill-quaternary: rgb(var(--lg-fill-base-dark) / 0.18);
+
+  --lg-base-alpha: 0.44;
+  --lg-base-color: 20 20 24;
+  --lg-elevated-color: 32 32 38;
+
+  --lg-content-ultrathin: rgb(28 28 30 / 0.5);
+  --lg-content-thin: rgb(28 28 30 / 0.66);
+  --lg-content-regular: rgb(28 28 30 / 0.8);
+  --lg-content-thick: rgb(28 28 30 / 0.94);
+
+  /* dark：上缘白色高光弱且更冷、整体描边偏亮 */
+  --lg-stroke-top: rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)));
+  --lg-stroke-bottom: rgb(0 0 0 / calc(0.34 * var(--lg-stroke-strength)));
+  --lg-stroke-side: rgb(255 255 255 / calc(0.16 * var(--lg-stroke-strength)));
+
+  --lg-specular-opacity: 1; /* dark 下高光是主要的「玻璃」信号 */
+  --lg-shadow: 0 1px 1px rgb(0 0 0 / 0.34); /* 落影极弱 */
+  --lg-glow: 0 0 24px rgb(255 255 255 / 0.06); /* 改用外发光分离层级 */
+  --lg-refract-scale: 1.1; /* dark 下折射更高且不伤可读性 */
+  --lg-disperse-scale: 1.15; /* dark 下色散更饱和 */
+
+  /* ⚠️ 下面这几项必须在这里重写一遍。
+     CSS 自定义属性的 var() 在**声明处**求值：`--lg-material-base` 声明在 :root 上，
+     就用 root 当时的 --lg-base-color / --lg-base-alpha 算定了，
+     后代继承的是算好的浅色值，不会因为进了 .dark 就重算。
+     同一个坑在 shadcn.css 的 .dark 块里有更详细的说明。 */
+  --lg-material-base: rgb(var(--lg-base-color) / var(--lg-base-alpha));
+  --lg-material-elevated: rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)));
+  --lg-ring: var(--lg-blue);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   高对比（prefers-contrast: more）—— light / dark 各自一套
+   Apple：提高描边对比、把标签色升到实色、加强分隔线
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root[data-glass-contrast='more'] {
+  --lg-stroke-strength: 1.8;
+  --lg-label-secondary: rgb(var(--lg-label-tint-light) / 0.85);
+  --lg-label-tertiary: rgb(var(--lg-label-tint-light) / 0.6);
+  --lg-label-quaternary: rgb(var(--lg-label-tint-light) / 0.4);
+  --lg-separator: rgb(var(--lg-separator-tint-light) / 0.6);
+  --lg-separator-opaque: #8e8e93;
+  /* 高对比下折射与色散都要收敛 —— 畸变本身会降低可读性 */
+  --lg-refract-scale: 0.5;
+  --lg-disperse-scale: 0.4;
+
+  /* 同上：描边引用了 --lg-stroke-strength，不在这里重写就不会变强 */
+  --lg-stroke-top: rgb(255 255 255 / calc(0.62 * var(--lg-stroke-strength)));
+  --lg-stroke-bottom: rgb(0 0 0 / calc(0.1 * var(--lg-stroke-strength)));
+  --lg-stroke-side: rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)));
+}
+
+:root[data-glass-contrast='more'][data-glass-theme='dark'],
+.dark:root[data-glass-contrast='more'] {
+  --lg-label-secondary: rgb(var(--lg-label-tint-dark) / 0.9);
+  --lg-label-tertiary: rgb(var(--lg-label-tint-dark) / 0.7);
+  --lg-label-quaternary: rgb(var(--lg-label-tint-dark) / 0.5);
+  --lg-separator: rgb(200 200 210 / 0.7);
+  --lg-separator-opaque: #6e6e73;
+  --lg-stroke-top: rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)));
+  --lg-stroke-bottom: rgb(0 0 0 / calc(0.34 * var(--lg-stroke-strength)));
+  --lg-stroke-side: rgb(255 255 255 / calc(0.16 * var(--lg-stroke-strength)));
+}

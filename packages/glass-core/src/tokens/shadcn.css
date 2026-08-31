@@ -1,0 +1,225 @@
+/**
+ * Layer 3 · shadcn 兼容层。
+ * 对应 PROJECT_SPEC §6。
+ *
+ * **本层是对 Layer 2 的别名映射，不是独立定义。** 改配色请改 semantic.css。
+ *
+ * 覆盖范围已对照 https://ui.shadcn.com/docs/theming 逐项核对（2026-08-31），
+ * 不是凭记忆写的。核对时发现两处与旧版认知不同：
+ *
+ *   1. **`--destructive-foreground` 已不存在。** 当前 shadcn 的 button 用
+ *      `bg-destructive text-white`，不再引用配对的 foreground。
+ *      （用 `npx shadcn@latest view @shadcn/button` 核实过源码。）
+ *      为兼容仍在引用它的第三方组件，本层**仍然定义**它，但标注为兼容性保留。
+ *   2. `@theme inline` 的圆角阶梯是 **sm/md/lg/xl/2xl/3xl/4xl 七档**，不是四档。
+ *
+ * ── 一条重要的设计取舍 ──────────────────────────────────────────────
+ * Layer 3 一律映射到**可读的、接近不透明**的取值，而不是玻璃材质。
+ * 理由：第三方 shadcn 组件不会自带 `backdrop-filter`，
+ * 如果把 `--popover` 映射成半透明玻璃色，它们会直接糊掉。
+ * 本库自己的组件走 Layer 2（`--lg-material-*`）拿玻璃，不走这一层。
+ */
+
+/**
+ * shadcn 的 `dark:` 变体是**类驱动**的，靠这条自定义变体挂到 `.dark` 祖先上。
+ * 不写这一条，第三方 shadcn 组件里所有 `dark:*` 工具类都不会生效
+ * （它们会退回 Tailwind 默认的 `prefers-color-scheme`，与本库的 class 策略脱节）。
+ * 与 shadcn 官方模板保持一致。
+ */
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: var(--lg-radius-md);
+
+  --background: #ffffff;
+  --foreground: var(--lg-label-primary);
+
+  --card: #ffffff;
+  --card-foreground: var(--lg-label-primary);
+
+  --popover: #ffffff;
+  --popover-foreground: var(--lg-label-primary);
+
+  --primary: var(--lg-blue);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--lg-gray-5);
+  --secondary-foreground: var(--lg-label-primary);
+
+  --muted: var(--lg-gray-6);
+  --muted-foreground: var(--lg-label-secondary);
+
+  --accent: var(--lg-gray-5);
+  --accent-foreground: var(--lg-label-primary);
+
+  --destructive: var(--lg-red);
+  /* 兼容性保留：当前 shadcn 已不使用，见文件头说明 */
+  --destructive-foreground: #ffffff;
+
+  --border: var(--lg-separator);
+  --input: var(--lg-separator);
+  --ring: var(--lg-ring);
+
+  --chart-1: var(--lg-blue);
+  --chart-2: var(--lg-green);
+  --chart-3: var(--lg-orange);
+  --chart-4: var(--lg-purple);
+  --chart-5: var(--lg-pink);
+
+  --sidebar: var(--lg-gray-6);
+  --sidebar-foreground: var(--lg-label-primary);
+  --sidebar-primary: var(--lg-blue);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--lg-gray-5);
+  --sidebar-accent-foreground: var(--lg-label-primary);
+  --sidebar-border: var(--lg-separator);
+  --sidebar-ring: var(--lg-ring);
+}
+
+/**
+ * ⚠️ 必须把**每一项**都重新声明一遍，不能只写「变了的那几个」。
+ *
+ * 原因：CSS 自定义属性的 `var()` 是在**声明处**求值的，不是使用处。
+ * `--foreground: var(--lg-label-primary)` 声明在 `:root` 上，就用 root 当时的
+ * `--lg-label-primary`（浅色 = 黑）算定了；后代元素继承到的是**已经算好的黑色**，
+ * 即使它自己处在 `.dark` 上下文里、`--lg-label-primary` 已经变成白色，也不会重算。
+ *
+ * 结果就是暗色下文字仍是黑的 —— 深色背景 + 黑字，几乎不可读。
+ * 这个 bug 是被 debug/shadcn-compat 验证页抓出来的（Phase 2 自查项）。
+ *
+ * shadcn 官方模板不会踩到，是因为它在 `:root` 和 `.dark` 里都写**字面量**颜色，
+ * 没有 var() 间接层。本库既然要做「Layer 3 别名映射 Layer 2」，就必须付这个代价：
+ * **别名层要在每个主题块里完整重写一遍。**
+ */
+:root[data-glass-theme='dark'],
+.dark {
+  /* iOS 深色下的 systemBackground 是纯黑 */
+  --background: #000000;
+  --foreground: var(--lg-label-primary);
+
+  --card: var(--lg-gray-6);
+  --card-foreground: var(--lg-label-primary);
+
+  --popover: var(--lg-gray-5);
+  --popover-foreground: var(--lg-label-primary);
+
+  --primary: var(--lg-blue);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--lg-gray-5);
+  --secondary-foreground: var(--lg-label-primary);
+
+  --muted: var(--lg-gray-6);
+  --muted-foreground: var(--lg-label-secondary);
+
+  --accent: var(--lg-gray-5);
+  --accent-foreground: var(--lg-label-primary);
+
+  --destructive: var(--lg-red);
+  --destructive-foreground: #ffffff;
+
+  --border: var(--lg-separator);
+  --input: var(--lg-separator);
+  --ring: var(--lg-ring);
+
+  --chart-1: var(--lg-blue);
+  --chart-2: var(--lg-green);
+  --chart-3: var(--lg-orange);
+  --chart-4: var(--lg-purple);
+  --chart-5: var(--lg-pink);
+
+  --sidebar: var(--lg-gray-6);
+  --sidebar-foreground: var(--lg-label-primary);
+  --sidebar-primary: var(--lg-blue);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--lg-gray-5);
+  --sidebar-accent-foreground: var(--lg-label-primary);
+  --sidebar-border: var(--lg-separator);
+  --sidebar-ring: var(--lg-ring);
+}
+
+/* 高对比同理：凡是引用了会随对比度变化的 Layer 2 变量，都要在这里重写 */
+:root[data-glass-contrast='more'] {
+  --muted-foreground: var(--lg-label-secondary);
+  --border: var(--lg-separator);
+  --input: var(--lg-separator);
+}
+:root[data-glass-contrast='more'][data-glass-theme='dark'],
+.dark:root[data-glass-contrast='more'] {
+  --muted-foreground: var(--lg-label-secondary);
+  --border: var(--lg-separator);
+  --input: var(--lg-separator);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Tailwind v4 `@theme inline`
+   inline 表示生成的工具类**引用变量本身**而不是拷贝其值，
+   这样运行时改 --primary，`bg-primary` 会立即跟着变。
+   ══════════════════════════════════════════════════════════════════════ */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 16px);
+  --radius-4xl: calc(var(--radius) + 24px);
+
+  /* 本库自有的玻璃 token 也暴露成 Tailwind 工具类，
+     这样组件源码里可以直接写 bg-glass-base / text-label-secondary */
+  --color-glass-base: var(--lg-material-base);
+  --color-glass-elevated: var(--lg-material-elevated);
+  --color-label: var(--lg-label-primary);
+  --color-label-secondary: var(--lg-label-secondary);
+  --color-label-tertiary: var(--lg-label-tertiary);
+  --color-label-quaternary: var(--lg-label-quaternary);
+  --color-separator: var(--lg-separator);
+  --color-fill: var(--lg-fill-primary);
+  --color-fill-secondary: var(--lg-fill-secondary);
+  --color-fill-tertiary: var(--lg-fill-tertiary);
+  --color-fill-quaternary: var(--lg-fill-quaternary);
+}

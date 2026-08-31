@@ -1,0 +1,19 @@
+/**
+ * 第三方 shadcn 组件兼容性验证 —— Tailwind v4 编译入口。
+ *
+ * 这是 PROJECT_SPEC Phase 2 自查项的落地：
+ *   「随便挑 3 个第三方 shadcn 组件（button、card、dialog）装进这套 token 下，确认样式不崩」
+ *
+ * index.html 里的 class 字符串是用
+ *   npx shadcn@latest view @shadcn/button @shadcn/card @shadcn/dialog
+ * 从官方 registry 取的**真实源码**，一字未改。
+ *
+ * 构建：
+ *   npx @tailwindcss/cli -i input.css -o tailwind.css
+ */
+
+@import 'tailwindcss';
+@source './index.html';
+
+/* 本库的完整 token 体系 —— 第三方组件全靠这一层提供颜色 */
+@import '../../src/tokens/theme.css';

@@ -22,7 +22,7 @@ Phase 0（研究，部分）· Phase 1（光学引擎）· Phase 2（Token 体�
 | 3 | 单独的 `registry:theme` item | ✅ `theme`，**由脚本从 CSS 源单向生成**（见下） |
 | 4 | 跑通 build，产物落 `apps/www/public/r/` | ✅ `theme.json` / `utils.json` / `glass-providers.json` / `registry.json` |
 | 5 | 干净 Next.js 工程实测两种安装 | ✅ **两种都实测通过**，见 §1.2 |
-| 6 | 写成 CI job | ⚠️ **已写但从未运行过** —— 本仓库目前还不是 git 仓库，没有远程，workflow 无法触发。见 §1.5 |
+| 6 | 写成 CI job | ⚠️ **已写但从未运行过** —— 仓库已 `git init` 并完成初始提交，但**没有远程**，workflow 无法触发。见 §1.5 |
 
 **theme item 是生成的，不是手写的。** `apps/www/scripts/generate-theme-item.mjs`
 从 `packages/glass-core/src/tokens/*.css` 解析：
@@ -121,7 +121,7 @@ theme item 声明了 `dependencies: ["@glass/core"]`，`shadcn add` 会真的执
 
 | 缺口 | 严重度 |
 |---|---|
-| **CI job 写了但从未运行过** —— 仓库还不是 git 仓库、没有远程，workflow 无法触发。验收要求的「CI job 存在并通过」只做到了「存在」 | 🔴 高 |
+| **CI job 写了但从未运行过** —— 已有本地 git 仓库，但没有远程，workflow 无法触发。验收要求的「CI job 存在并通过」只做到了「存在」 | 🔴 高 |
 | `@glass/core` 未发布 npm，真实用户现在装不了 | 🔴 高 |
 | 目前只有 3 个 item（theme / utils / glass-providers），**没有 UI 组件** —— 等 Phase 3 | 🟡 中（阶段顺序使然） |
 | `@theme inline` 里的 90 条自引用噪音（§1.3 C） | 🟡 中 |
@@ -555,7 +555,7 @@ docs/research/
 
 另外两件不阻塞但迟早要做的：
 
-- **把仓库变成 git 仓库并推到远程**，否则 Phase 5 写好的 CI job 永远不会跑
+- **配好远程并推上去**（本地仓库与初始提交已完成），否则 Phase 5 写好的 CI job 永远不会跑
   —— 「CI job 存在并通过」这条验收目前只做到了「存在」。
 - **发布 `@glass/core` 到 npm**，否则真实用户装不了 registry item
   （现在靠本地 npm shim 才能跑通冒烟测试）。

@@ -1,0 +1,17 @@
+{
+  "name": "liquid-glass-ui",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.2.2",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "dev": "pnpm --filter www dev",
+    "build": "pnpm -r build",
+    "registry:build": "pnpm --filter www registry:build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint"
+  }
+}

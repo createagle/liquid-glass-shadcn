@@ -1,0 +1,12 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+allowBuilds:
+  '@parcel/watcher': set this to true or false
+  esbuild: set this to true or false
+
+# pnpm 10+ 默认不跑依赖的构建脚本，需要显式放行
+onlyBuiltDependencies:
+  - esbuild
+  - '@parcel/watcher'

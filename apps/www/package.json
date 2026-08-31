@@ -1,0 +1,15 @@
+{
+  "name": "www",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "registry:generate": "node scripts/generate-theme-item.mjs",
+    "registry:build": "npm run registry:generate && shadcn build",
+    "registry:validate": "shadcn registry validate registry.json",
+    "registry:serve": "node scripts/serve-registry.mjs"
+  },
+  "devDependencies": {
+    "shadcn": "^4.19.0"
+  }
+}

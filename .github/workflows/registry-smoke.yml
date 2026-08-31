@@ -1,0 +1,117 @@
+name: Registry 安装冒烟测试
+
+# PROJECT_SPEC §11.2：
+#   「CI 必须包含 registry.json schema 校验 + 对每个 item 做真实安装冒烟测试
+#     （在临时的干净 Next.js 工程里 add 并构建通过）。没有跑通这个测试就不算完成。」
+#
+# 本 job 覆盖两种安装方式：直链 与 命名空间。
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 类型检查 + 构建 @glass/core
+        run: |
+          cd packages/glass-core
+          npx tsc -p tsconfig.json --noEmit
+          npx tsc -p tsconfig.json
+
+      # ── registry ────────────────────────────────────────────────────
+      - name: 生成 theme item（从 CSS 源单向生成）
+        run: cd apps/www && node scripts/generate-theme-item.mjs
+
+      - name: 确认生成物与源同步（CI 里不允许有未提交的漂移）
+        run: |
+          if [ -n "$(git status --porcelain apps/www/registry/glass/registry.json)" ]; then
+            echo "::error::registry/glass/registry.json 与 CSS 源不同步。"
+            echo "请在本地跑 'node apps/www/scripts/generate-theme-item.mjs' 并提交结果。"
+            git --no-pager diff -- apps/www/registry/glass/registry.json
+            exit 1
+          fi
+
+      - name: 校验 registry schema
+        run: cd apps/www && npx --yes shadcn@latest registry validate registry.json
+
+      - name: 构建 registry
+        run: cd apps/www && npx --yes shadcn@latest build
+
+      - name: 起 registry 静态服务（:4180）
+        run: |
+          cd apps/www && node scripts/serve-registry.mjs 4180 &
+          npx --yes wait-on http://localhost:4180/r/registry.json -t 30000
+
+      # ── @glass/core 尚未发布到 npm，用本地 shim 覆盖真实依赖安装路径 ──
+      - name: 打包 @glass/core 并起 npm shim（:4181）
+        run: |
+          cd packages/glass-core
+          npm pack --pack-destination "$RUNNER_TEMP"
+          cd "$GITHUB_WORKSPACE"
+          node scripts/npm-registry-shim.mjs "$RUNNER_TEMP"/glass-core-*.tgz 4181 &
+          npx --yes wait-on http://localhost:4181/@glass/core -t 30000
+
+      # ── 干净工程 ────────────────────────────────────────────────────
+      - name: 创建干净的 Next.js 工程
+        run: |
+          cd "$RUNNER_TEMP"
+          npx --yes create-next-app@latest smoke \
+            --typescript --tailwind --eslint --app --src-dir \
+            --import-alias "@/*" --use-npm --no-turbopack --yes
+
+      - name: shadcn init
+        run: cd "$RUNNER_TEMP/smoke" && npx --yes shadcn@latest init -d --no-monorepo -f
+
+      - name: 配置 @glass 命名空间与 scoped npm registry
+        run: |
+          cd "$RUNNER_TEMP/smoke"
+          echo "@glass:registry=http://localhost:4181" > .npmrc
+          node -e "
+            const fs=require('fs');
+            const j=JSON.parse(fs.readFileSync('components.json','utf8'));
+            j.registries={'@glass':'http://localhost:4180/r/{name}.json'};
+            fs.writeFileSync('components.json', JSON.stringify(j,null,2));
+          "
+
+      - name: 方式一 · 直链安装
+        run: |
+          cd "$RUNNER_TEMP/smoke"
+          npx --yes shadcn@latest add http://localhost:4180/r/utils.json --yes --overwrite
+
+      - name: 方式二 · 命名空间安装（含 registryDependencies 传递解析）
+        run: |
+          cd "$RUNNER_TEMP/smoke"
+          npx --yes shadcn@latest add @glass/glass-providers --yes --overwrite
+
+      - name: 断言 token 真的被注入（不需要手动补 CSS）
+        run: |
+          cd "$RUNNER_TEMP/smoke"
+          css=src/app/globals.css
+          for token in lg-refract-2 lg-label-primary lg-material-base lg-content-thick; do
+            grep -q -- "--$token:" "$css" || { echo "::error::缺少 --$token"; exit 1; }
+          done
+          grep -q "lg-surface" "$css" || { echo "::error::缺少 .lg-surface 渲染路径"; exit 1; }
+          test -f src/components/glass-providers.tsx || { echo "::error::组件文件未落地"; exit 1; }
+          echo "✓ token 与渲染路径均已注入"
+
+      - name: 目标工程构建通过
+        run: cd "$RUNNER_TEMP/smoke" && npm run build

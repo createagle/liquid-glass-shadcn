@@ -1,0 +1,503 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "glass",
+  "homepage": "https://liquid-glass-ui.dev",
+  "items": [
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "theme",
+      "title": "Liquid Glass Theme",
+      "author": "Liquid Glass UI",
+      "description": "Liquid Glass UI 的完整 token 体系：Layer 1 原始值、Layer 2 材质与角色（明暗 × 常规/高对比 共四套）、Layer 3 shadcn 兼容层，以及 Tier A/B/C 三档渲染路径。",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "files": [],
+      "cssVars": {
+        "theme": {
+          "color-background": "var(--background)",
+          "color-foreground": "var(--foreground)",
+          "color-card": "var(--card)",
+          "color-card-foreground": "var(--card-foreground)",
+          "color-popover": "var(--popover)",
+          "color-popover-foreground": "var(--popover-foreground)",
+          "color-primary": "var(--primary)",
+          "color-primary-foreground": "var(--primary-foreground)",
+          "color-secondary": "var(--secondary)",
+          "color-secondary-foreground": "var(--secondary-foreground)",
+          "color-muted": "var(--muted)",
+          "color-muted-foreground": "var(--muted-foreground)",
+          "color-accent": "var(--accent)",
+          "color-accent-foreground": "var(--accent-foreground)",
+          "color-destructive": "var(--destructive)",
+          "color-destructive-foreground": "var(--destructive-foreground)",
+          "color-border": "var(--border)",
+          "color-input": "var(--input)",
+          "color-ring": "var(--ring)",
+          "color-chart-1": "var(--chart-1)",
+          "color-chart-2": "var(--chart-2)",
+          "color-chart-3": "var(--chart-3)",
+          "color-chart-4": "var(--chart-4)",
+          "color-chart-5": "var(--chart-5)",
+          "color-sidebar": "var(--sidebar)",
+          "color-sidebar-foreground": "var(--sidebar-foreground)",
+          "color-sidebar-primary": "var(--sidebar-primary)",
+          "color-sidebar-primary-foreground": "var(--sidebar-primary-foreground)",
+          "color-sidebar-accent": "var(--sidebar-accent)",
+          "color-sidebar-accent-foreground": "var(--sidebar-accent-foreground)",
+          "color-sidebar-border": "var(--sidebar-border)",
+          "color-sidebar-ring": "var(--sidebar-ring)",
+          "radius-sm": "calc(var(--radius) - 4px)",
+          "radius-md": "calc(var(--radius) - 2px)",
+          "radius-lg": "var(--radius)",
+          "radius-xl": "calc(var(--radius) + 4px)",
+          "radius-2xl": "calc(var(--radius) + 8px)",
+          "radius-3xl": "calc(var(--radius) + 16px)",
+          "radius-4xl": "calc(var(--radius) + 24px)",
+          "color-glass-base": "var(--lg-material-base)",
+          "color-glass-elevated": "var(--lg-material-elevated)",
+          "color-label": "var(--lg-label-primary)",
+          "color-label-secondary": "var(--lg-label-secondary)",
+          "color-label-tertiary": "var(--lg-label-tertiary)",
+          "color-label-quaternary": "var(--lg-label-quaternary)",
+          "color-separator": "var(--lg-separator)",
+          "color-fill": "var(--lg-fill-primary)",
+          "color-fill-secondary": "var(--lg-fill-secondary)",
+          "color-fill-tertiary": "var(--lg-fill-tertiary)",
+          "color-fill-quaternary": "var(--lg-fill-quaternary)"
+        },
+        "light": {
+          "lg-blur-1": "4px",
+          "lg-blur-2": "8px",
+          "lg-blur-3": "14px",
+          "lg-blur-4": "20px",
+          "lg-blur-5": "30px",
+          "lg-sat-1": "1.2",
+          "lg-sat-2": "1.7",
+          "lg-sat-3": "2.2",
+          "lg-refract-1": "-110",
+          "lg-refract-2": "-180",
+          "lg-refract-3": "-260",
+          "lg-disperse-1": "19",
+          "lg-disperse-2": "38",
+          "lg-disperse-3": "58",
+          "lg-radius-sm": "8px",
+          "lg-radius-md": "14px",
+          "lg-radius-lg": "22px",
+          "lg-radius-xl": "34px",
+          "lg-radius-continuous": "34px",
+          "lg-ios-blue-light": "#007aff",
+          "lg-ios-green-light": "#34c759",
+          "lg-ios-red-light": "#ff3b30",
+          "lg-ios-orange-light": "#ff9500",
+          "lg-ios-yellow-light": "#ffcc00",
+          "lg-ios-pink-light": "#ff2d55",
+          "lg-ios-purple-light": "#af52de",
+          "lg-ios-indigo-light": "#5856d6",
+          "lg-ios-teal-light": "#30b0c7",
+          "lg-gray-1-light": "#8e8e93",
+          "lg-gray-2-light": "#aeaeb2",
+          "lg-gray-3-light": "#c7c7cc",
+          "lg-gray-4-light": "#d1d1d6",
+          "lg-gray-5-light": "#e5e5ea",
+          "lg-gray-6-light": "#f2f2f7",
+          "lg-ios-blue-dark": "#0a84ff",
+          "lg-ios-green-dark": "#30d158",
+          "lg-ios-red-dark": "#ff453a",
+          "lg-ios-orange-dark": "#ff9f0a",
+          "lg-ios-yellow-dark": "#ffd60a",
+          "lg-ios-pink-dark": "#ff375f",
+          "lg-ios-purple-dark": "#bf5af2",
+          "lg-ios-indigo-dark": "#5e5ce6",
+          "lg-ios-teal-dark": "#40c8e0",
+          "lg-gray-1-dark": "#8e8e93",
+          "lg-gray-2-dark": "#636366",
+          "lg-gray-3-dark": "#48484a",
+          "lg-gray-4-dark": "#3a3a3c",
+          "lg-gray-5-dark": "#2c2c2e",
+          "lg-gray-6-dark": "#1c1c1e",
+          "lg-label-base-light": "0 0 0",
+          "lg-label-base-dark": "255 255 255",
+          "lg-label-tint-light": "60 60 67",
+          "lg-label-tint-dark": "235 235 245",
+          "lg-separator-tint-light": "60 60 67",
+          "lg-separator-tint-dark": "84 84 88",
+          "lg-separator-opaque-light": "#c6c6c8",
+          "lg-separator-opaque-dark": "#38383a",
+          "lg-fill-base-light": "120 120 128",
+          "lg-fill-base-dark": "120 120 128",
+          "lg-stop-alpha-light": "0.34, 0.62, 0.78, 0.96",
+          "lg-stop-alpha-dark": "0.22, 0.44, 0.62, 0.94",
+          "lg-stop-blur": "8px, 14px, 20px, 26px",
+          "lg-stop-saturate-light": "1.9, 1.7, 1.35, 1.05",
+          "lg-stop-saturate-dark": "1.8, 1.6, 1.3, 1",
+          "lg-blue": "var(--lg-ios-blue-light)",
+          "lg-green": "var(--lg-ios-green-light)",
+          "lg-red": "var(--lg-ios-red-light)",
+          "lg-orange": "var(--lg-ios-orange-light)",
+          "lg-yellow": "var(--lg-ios-yellow-light)",
+          "lg-pink": "var(--lg-ios-pink-light)",
+          "lg-purple": "var(--lg-ios-purple-light)",
+          "lg-indigo": "var(--lg-ios-indigo-light)",
+          "lg-teal": "var(--lg-ios-teal-light)",
+          "lg-gray-1": "var(--lg-gray-1-light)",
+          "lg-gray-2": "var(--lg-gray-2-light)",
+          "lg-gray-3": "var(--lg-gray-3-light)",
+          "lg-gray-4": "var(--lg-gray-4-light)",
+          "lg-gray-5": "var(--lg-gray-5-light)",
+          "lg-gray-6": "var(--lg-gray-6-light)",
+          "lg-label-primary": "rgb(var(--lg-label-base-light))",
+          "lg-label-secondary": "rgb(var(--lg-label-tint-light) / 0.6)",
+          "lg-label-tertiary": "rgb(var(--lg-label-tint-light) / 0.3)",
+          "lg-label-quaternary": "rgb(var(--lg-label-tint-light) / 0.18)",
+          "lg-separator": "rgb(var(--lg-separator-tint-light) / 0.29)",
+          "lg-separator-opaque": "var(--lg-separator-opaque-light)",
+          "lg-fill-primary": "rgb(var(--lg-fill-base-light) / 0.2)",
+          "lg-fill-secondary": "rgb(var(--lg-fill-base-light) / 0.16)",
+          "lg-fill-tertiary": "rgb(var(--lg-fill-base-light) / 0.12)",
+          "lg-fill-quaternary": "rgb(var(--lg-fill-base-light) / 0.08)",
+          "lg-tint": "0.34",
+          "lg-base-alpha": "0.62",
+          "lg-base-blur": "14px",
+          "lg-base-saturate": "1.7",
+          "lg-stroke-strength": "1",
+          "lg-base-color": "255 255 255",
+          "lg-elevated-color": "255 255 255",
+          "lg-material-base": "rgb(var(--lg-base-color) / var(--lg-base-alpha))",
+          "lg-material-elevated": "rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)))",
+          "lg-material-indicator": "transparent",
+          "lg-content-ultrathin": "rgb(255 255 255 / 0.44)",
+          "lg-content-thin": "rgb(255 255 255 / 0.62)",
+          "lg-content-regular": "rgb(255 255 255 / 0.78)",
+          "lg-content-thick": "rgb(255 255 255 / 0.92)",
+          "lg-content-blur": "20px",
+          "lg-stroke-top": "rgb(255 255 255 / calc(0.62 * var(--lg-stroke-strength)))",
+          "lg-stroke-bottom": "rgb(0 0 0 / calc(0.1 * var(--lg-stroke-strength)))",
+          "lg-stroke-side": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)))",
+          "lg-specular-opacity": "0.72",
+          "lg-shadow": "0 8px 26px rgb(16 22 40 / 0.18), 0 1px 2px rgb(16 22 40 / 0.1)",
+          "lg-glow": "none",
+          "lg-refract-scale": "0.85",
+          "lg-disperse-scale": "0.9",
+          "lg-ring": "var(--lg-blue)",
+          "radius": "var(--lg-radius-md)",
+          "background": "#ffffff",
+          "foreground": "var(--lg-label-primary)",
+          "card": "#ffffff",
+          "card-foreground": "var(--lg-label-primary)",
+          "popover": "#ffffff",
+          "popover-foreground": "var(--lg-label-primary)",
+          "primary": "var(--lg-blue)",
+          "primary-foreground": "#ffffff",
+          "secondary": "var(--lg-gray-5)",
+          "secondary-foreground": "var(--lg-label-primary)",
+          "muted": "var(--lg-gray-6)",
+          "muted-foreground": "var(--lg-label-secondary)",
+          "accent": "var(--lg-gray-5)",
+          "accent-foreground": "var(--lg-label-primary)",
+          "destructive": "var(--lg-red)",
+          "destructive-foreground": "#ffffff",
+          "border": "var(--lg-separator)",
+          "input": "var(--lg-separator)",
+          "ring": "var(--lg-ring)",
+          "chart-1": "var(--lg-blue)",
+          "chart-2": "var(--lg-green)",
+          "chart-3": "var(--lg-orange)",
+          "chart-4": "var(--lg-purple)",
+          "chart-5": "var(--lg-pink)",
+          "sidebar": "var(--lg-gray-6)",
+          "sidebar-foreground": "var(--lg-label-primary)",
+          "sidebar-primary": "var(--lg-blue)",
+          "sidebar-primary-foreground": "#ffffff",
+          "sidebar-accent": "var(--lg-gray-5)",
+          "sidebar-accent-foreground": "var(--lg-label-primary)",
+          "sidebar-border": "var(--lg-separator)",
+          "sidebar-ring": "var(--lg-ring)"
+        },
+        "dark": {
+          "lg-blue": "var(--lg-ios-blue-dark)",
+          "lg-green": "var(--lg-ios-green-dark)",
+          "lg-red": "var(--lg-ios-red-dark)",
+          "lg-orange": "var(--lg-ios-orange-dark)",
+          "lg-yellow": "var(--lg-ios-yellow-dark)",
+          "lg-pink": "var(--lg-ios-pink-dark)",
+          "lg-purple": "var(--lg-ios-purple-dark)",
+          "lg-indigo": "var(--lg-ios-indigo-dark)",
+          "lg-teal": "var(--lg-ios-teal-dark)",
+          "lg-gray-1": "var(--lg-gray-1-dark)",
+          "lg-gray-2": "var(--lg-gray-2-dark)",
+          "lg-gray-3": "var(--lg-gray-3-dark)",
+          "lg-gray-4": "var(--lg-gray-4-dark)",
+          "lg-gray-5": "var(--lg-gray-5-dark)",
+          "lg-gray-6": "var(--lg-gray-6-dark)",
+          "lg-label-primary": "rgb(var(--lg-label-base-dark))",
+          "lg-label-secondary": "rgb(var(--lg-label-tint-dark) / 0.6)",
+          "lg-label-tertiary": "rgb(var(--lg-label-tint-dark) / 0.3)",
+          "lg-label-quaternary": "rgb(var(--lg-label-tint-dark) / 0.16)",
+          "lg-separator": "rgb(var(--lg-separator-tint-dark) / 0.65)",
+          "lg-separator-opaque": "var(--lg-separator-opaque-dark)",
+          "lg-fill-primary": "rgb(var(--lg-fill-base-dark) / 0.36)",
+          "lg-fill-secondary": "rgb(var(--lg-fill-base-dark) / 0.32)",
+          "lg-fill-tertiary": "rgb(var(--lg-fill-base-dark) / 0.24)",
+          "lg-fill-quaternary": "rgb(var(--lg-fill-base-dark) / 0.18)",
+          "lg-base-alpha": "0.44",
+          "lg-base-color": "20 20 24",
+          "lg-elevated-color": "32 32 38",
+          "lg-content-ultrathin": "rgb(28 28 30 / 0.5)",
+          "lg-content-thin": "rgb(28 28 30 / 0.66)",
+          "lg-content-regular": "rgb(28 28 30 / 0.8)",
+          "lg-content-thick": "rgb(28 28 30 / 0.94)",
+          "lg-stroke-top": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)))",
+          "lg-stroke-bottom": "rgb(0 0 0 / calc(0.34 * var(--lg-stroke-strength)))",
+          "lg-stroke-side": "rgb(255 255 255 / calc(0.16 * var(--lg-stroke-strength)))",
+          "lg-specular-opacity": "1",
+          "lg-shadow": "0 1px 1px rgb(0 0 0 / 0.34)",
+          "lg-glow": "0 0 24px rgb(255 255 255 / 0.06)",
+          "lg-refract-scale": "1.1",
+          "lg-disperse-scale": "1.15",
+          "lg-material-base": "rgb(var(--lg-base-color) / var(--lg-base-alpha))",
+          "lg-material-elevated": "rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)))",
+          "lg-ring": "var(--lg-blue)",
+          "background": "#000000",
+          "foreground": "var(--lg-label-primary)",
+          "card": "var(--lg-gray-6)",
+          "card-foreground": "var(--lg-label-primary)",
+          "popover": "var(--lg-gray-5)",
+          "popover-foreground": "var(--lg-label-primary)",
+          "primary": "var(--lg-blue)",
+          "primary-foreground": "#ffffff",
+          "secondary": "var(--lg-gray-5)",
+          "secondary-foreground": "var(--lg-label-primary)",
+          "muted": "var(--lg-gray-6)",
+          "muted-foreground": "var(--lg-label-secondary)",
+          "accent": "var(--lg-gray-5)",
+          "accent-foreground": "var(--lg-label-primary)",
+          "destructive": "var(--lg-red)",
+          "destructive-foreground": "#ffffff",
+          "border": "var(--lg-separator)",
+          "input": "var(--lg-separator)",
+          "ring": "var(--lg-ring)",
+          "chart-1": "var(--lg-blue)",
+          "chart-2": "var(--lg-green)",
+          "chart-3": "var(--lg-orange)",
+          "chart-4": "var(--lg-purple)",
+          "chart-5": "var(--lg-pink)",
+          "sidebar": "var(--lg-gray-6)",
+          "sidebar-foreground": "var(--lg-label-primary)",
+          "sidebar-primary": "var(--lg-blue)",
+          "sidebar-primary-foreground": "#ffffff",
+          "sidebar-accent": "var(--lg-gray-5)",
+          "sidebar-accent-foreground": "var(--lg-label-primary)",
+          "sidebar-border": "var(--lg-separator)",
+          "sidebar-ring": "var(--lg-ring)"
+        }
+      },
+      "css": {
+        "@layer base": {
+          ":root[data-glass-contrast='more']": {
+            "--lg-stroke-strength": "1.8",
+            "--lg-label-secondary": "rgb(var(--lg-label-tint-light) / 0.85)",
+            "--lg-label-tertiary": "rgb(var(--lg-label-tint-light) / 0.6)",
+            "--lg-label-quaternary": "rgb(var(--lg-label-tint-light) / 0.4)",
+            "--lg-separator": "rgb(var(--lg-separator-tint-light) / 0.6)",
+            "--lg-separator-opaque": "#8e8e93",
+            "--lg-refract-scale": "0.5",
+            "--lg-disperse-scale": "0.4",
+            "--lg-stroke-top": "rgb(255 255 255 / calc(0.62 * var(--lg-stroke-strength)))",
+            "--lg-stroke-bottom": "rgb(0 0 0 / calc(0.1 * var(--lg-stroke-strength)))",
+            "--lg-stroke-side": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)))",
+            "--muted-foreground": "var(--lg-label-secondary)",
+            "--border": "var(--lg-separator)",
+            "--input": "var(--lg-separator)"
+          },
+          ":root[data-glass-contrast='more'][data-glass-theme='dark'], .dark:root[data-glass-contrast='more']": {
+            "--lg-label-secondary": "rgb(var(--lg-label-tint-dark) / 0.9)",
+            "--lg-label-tertiary": "rgb(var(--lg-label-tint-dark) / 0.7)",
+            "--lg-label-quaternary": "rgb(var(--lg-label-tint-dark) / 0.5)",
+            "--lg-separator": "rgb(200 200 210 / 0.7)",
+            "--lg-separator-opaque": "#6e6e73",
+            "--lg-stroke-top": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)))",
+            "--lg-stroke-bottom": "rgb(0 0 0 / calc(0.34 * var(--lg-stroke-strength)))",
+            "--lg-stroke-side": "rgb(255 255 255 / calc(0.16 * var(--lg-stroke-strength)))",
+            "--muted-foreground": "var(--lg-label-secondary)",
+            "--border": "var(--lg-separator)",
+            "--input": "var(--lg-separator)"
+          }
+        },
+        "@layer components": {
+          ".lg-surface": {
+            "position": "relative",
+            "isolation": "isolate",
+            "border-radius": "var(--lg-surface-radius, var(--lg-radius-md))",
+            "color": "var(--lg-label)",
+            "transition": "background-color 240ms linear,\r\n    box-shadow 240ms linear"
+          },
+          "@supports (corner-shape: squircle)": {
+            ".lg-surface[data-continuous='true']": {
+              "corner-shape": "squircle"
+            },
+            ".lg-continuous": {
+              "corner-shape": "squircle"
+            }
+          },
+          ":root[data-glass-motion='reduced'] .lg-surface": {
+            "transition-duration": "120ms"
+          },
+          ".lg-surface[data-layer='base']": {
+            "background-color": "rgb(var(--lg-base-color) / var(--lg-base-alpha))",
+            "box-shadow": "inset 0 1px 0 0 var(--lg-stroke-top),\r\n    inset 0 -1px 0 0 var(--lg-stroke-bottom),\r\n    var(--lg-shadow)"
+          },
+          ".lg-surface[data-layer='elevated']": {
+            "background-color": "rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)))",
+            "box-shadow": "inset 0 1px 0 0 var(--lg-stroke-top),\r\n    inset 0 -1px 0 0 var(--lg-stroke-bottom),\r\n    var(--lg-shadow),\r\n    var(--lg-glow)"
+          },
+          ".lg-surface[data-layer='indicator']": {
+            "background-color": "transparent",
+            "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\r\n    \r\n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.28),\r\n    \r\n    inset 1px 0 1px -0.5px var(--lg-stroke-side),\r\n    inset -1px 0 1px -0.5px var(--lg-stroke-side),\r\n    0 3px 10px rgb(0 0 0 / 0.26)"
+          },
+          "[data-glass-tier='a'] .lg-surface[data-layer='base'], [data-glass-tier='a'] .lg-surface[data-layer='elevated']": {
+            "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
+            "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"
+          },
+          "[data-glass-tier='a'] .lg-surface[data-layer='indicator']": {
+            "backdrop-filter": "brightness(1.06) saturate(1.22)"
+          },
+          "[data-glass-tier='b'] .lg-surface[data-layer='base'], [data-glass-tier='b'] .lg-surface[data-layer='elevated']": {
+            "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
+            "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"
+          },
+          "[data-glass-tier='b'] .lg-surface[data-layer='indicator']": {
+            "backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
+            "-webkit-backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
+            "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\r\n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),\r\n    \r\n    inset 0 0 2px 1px rgb(255 255 255 / 0.16),\r\n    inset 0 0 8px 3px rgb(255 255 255 / 0.08),\r\n    0 3px 10px rgb(0 0 0 / 0.26)"
+          },
+          ".lg-surface[data-layer='indicator'][data-refraction='off']": {
+            "backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
+            "-webkit-backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
+            "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\r\n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),\r\n    inset 0 0 2px 1px rgb(255 255 255 / 0.16),\r\n    inset 0 0 8px 3px rgb(255 255 255 / 0.08),\r\n    0 3px 10px rgb(0 0 0 / 0.26)"
+          },
+          "[data-glass-tier='b'] .lg-surface[data-layer='indicator']::before, .lg-surface[data-layer='indicator'][data-refraction='off']::before": {
+            "content": "''",
+            "position": "absolute",
+            "inset": "0",
+            "border-radius": "inherit",
+            "padding": "1.5px",
+            "background": "linear-gradient(\r\n    135deg,\r\n    rgb(255 110 180 / 0.55) 0%,\r\n    rgb(120 200 255 / 0.15) 35%,\r\n    rgb(140 255 220 / 0.12) 60%,\r\n    rgb(180 130 255 / 0.5) 100%\r\n  )",
+            "mask": "linear-gradient(#000 0 0) content-box,\r\n    linear-gradient(#000 0 0)",
+            "mask-composite": "exclude",
+            "-webkit-mask": "linear-gradient(#000 0 0) content-box,\r\n    linear-gradient(#000 0 0)",
+            "-webkit-mask-composite": "xor",
+            "pointer-events": "none"
+          },
+          "[data-glass-tier='c'] .lg-surface[data-layer='base'], [data-glass-tier='c'] .lg-surface[data-layer='elevated']": {
+            "background-color": "rgb(var(--lg-base-color) / min(1, calc(var(--lg-base-alpha) + 0.26)))"
+          },
+          "[data-glass-tier='c'] .lg-surface[data-layer='indicator']": {
+            "background": "linear-gradient(\r\n    180deg,\r\n    rgb(255 255 255 / 0.32) 0%,\r\n    rgb(255 255 255 / 0.16) 46%,\r\n    rgb(255 255 255 / 0.22) 100%\r\n  )",
+            "box-shadow": "inset 0 1px 0 0 rgb(255 255 255 / 0.75),\r\n    inset 0 -1px 0 0 rgb(0 0 0 / 0.2),\r\n    0 2px 8px rgb(0 0 0 / 0.22)"
+          },
+          "[data-glass-tier='c'][data-glass-theme='dark'] .lg-surface[data-layer='indicator']": {
+            "background": "linear-gradient(\r\n    180deg,\r\n    rgb(255 255 255 / 0.2) 0%,\r\n    rgb(255 255 255 / 0.08) 46%,\r\n    rgb(255 255 255 / 0.13) 100%\r\n  )"
+          },
+          ".lg-surface[data-layer='indicator'][data-pressed='true']": {
+            "box-shadow": "inset 0 2px 1.5px -0.5px rgb(255 255 255 / var(--lg-specular-opacity)),\r\n    inset 0 -1.5px 1.5px -0.5px rgb(0 0 0 / 0.34),\r\n    inset 1px 0 1.5px -0.5px var(--lg-stroke-side),\r\n    inset -1px 0 1.5px -0.5px var(--lg-stroke-side),\r\n    0 5px 16px rgb(0 0 0 / 0.32)"
+          },
+          "[data-glass-tier='a'] .lg-surface[data-layer='indicator'][data-pressed='true']": {
+            "backdrop-filter": "brightness(1.12) saturate(1.4)"
+          },
+          ".lg-surface:focus-visible": {
+            "outline": "2px solid var(--lg-ring, rgb(10 132 255))",
+            "outline-offset": "2px"
+          },
+          ".lg-content": {
+            "background-color": "var(--lg-content-regular)",
+            "color": "var(--lg-label-primary)"
+          },
+          ".lg-content[data-material='ultrathin']": {
+            "background-color": "var(--lg-content-ultrathin)"
+          },
+          ".lg-content[data-material='thin']": {
+            "background-color": "var(--lg-content-thin)"
+          },
+          ".lg-content[data-material='regular']": {
+            "background-color": "var(--lg-content-regular)"
+          },
+          ".lg-content[data-material='thick']": {
+            "background-color": "var(--lg-content-thick)"
+          },
+          "[data-glass-tier='a'] .lg-content, [data-glass-tier='b'] .lg-content": {
+            "backdrop-filter": "blur(var(--lg-content-blur)) saturate(1.4)",
+            "-webkit-backdrop-filter": "blur(var(--lg-content-blur)) saturate(1.4)"
+          },
+          "[data-glass-tier='c'] .lg-content": {
+            "background-color": "var(--lg-content-thick)"
+          },
+          "@media (prefers-reduced-transparency: reduce)": {
+            ":root": {
+              "--lg-base-alpha": "0.98",
+              "--lg-refract-scale": "0",
+              "--lg-disperse-scale": "0"
+            },
+            ".lg-surface, .lg-content": {
+              "backdrop-filter": "none !important",
+              "-webkit-backdrop-filter": "none !important"
+            },
+            ".lg-surface[data-layer='indicator']": {
+              "background-color": "rgb(var(--lg-base-color) / 0.98)"
+            }
+          },
+          "@media (prefers-reduced-motion: reduce)": {
+            ".lg-surface": {
+              "transition-duration": "120ms"
+            }
+          }
+        }
+      },
+      "docs": "已安装 Liquid Glass 主题。\n\n还需要两步：\n1) 安装光学引擎：pnpm add @glass/core\n2) 确认你的 globals.css 里有 shadcn 默认的暗色变体声明：\n   @custom-variant dark (&:is(.dark *));\n   （shadcn init 会自动写入。缺了它，dark: 工具类不会跟随 .dark 类。）\n\n在应用根组件挂上 <GlassProvider>，并在 <head> 注入 glassSsrScript() 以避免首屏闪烁。",
+      "categories": [
+        "theme",
+        "liquid-glass"
+      ],
+      "type": "registry:theme"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "utils",
+      "title": "cn()",
+      "author": "Liquid Glass UI",
+      "description": "class 合并工具。与 shadcn 生态完全一致的实现，组件源码统一从 @/lib/utils 引入。",
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/lib/utils.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "type": "registry:lib"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "glass-providers",
+      "title": "Glass Providers",
+      "author": "Liquid Glass UI",
+      "description": "应用级 GlassProvider 封装：主题、材质档位、tier 覆写与无障碍偏好订阅。挂在应用根部。",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/lib/glass-providers.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "别忘了在 <head> 里注入 glassSsrScript()，否则首屏会有暗色 / 材质闪烁。用法见文件顶部注释。",
+      "type": "registry:component"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "glass-providers",
+  "title": "Glass Providers",
+  "author": "Liquid Glass UI",
+  "description": "应用级 GlassProvider 封装：主题、材质档位、tier 覆写与无障碍偏好订阅。挂在应用根部。",
+  "dependencies": [
+    "@glass/core"
+  ],
+  "registryDependencies": [
+    "@glass/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/glass/lib/glass-providers.tsx",
+      "content": "'use client';\n\nimport { GlassProvider } from '@glass/core';\nimport type { ReactNode } from 'react';\n\n/**\n * Liquid Glass 的应用级 Provider。\n *\n * 挂在应用根部（Next.js App Router 里就是 `app/layout.tsx` 的 `<body>` 内）：\n *\n * ```tsx\n * import { GlassProviders } from \"@/components/glass-providers\";\n * import { glassSsrScript } from \"@glass/core\";\n *\n * export default function RootLayout({ children }) {\n *   return (\n *     <html lang=\"zh-CN\" suppressHydrationWarning>\n *       <head>\n *         <script dangerouslySetInnerHTML={{ __html: glassSsrScript() }} />\n *       </head>\n *       <body>\n *         <GlassProviders>{children}</GlassProviders>\n *       </body>\n *     </html>\n *   );\n * }\n * ```\n *\n * `glassSsrScript()` 必须放在 `<head>` 里同步执行 —— 它在首次绘制前就把\n * 主题 / 材质档位 / tier 写到 `<html>` 上，避免首屏闪烁。\n */\nexport function GlassProviders({ children }: { children: ReactNode }) {\n  return <GlassProvider defaultTheme=\"system\">{children}</GlassProvider>;\n}\n",
+      "type": "registry:component"
+    }
+  ],
+  "docs": "别忘了在 <head> 里注入 glassSsrScript()，否则首屏会有暗色 / 材质闪烁。用法见文件顶部注释。",
+  "type": "registry:component"
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "glass",
+  "homepage": "https://liquid-glass-ui.dev",
+  "include": ["./registry/glass/registry.json"],
+  "items": [
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "utils",
+      "type": "registry:lib",
+      "title": "cn()",
+      "description": "class 合并工具。与 shadcn 生态完全一致的实现，组件源码统一从 @/lib/utils 引入。",
+      "author": "Liquid Glass UI",
+      "dependencies": ["clsx", "tailwind-merge"],
+      "files": [
+        {
+          "path": "registry/glass/lib/utils.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "glass-providers",
+      "type": "registry:component",
+      "title": "Glass Providers",
+      "description": "应用级 GlassProvider 封装：主题、材质档位、tier 覆写与无障碍偏好订阅。挂在应用根部。",
+      "author": "Liquid Glass UI",
+      "dependencies": ["@glass/core"],
+      "registryDependencies": ["@glass/theme"],
+      "files": [
+        {
+          "path": "registry/glass/lib/glass-providers.tsx",
+          "type": "registry:component"
+        }
+      ],
+      "docs": "别忘了在 <head> 里注入 glassSsrScript()，否则首屏会有暗色 / 材质闪烁。用法见文件顶部注释。"
+    }
+  ]
+}

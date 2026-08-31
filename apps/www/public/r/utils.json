@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "utils",
+  "title": "cn()",
+  "author": "Liquid Glass UI",
+  "description": "class 合并工具。与 shadcn 生态完全一致的实现，组件源码统一从 @/lib/utils 引入。",
+  "dependencies": [
+    "clsx",
+    "tailwind-merge"
+  ],
+  "files": [
+    {
+      "path": "registry/glass/lib/utils.ts",
+      "content": "import { clsx, type ClassValue } from 'clsx';\nimport { twMerge } from 'tailwind-merge';\n\n/**\n * 合并 class 名。与 shadcn 生态保持完全一致的实现 ——\n * 本库的组件源码会 `import { cn } from \"@/lib/utils\"`，\n * 装到用户项目里时会复用他们已有的这个文件（如果已存在）。\n */\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n",
+      "type": "registry:lib"
+    }
+  ],
+  "type": "registry:lib"
+}

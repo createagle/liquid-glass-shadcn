@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>feImage 根因验证 — Phase 0</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;background:#000;color:#fff}
+  header{padding:12px 16px;background:#12131a}
+  h1{font-size:18px;margin:0 0 4px}
+  .sub{color:#9a9ab0;font-size:13px;margin:0}
+  .band{position:relative;height:88px;
+        background:repeating-linear-gradient(90deg,#000 0 30px,#e8e8e8 30px 60px)}
+  .fx{position:absolute;inset:0}
+  .lbl{position:absolute;left:0;top:0;bottom:0;width:330px;z-index:5;
+       display:flex;flex-direction:column;justify-content:center;padding:0 14px;
+       background:#0a0a0f;border-right:2px solid #ff3b30}
+  .lbl b{font-size:15px}
+  .lbl span{font-size:11.5px;color:#b9b9c9;line-height:1.4}
+  footer{padding:14px 16px;background:#12131a;font:12px/1.6 ui-monospace,Consolas,monospace;
+         color:#c8f7dc;white-space:pre-wrap}
+</style></head><body>
+
+<header>
+  <h1>feImage 根因验证</h1>
+  <p class="sub">假设：<b>feImage 的百分比尺寸按「宿主 svg 的视口」解析，不是按目标元素</b>。<br>
+  每条带用一种<b>专属颜色</b>：铺满 = 该写法可用　·　只铺左边一段 = 尺寸解析错了　·　仍是黑白条纹 = 无效<br>
+  <b style="color:#ff0000">W1 红</b>　<b style="color:#ff8a00">W2 橙</b>　<b style="color:#ffe600">W3 黄</b>　<b style="color:#00e05a">W4 绿</b>　<b style="color:#00c8ff">W5 青</b>　<b style="color:#ff00c8">W6 洋红</b></p>
+</header>
+
+<div id="bands"></div>
+<div id="hosts"></div>
+<footer id="sum"></footer>
+
+<script>
+const SVGNS='http://www.w3.org/2000/svg';
+const W = 1600, H = 88;   // 目标色带的尺寸（够宽，便于判断是否铺满）
+
+// 每个变体用一种可区分的纯色，便于一眼读出「哪几条通过了」
+const COLORS = {w1:'#ff0000', w2:'#ff8a00', w3:'#ffe600', w4:'#00e05a', w5:'#00c8ff', w6:'#ff00c8'};
+function solidPNG(w,h,fill){
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const x=c.getContext('2d'); x.fillStyle=fill; x.fillRect(0,0,w,h);
+  return c.toDataURL('image/png');
+}
+
+// host 样式变体
+const hostStyles = {
+  offscreen : 'position:absolute;left:-99999px;top:0',
+  hidden    : 'position:absolute;left:0;top:0;visibility:hidden',
+  opacity0  : 'position:absolute;left:0;top:0;opacity:0;pointer-events:none',
+  cssZero   : 'position:fixed;width:0;height:0'   // PROJECT_SPEC §5.2 建议的写法
+};
+
+const variants=[
+ {id:'w1', t:'W1 宿主放大到目标尺寸 + 百分比',
+  d:'host svg = 1600×88，feImage width/height = 100%',
+  host:{w:W,h:H,style:hostStyles.offscreen}, fe:{w:'100%',h:'100%'}, img:[W,H]},
+
+ {id:'w2', t:'W2 宿主小 + feImage 绝对用户单位',
+  d:'host svg = 10×10，feImage width/height 写成 1600 / 88（绝对值）',
+  host:{w:10,h:10,style:hostStyles.offscreen}, fe:{w:String(W),h:String(H)}, img:[W,H]},
+
+ {id:'w3', t:'W3 宿主放大 + 绝对用户单位',
+  d:'host svg = 1600×88，feImage width/height 也写绝对值',
+  host:{w:W,h:H,style:hostStyles.offscreen}, fe:{w:String(W),h:String(H)}, img:[W,H]},
+
+ {id:'w4', t:'W4 宿主 visibility:hidden',
+  d:'W3 的写法，但宿主用 visibility:hidden 隐藏（不是移出视口）',
+  host:{w:W,h:H,style:hostStyles.hidden}, fe:{w:String(W),h:String(H)}, img:[W,H]},
+
+ {id:'w5', t:'W5 宿主 opacity:0',
+  d:'W3 的写法，但宿主用 opacity:0 隐藏',
+  host:{w:W,h:H,style:hostStyles.opacity0}, fe:{w:String(W),h:String(H)}, img:[W,H]},
+
+ {id:'w6', t:'W6 宿主 CSS width:0;height:0',
+  d:'W3 的写法，但宿主用 PROJECT_SPEC §5.2 的 width:0;height:0（预期失败）',
+  host:{w:W,h:H,style:hostStyles.cssZero}, fe:{w:String(W),h:String(H)}, img:[W,H]}
+];
+
+const bands=document.getElementById('bands'), hostsEl=document.getElementById('hosts');
+
+variants.forEach(v=>{
+  const host=document.createElementNS(SVGNS,'svg');
+  host.setAttribute('width', v.host.w); host.setAttribute('height', v.host.h);
+  host.setAttribute('aria-hidden','true'); host.setAttribute('style', v.host.style);
+  const defs=document.createElementNS(SVGNS,'defs'); host.appendChild(defs);
+
+  const f=document.createElementNS(SVGNS,'filter');
+  f.setAttribute('id','f_'+v.id);
+  f.setAttribute('x','0%'); f.setAttribute('y','0%');
+  f.setAttribute('width','100%'); f.setAttribute('height','100%');
+  f.setAttribute('filterUnits','objectBoundingBox');
+  f.setAttribute('primitiveUnits','userSpaceOnUse');
+  f.setAttribute('color-interpolation-filters','sRGB');
+
+  const fe=document.createElementNS(SVGNS,'feImage');
+  fe.setAttribute('x','0'); fe.setAttribute('y','0');
+  fe.setAttribute('width', v.fe.w); fe.setAttribute('height', v.fe.h);
+  fe.setAttribute('preserveAspectRatio','none');
+  fe.setAttribute('href', solidPNG(v.img[0], v.img[1], COLORS[v.id]));
+  f.appendChild(fe); defs.appendChild(f); hostsEl.appendChild(host);
+
+  const b=document.createElement('div'); b.className='band';
+  b.innerHTML=`<div class="fx" style="backdrop-filter:url(#f_${v.id})"></div>
+               <div class="lbl"><b>${v.t}</b><span>${v.d}</span></div>`;
+  bands.appendChild(b);
+});
+
+document.getElementById('sum').textContent =
+`UA: ${navigator.userAgent}
+目标色带宽度 = 视口宽度（远大于 1600 时右侧仍会露出条纹，属正常）
+
+判读要点
+  哪几条洋红铺得最宽 → 那个写法就是 @glass/core 滤镜工厂该用的
+  W6 预期失败：它用的正是 PROJECT_SPEC §5.2 建议的 width:0;height:0 宿主`;
+</script>
+</body></html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>feImage 变体矩阵 — Phase 0</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+       background:#000;color:#fff}
+  header{padding:14px 18px;background:#12131a}
+  h1{font-size:19px;margin:0 0 4px}
+  .sub{color:#9a9ab0;font-size:13px;margin:0}
+  .band{position:relative;height:96px;
+        background:repeating-linear-gradient(90deg,#000 0 30px,#e8e8e8 30px 60px)}
+  .fx{position:absolute;inset:0}
+  .lbl{position:absolute;left:0;top:0;bottom:0;width:340px;z-index:5;
+       display:flex;flex-direction:column;justify-content:center;padding:0 16px;
+       background:rgba(0,0,0,.82);border-right:2px solid #ff3b30}
+  .lbl b{font-size:17px}
+  .lbl span{font-size:12px;color:#b9b9c9;line-height:1.45}
+  footer{padding:16px 18px;background:#12131a;font:12.5px/1.6 ui-monospace,Consolas,monospace;
+         color:#c8f7dc;white-space:pre-wrap}
+</style></head><body>
+
+<header>
+  <h1>feImage 变体矩阵</h1>
+  <p class="sub">每条色带右侧区域的 <b>backdrop-filter 里只有一个 feImage</b>，源是一张纯洋红图。<br>
+  <b style="color:#ff5ce0">整条变洋红 = 该变体可用</b>　·　<b style="color:#b9b9c9">仍是黑白条纹 = 不可用</b></p>
+</header>
+
+<div id="bands"></div>
+
+<!-- 宿主 A：width/height = 0（PROJECT_SPEC §5.2 建议的写法） -->
+<svg id="hostZero" width="0" height="0" style="position:fixed" aria-hidden="true"><defs></defs></svg>
+<!-- 宿主 B：有真实尺寸，但移出视口 -->
+<svg id="hostSized" width="400" height="120"
+     style="position:absolute;left:-9999px;top:0" aria-hidden="true"><defs></defs></svg>
+
+<footer id="sum"></footer>
+
+<script>
+const XLINK='http://www.w3.org/1999/xlink', SVGNS='http://www.w3.org/2000/svg';
+
+const svgMagenta = 'data:image/svg+xml,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="120">' +
+  '<rect width="400" height="120" fill="#ff00c8"/></svg>');
+
+const c=document.createElement('canvas'); c.width=400; c.height=120;
+const cx=c.getContext('2d'); cx.fillStyle='#ff00c8'; cx.fillRect(0,0,400,120);
+const pngMagenta = c.toDataURL('image/png');
+
+const variants=[
+ {id:'v1',host:'hostZero', attr:'href', src:svgMagenta,t:'V1 基线',d:'href + SVG图 + 宿主 svg 尺寸为 0（之前测失败的写法）'},
+ {id:'v2',host:'hostZero', attr:'xlink',src:svgMagenta,t:'V2 xlink:href',d:'改用带命名空间的 xlink:href'},
+ {id:'v3',host:'hostZero', attr:'both', src:svgMagenta,t:'V3 两个都设',d:'href 与 xlink:href 同时设置 + SVG图'},
+ {id:'v4',host:'hostZero', attr:'both', src:pngMagenta,t:'V4 PNG 位图',d:'改用 PNG data URI（排除「SVG 图不能进 feImage」）'},
+ {id:'v5',host:'hostSized',attr:'both', src:pngMagenta,t:'V5 宿主有尺寸 + PNG',d:'宿主 svg 给真实宽高并移出视口'},
+ {id:'v6',host:'hostSized',attr:'both', src:svgMagenta,t:'V6 宿主有尺寸 + SVG图',d:'同 V5 但换回 SVG data URI'}
+];
+
+const bands=document.getElementById('bands');
+variants.forEach(v=>{
+  const defs=document.getElementById(v.host).querySelector('defs');
+  const f=document.createElementNS(SVGNS,'filter');
+  f.setAttribute('id','f_'+v.id);
+  f.setAttribute('x','0%'); f.setAttribute('y','0%');
+  f.setAttribute('width','100%'); f.setAttribute('height','100%');
+  f.setAttribute('color-interpolation-filters','sRGB');
+  const fe=document.createElementNS(SVGNS,'feImage');
+  fe.setAttribute('x','0'); fe.setAttribute('y','0');
+  fe.setAttribute('width','100%'); fe.setAttribute('height','100%');
+  fe.setAttribute('preserveAspectRatio','none');
+  if(v.attr==='href'||v.attr==='both') fe.setAttribute('href',v.src);
+  if(v.attr==='xlink'||v.attr==='both') fe.setAttributeNS(XLINK,'xlink:href',v.src);
+  f.appendChild(fe); defs.appendChild(f);
+
+  const b=document.createElement('div'); b.className='band';
+  b.innerHTML=`<div class="fx" style="backdrop-filter:url(#f_${v.id})"></div>
+               <div class="lbl"><b>${v.t}</b><span>${v.d}</span></div>`;
+  bands.appendChild(b);
+});
+
+document.getElementById('sum').textContent =
+`UA: ${navigator.userAgent}
+
+判读：哪条色带的右侧区域整片变成洋红色，哪个变体就可用。
+6 条全是黑白条纹 → feImage 在本浏览器确实不可用，SVG 位移贴图方案报废。`;
+</script>
+</body></html>

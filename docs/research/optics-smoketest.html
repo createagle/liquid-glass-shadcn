@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>Liquid Glass 光学能力诊断 — Phase 0</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+       background:#12131a;color:#e9e9ef;padding:28px 20px 80px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:#9a9ab0;margin:0 0 26px;font-size:14px}
+  section{background:#1c1d27;border:1px solid #2e2f3d;border-radius:14px;padding:20px;margin:0 0 20px}
+  h2{font-size:17px;margin:0 0 6px}
+  .why{color:#9a9ab0;font-size:13.5px;margin:0 0 14px}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 14px}
+  .chip{font-size:13px;padding:5px 11px;border-radius:8px;font-weight:600}
+  .pass{background:#0d3f27;color:#5ee9a0;border:1px solid #1c6b45}
+  .fail{background:#43151b;color:#ff8a8a;border:1px solid #7a2830}
+
+  /* striped test bed */
+  .bed{position:relative;height:150px;border-radius:12px;overflow:hidden;
+       background:repeating-linear-gradient(90deg,#000 0 14px,#fff 14px 28px)}
+  .probe{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+         width:78%;height:96px;border:2px dashed #ff3b30;border-radius:12px}
+  .tag{position:absolute;left:8px;top:6px;background:#ff3b30;color:#fff;
+       font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;z-index:3}
+
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  td,th{border:1px solid #2e2f3d;padding:7px 10px;text-align:left}
+  th{background:#23243044;font-weight:600}
+  code{background:#2a2b38;padding:1px 6px;border-radius:5px;font-size:13px}
+  .ok{color:#5ee9a0;font-weight:700}.no{color:#ff8a8a;font-weight:700}
+
+  .q{margin:14px 0 0;padding:14px;background:#23243a;border-radius:10px}
+  .q b{display:block;margin-bottom:8px}
+  label{display:inline-flex;align-items:center;gap:7px;margin-right:20px;cursor:pointer}
+  textarea{width:100%;height:230px;margin-top:10px;background:#0d0e14;color:#c8f7dc;
+           border:1px solid #2e2f3d;border-radius:10px;padding:12px;font:12.5px/1.55 ui-monospace,Consolas,monospace}
+  button{background:#0a84ff;color:#fff;border:0;padding:10px 18px;border-radius:9px;
+         font-size:14px;font-weight:600;cursor:pointer;margin-top:10px}
+  .sqrow{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;
+         background:repeating-linear-gradient(90deg,#000 0 14px,#fff 14px 28px);
+         padding:22px;border-radius:12px}
+  .sqbox{width:150px;height:150px;background:#0a84ff;display:grid;place-items:center;
+         color:#fff;font-weight:700;font-size:13px;border-radius:44px}
+  .sqbox.sq{corner-shape:squircle}
+</style></head><body><div class="wrap">
+
+<h1>Liquid Glass 光学能力诊断</h1>
+<p class="sub">请用<b>正常的 Chrome 或 Edge</b> 打开本页（不要用内嵌预览面板）。<br>
+下面 3 个测试，每个都写清了「通过长什么样 / 失败长什么样」。看完在最下方选一下，把结果框里的文字复制给我。</p>
+
+<!-- ── 测试 1 ── -->
+<section>
+  <h2>测试 1 · feImage 酸性测试 <span style="color:#ff8a8a">（最重要）</span></h2>
+  <p class="why">红框区域的 <code>backdrop-filter</code> 里<b>只有一个 <code>feImage</code></b>，它加载了一张纯洋红色图片。
+  如果 <code>feImage</code> 正常工作，这块区域会被洋红色<b>整个盖住</b>。这决定了本项目的折射方案能不能用。</p>
+  <div class="legend">
+    <span class="chip pass">通过 = 红框内是一整块纯洋红色</span>
+    <span class="chip fail">失败 = 红框内还是黑白条纹</span>
+  </div>
+  <div class="bed"><span class="tag">测试 1</span>
+    <div class="probe" style="backdrop-filter:url(#fImgOnly)"></div>
+  </div>
+</section>
+
+<!-- ── 测试 2 ── -->
+<section>
+  <h2>测试 2 · 对照组（已知可用）</h2>
+  <p class="why">同样是 <code>backdrop-filter: url(...)</code>，但位移图来自 <code>feTurbulence</code> 而不是 <code>feImage</code>。
+  这一格<b>应该是通过的</b>。它的作用是证明「<code>backdrop-filter</code> 引用 SVG 滤镜」这条路本身没问题，
+  从而把测试 1 的失败精确定位到 <code>feImage</code> 一个原语上。</p>
+  <div class="legend">
+    <span class="chip pass">通过 = 条纹被扭成明显的波浪 / 火焰状</span>
+    <span class="chip fail">失败 = 条纹笔直，毫无变化</span>
+  </div>
+  <div class="bed"><span class="tag">测试 2</span>
+    <div class="probe" style="backdrop-filter:url(#fTurb)"></div>
+  </div>
+</section>
+
+<!-- ── 测试 3 ── -->
+<section>
+  <h2>测试 3 · corner-shape: squircle</h2>
+  <p class="why">两个方块<b>圆角值完全相同（44px）</b>，左边多加了一行 <code>corner-shape: squircle</code>。
+  如果浏览器支持，左边会是 Apple 那种「更方、更平缓」的连续曲率角，右边是标准圆弧角。</p>
+  <div class="legend">
+    <span class="chip pass">通过 = 左右两个方块的<b>角明显不一样</b></span>
+    <span class="chip fail">失败 = 左右两个<b>长得一模一样</b></span>
+  </div>
+  <div class="sqrow">
+    <div><div class="sqbox sq">左：squircle</div></div>
+    <div><div class="sqbox">右：border-radius</div></div>
+  </div>
+</section>
+
+<!-- ── 自动检测 ── -->
+<section>
+  <h2>自动检测结果（不用你做什么，页面自己填）</h2>
+  <table id="caps"></table>
+</section>
+
+<!-- ── 回填 ── -->
+<section>
+  <h2>请选一下你看到的结果</h2>
+  <div class="q"><b>测试 1（feImage 酸性测试）红框里是什么？</b>
+    <label><input type="radio" name="t1" value="PASS 纯洋红色块"> 一整块纯洋红色</label>
+    <label><input type="radio" name="t1" value="FAIL 仍是黑白条纹"> 还是黑白条纹</label>
+    <label><input type="radio" name="t1" value="其他/说不准"> 其他</label>
+  </div>
+  <div class="q"><b>测试 2（对照组）红框里的条纹？</b>
+    <label><input type="radio" name="t2" value="PASS 明显扭曲"> 明显扭曲成波浪</label>
+    <label><input type="radio" name="t2" value="FAIL 笔直无变化"> 笔直，没变化</label>
+    <label><input type="radio" name="t2" value="其他/说不准"> 其他</label>
+  </div>
+  <div class="q"><b>测试 3（squircle）左右两个方块？</b>
+    <label><input type="radio" name="t3" value="PASS 角明显不同"> 角明显不一样</label>
+    <label><input type="radio" name="t3" value="FAIL 完全一样"> 长得一模一样</label>
+    <label><input type="radio" name="t3" value="其他/说不准"> 其他</label>
+  </div>
+  <button id="copy">复制结果</button>
+  <textarea id="out" readonly></textarea>
+</section>
+
+<svg width="0" height="0" aria-hidden="true"><defs>
+  <filter id="fImgOnly" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feImage id="magentaSrc" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none"/>
+  </filter>
+  <filter id="fTurb" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+    <feTurbulence type="turbulence" baseFrequency="0.018" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" xChannelSelector="R" yChannelSelector="G" scale="55"/>
+  </filter>
+</defs></svg>
+
+<script>
+// 纯洋红色 SVG 作为 feImage 源：能显示 = feImage 正常
+document.getElementById('magentaSrc').setAttribute('href',
+  'data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="200">' +
+    '<rect width="600" height="200" fill="#ff00c8"/></svg>'));
+
+const checks = [
+  ["backdrop-filter: blur()",        CSS.supports('backdrop-filter','blur(10px)')],
+  ["backdrop-filter: url(#x)",       CSS.supports('backdrop-filter','url(#x)')],
+  ["-webkit-backdrop-filter: blur()",CSS.supports('-webkit-backdrop-filter','blur(10px)')],
+  ["filter: url(#x)",                CSS.supports('filter','url(#x)')],
+  ["corner-shape: squircle",         CSS.supports('corner-shape','squircle')],
+  ["corner-shape 计算值",             (getComputedStyle(document.querySelector('.sqbox.sq')).cornerShape||'(无)')],
+  ["oklch()",                        CSS.supports('color','oklch(0.5 0.1 200)')],
+  ["相对颜色 rgb(from …)",            CSS.supports('color','rgb(from red r g b)')],
+  ["CSS.paintWorklet",               'paintWorklet' in CSS]
+];
+document.getElementById('caps').innerHTML =
+  '<tr><th style="width:44%">能力</th><th>结果</th></tr>' +
+  checks.map(([k,v]) => {
+    const s = typeof v === 'boolean'
+      ? (v ? '<span class="ok">✓ true</span>' : '<span class="no">✗ false</span>')
+      : '<code>'+v+'</code>';
+    return `<tr><td>${k}</td><td>${s}</td></tr>`;
+  }).join('');
+
+function build(){
+  const pick = n => (document.querySelector(`input[name=${n}]:checked`)||{}).value || '(未选)';
+  document.getElementById('out').value =
+`===== Liquid Glass 光学诊断结果 =====
+时间: ${new Date().toISOString()}
+UA:   ${navigator.userAgent}
+
+肉眼判定
+  测试1 feImage 酸性测试 : ${pick('t1')}
+  测试2 turbulence 对照组: ${pick('t2')}
+  测试3 corner-shape     : ${pick('t3')}
+
+自动检测
+${checks.map(([k,v])=>'  '+k.padEnd(30)+' = '+v).join('\n')}
+===================================`;
+}
+document.addEventListener('change', build);
+document.getElementById('copy').onclick = async () => {
+  build();
+  try { await navigator.clipboard.writeText(document.getElementById('out').value);
+        document.getElementById('copy').textContent = '已复制 ✓'; }
+  catch { document.getElementById('out').select(); }
+};
+build();
+</script>
+</div></body></html>

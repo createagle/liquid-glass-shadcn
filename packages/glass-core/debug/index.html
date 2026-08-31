@@ -33,8 +33,10 @@
   /* ── 被测对象 ─────────────────────────────────────────────────────── */
   #rig{position:relative;z-index:2;display:flex;flex-direction:column;gap:26px;align-items:center}
   .segmented{display:flex;gap:4px;padding:7px}
-  .seg{padding:11px 26px;font-weight:600;font-size:15px;color:#fff;
-       text-shadow:0 1px 1px rgb(0 0 0 / .4);border-radius:19px;cursor:pointer;user-select:none}
+  /* 压在玻璃面上的文字一律走 token，不写裸色值（PROJECT_SPEC §15.4）——
+     写死 #fff 在亮色档下会变成白字压近白底座，对比度掉到 1.0 */
+  .seg{padding:11px 26px;font-weight:600;font-size:15px;color:var(--lg-label-primary);
+       border-radius:19px;cursor:pointer;user-select:none}
   #knobRow{display:flex;align-items:center;gap:20px}
   #knob{width:74px;height:74px;cursor:grab}
   #knob:active{cursor:grabbing}

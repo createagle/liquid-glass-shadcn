@@ -39,8 +39,10 @@
     background:var(--card);color:var(--lg-label-secondary)}
   .cell .cap b{color:var(--foreground)}
   .pill{position:relative;z-index:2;display:flex;gap:4px;padding:6px}
-  .pill .s{padding:8px 15px;font-size:13px;font-weight:600;color:#fff;
-           text-shadow:0 1px 1px rgb(0 0 0/.45);border-radius:15px}
+  .pill .s{padding:8px 15px;font-size:13px;font-weight:600;border-radius:15px;
+           /* 走 token，不写裸色值（PROJECT_SPEC §15.4）。
+              亮色下 --lg-label-primary 是黑、暗色下是白，与底座的明暗恰好配套。 */
+           color:var(--lg-label-primary)}
   .darkcell{color-scheme:dark}
 
   /* ── 圆角 ─────────────────────────────────────────────────────────── */

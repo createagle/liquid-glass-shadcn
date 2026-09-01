@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="zh-CN" data-glass-theme="dark" data-glass-tier="a">
+<head>
+<meta charset="utf-8">
+<title>元素级明暗自适应 —— 候选方案实验台</title>
+<link rel="stylesheet" href="../src/tokens/theme.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+
+  /* 与 contrast-fixture.html 用同一套最不利背景，结论才可比 */
+  #bg{position:fixed;inset:0;z-index:0}
+  #bg[data-bg="black"]{background:#000}
+  #bg[data-bg="white"]{background:#fff}
+  #bg[data-bg="mid"]{background:#808080}
+  #bg[data-bg="checker"]{background:
+    repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 0 0/16px 16px}
+  #bg[data-bg="saturated"]{background:
+    conic-gradient(from 210deg at 50% 50%,#af52de,#0a84ff,#30d158,#ffcc00,#ff2d55,#af52de)}
+  #bg[data-bg="photo"]{background:
+    radial-gradient(40% 55% at 12% 18%,#ff2d55 0%,transparent 60%),
+    radial-gradient(45% 60% at 84% 14%,#ffcc00 0%,transparent 60%),
+    radial-gradient(55% 50% at 78% 86%,#001133 0%,transparent 62%),
+    radial-gradient(45% 55% at 18% 88%,#30d158 0%,transparent 60%),
+    linear-gradient(115deg,#000 0%,#fff 35%,#0a84ff 70%,#000 100%)}
+
+  .stage{position:relative;z-index:1;padding:20px;display:flex;flex-direction:column;gap:14px}
+
+  /* 每个候选一张卡；卡本身就是被测的玻璃底座 */
+  .cand{
+    position:relative;isolation:isolate;
+    border-radius:22px;padding:14px 18px;
+    display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+  }
+  .cand .tag{
+    font:700 11px/1 ui-monospace,monospace;letter-spacing:.06em;
+    opacity:.55;min-width:150px;
+    /* tag 不参与测量，用保底的高对比色，避免自己看不见 */
+    color:var(--lg-label-primary);
+  }
+  .body{font-size:14px;font-weight:400}
+  .sec{font-size:14px;font-weight:400}
+
+  html[data-hide-text="1"] [data-probe]{visibility:hidden}
+
+  /* ════════════════════════════════════════════════════════════════
+     C0 —— 基线：当前实现（tint 0 的材质 alpha + 固定主题文字色）
+     ════════════════════════════════════════════════════════════════ */
+  .c0{
+    background-color:rgb(var(--lg-base-color) / var(--lg-base-alpha));
+    backdrop-filter:blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+  }
+  .c0 .p{color:var(--lg-label-primary)}
+  .c0 .s{color:var(--lg-label-secondary)}
+
+  /* ════════════════════════════════════════════════════════════════
+     C1 —— 只把材质 alpha 抬到「保证 AA」的地板值
+     亮色：白底 alpha ≥ .455 才能让纯黑文字在纯黑背景上过 4.5:1
+     暗色：黑底 alpha ≥ .535 才能让纯白文字在纯白背景上过 4.5:1
+     （推导见 docs/research/optics-web.md §6）
+     ════════════════════════════════════════════════════════════════ */
+  .c1{
+    background-color:rgb(var(--lg-base-color) / var(--c1-alpha));
+    backdrop-filter:blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+  }
+  .c1 .p{color:var(--lg-label-primary)}
+  .c1 .s{color:var(--lg-label-secondary)}
+
+  /* ════════════════════════════════════════════════════════════════
+     C2 —— backdrop-filter 亮度钳制
+     暗色主题：brightness(k) 把亮背景压下来（k<1 能压亮，但压不亮黑）
+     亮色主题：brightness() 抬不动黑 —— 只能靠白色填充，故与 C1 同构
+     这一条要验证的是：钳制能不能比单纯抬 alpha 更省透明度
+     ════════════════════════════════════════════════════════════════ */
+  .c2{
+    background-color:rgb(var(--lg-base-color) / var(--c2-alpha));
+    backdrop-filter:blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))
+                    brightness(var(--c2-brightness));
+  }
+  .c2 .p{color:var(--lg-label-primary)}
+  .c2 .s{color:var(--lg-label-secondary)}
+
+  /* ════════════════════════════════════════════════════════════════
+     C3 —— mix-blend-mode: difference（optics-web §6 方案 1 的朴素形态）
+     预期会失败：difference 保证的是 RGB 差，不是**亮度**差。
+     中等亮度彩色背景上反色后亮度可能几乎不变 —— 本条就是来证伪的。
+     ════════════════════════════════════════════════════════════════ */
+  .c3{
+    background-color:rgb(var(--lg-base-color) / var(--lg-base-alpha));
+    backdrop-filter:blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+  }
+  .c3 .p,.c3 .s{color:#fff;mix-blend-mode:difference}
+
+  /* ════════════════════════════════════════════════════════════════
+     C4 —— 元素级自适应（本次要落地的方案）
+     由 JS 探测底座**实际合成后**的背景亮度，翻转 data-lg-on，
+     文字色随之取反。这里先用 data 属性驱动，探测逻辑在 probe 脚本里模拟。
+     ════════════════════════════════════════════════════════════════ */
+  .c4{
+    background-color:rgb(var(--lg-base-color) / var(--lg-base-alpha));
+    backdrop-filter:blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+  }
+  .c4[data-lg-on="light"] .p{color:rgb(var(--lg-label-base-light))}
+  .c4[data-lg-on="light"] .s{color:rgb(var(--lg-label-tint-light) / .6)}
+  .c4[data-lg-on="dark"]  .p{color:rgb(var(--lg-label-base-dark))}
+  .c4[data-lg-on="dark"]  .s{color:rgb(var(--lg-label-tint-dark) / .6)}
+
+  /* ════════════════════════════════════════════════════════════════
+     C5 —— 自适应 + alpha 地板（C4 与 C1 叠加）
+     自适应负责好看，地板负责「探测失败时也不至于翻车」
+     ════════════════════════════════════════════════════════════════ */
+  .c5{
+    background-color:rgb(var(--lg-base-color) / var(--c5-alpha));
+    backdrop-filter:blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+  }
+  .c5[data-lg-on="light"] .p{color:rgb(var(--lg-label-base-light))}
+  .c5[data-lg-on="light"] .s{color:rgb(var(--lg-label-tint-light) / .6)}
+  .c5[data-lg-on="dark"]  .p{color:rgb(var(--lg-label-base-dark))}
+  .c5[data-lg-on="dark"]  .s{color:rgb(var(--lg-label-tint-dark) / .6)}
+</style>
+</head>
+<body>
+<div id="bg" data-bg="white"></div>
+<div class="stage" id="stage"></div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const root = document.documentElement;
+
+const theme = params.get('theme') ?? 'dark';
+const tint  = Number(params.get('tint') ?? '0');
+const bg    = params.get('bg') ?? 'white';
+
+document.getElementById('bg').dataset.bg = bg;
+root.setAttribute('data-glass-theme', theme);
+root.classList.toggle('dark', theme === 'dark');
+root.setAttribute('data-glass-tier', params.get('tier') ?? 'a');
+
+/* 档位插值 —— 与 GlassProvider / contrast-fixture 用同一张表 */
+const STOPS = {
+  light: [[0.34,8,1.9,0.5],[0.62,14,1.7,1.0],[0.78,20,1.35,1.3],[0.96,26,1.05,1.6]],
+  dark:  [[0.22,8,1.8,0.6],[0.44,14,1.6,1.0],[0.62,20,1.3,1.35],[0.94,26,1.0,1.7]],
+};
+const s = STOPS[theme === 'dark' ? 'dark' : 'light'];
+const pos = Math.min(1, Math.max(0, tint)) * 3;
+const i = Math.min(2, Math.floor(pos)), t = pos - i;
+const L = (a,b) => a + (b-a)*t;
+root.style.setProperty('--lg-tint', String(tint));
+root.style.setProperty('--lg-base-alpha', L(s[i][0], s[i+1][0]).toFixed(4));
+root.style.setProperty('--lg-base-blur',  L(s[i][1], s[i+1][1]).toFixed(2) + 'px');
+root.style.setProperty('--lg-base-saturate', L(s[i][2], s[i+1][2]).toFixed(3));
+root.style.setProperty('--lg-stroke-strength', L(s[i][3], s[i+1][3]).toFixed(3));
+
+/* 地板值：见 CSS 注释里的推导 */
+const FLOOR = theme === 'dark' ? 0.535 : 0.455;
+const baseAlpha = L(s[i][0], s[i+1][0]);
+root.style.setProperty('--c1-alpha', String(Math.max(baseAlpha, FLOOR)));
+root.style.setProperty('--c5-alpha', String(Math.max(baseAlpha, FLOOR)));
+/* C2：暗色压亮背景；亮色钳制无效（抬不动黑），退化为地板 */
+root.style.setProperty('--c2-brightness', theme === 'dark' ? '0.46' : '1');
+root.style.setProperty('--c2-alpha', theme === 'dark' ? String(baseAlpha) : String(FLOOR));
+
+const CANDIDATES = [
+  ['c0', 'C0 基线（当前实现）'],
+  ['c1', 'C1 alpha 地板'],
+  ['c2', 'C2 亮度钳制'],
+  ['c3', 'C3 difference 混合'],
+  ['c4', 'C4 元素级自适应'],
+  ['c5', 'C5 自适应+地板'],
+];
+
+document.getElementById('stage').innerHTML = CANDIDATES.map(([cls, label]) => `
+  <div class="cand ${cls}" data-cand="${cls}">
+    <span class="tag">${label}</span>
+    <span class="body p" data-probe data-point="${cls}/primary"   data-size="body">主要标签 Primary</span>
+    <span class="sec  s" data-probe data-point="${cls}/secondary" data-size="body">次要标签 Secondary</span>
+  </div>`).join('');
+
+/* ── 元素级自适应的探测实现 ───────────────────────────────────────
+   这是本次要验证的核心逻辑：读取底座**背后**的实际背景，估算合成后亮度，
+   决定文字该用亮色还是暗色。
+   这里用「已知背景」查表，是因为实验台的背景是我们自己画的；
+   真实实现走 elementsFromPoint + 计算背景色，见 glass-core。 */
+const BG_LUMA = {            // 各背景的最坏情况亮度（0..1，sRGB 编码值）
+  black: 0.0, white: 1.0, mid: 0.502,
+  checker: 1.0,            // 有纯白格
+  saturated: 0.75,         // 黄/绿区很亮
+  photo: 1.0,              // 渐变里有纯白
+};
+
+function adapt(el) {
+  const bgL = BG_LUMA[bg] ?? 0.5;
+  const alpha = parseFloat(getComputedStyle(el).getPropertyValue('background-color').match(/[\d.]+/g)?.[3] ?? '1');
+  // 底座填充色：亮色主题是白，暗色主题是黑
+  const fill = theme === 'dark' ? 0 : 1;
+  // 合成后的近似亮度（sRGB 编码域的线性混合，足够用于判极性）
+  const composited = alpha * fill + (1 - alpha) * bgL;
+  el.dataset.lgOn = composited > 0.5 ? 'light' : 'dark';
+  el.dataset.compositedLuma = composited.toFixed(3);
+}
+document.querySelectorAll('.c4, .c5').forEach(adapt);
+
+window.__setTextHidden = (h) => root.setAttribute('data-hide-text', h ? '1' : '0');
+
+window.__collect = () => [...document.querySelectorAll('[data-probe]')].map((el) => {
+  const r = el.getBoundingClientRect();
+  const cs = getComputedStyle(el);
+  const host = el.closest('.cand');
+  return {
+    point: el.dataset.point,
+    size: el.dataset.size,
+    color: cs.color,
+    blend: cs.mixBlendMode,
+    adaptedTo: host?.dataset.lgOn ?? null,
+    compositedLuma: host?.dataset.compositedLuma ?? null,
+    box: { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) },
+  };
+});
+
+window.__ready = true;
+</script>
+</body>
+</html>

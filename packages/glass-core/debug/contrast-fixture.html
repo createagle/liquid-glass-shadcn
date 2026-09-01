@@ -111,10 +111,22 @@ const pos = Math.min(1, Math.max(0, tint)) * 3;
 const i = Math.min(2, Math.floor(pos)), t = pos - i;
 const L = (a,b) => a + (b-a)*t;
 root.style.setProperty('--lg-tint', String(tint));
-root.style.setProperty('--lg-base-alpha', L(s[i][0], s[i+1][0]).toFixed(4));
 root.style.setProperty('--lg-base-blur',  L(s[i][1], s[i+1][1]).toFixed(2) + 'px');
 root.style.setProperty('--lg-base-saturate', L(s[i][2], s[i+1][2]).toFixed(3));
 root.style.setProperty('--lg-stroke-strength', L(s[i][3], s[i+1][3]).toFixed(3));
+
+/* 可读性地板（PROJECT_SPEC §13）。
+   ⚠️ 这两个值**不在本文件里算** —— 唯一事实来源是
+   `packages/glass-core/src/a11y/legibility.ts`，由 contrast-audit.mjs
+   导入后经 URL 参数传进来。这里只在没传参时退回原始档位值，
+   以便直接用浏览器打开本页时仍能看到「未加地板」的样子。 */
+const rawAlpha = L(s[i][0], s[i+1][0]);
+const alphaParam = params.get('alpha');
+const secParam = params.get('secalpha');
+root.style.setProperty('--lg-base-alpha',
+  alphaParam !== null ? alphaParam : rawAlpha.toFixed(4));
+root.style.setProperty('--lg-base-alpha-raw', rawAlpha.toFixed(4));
+if (secParam !== null) root.style.setProperty('--lg-label-secondary-alpha', secParam);
 
 // 内容层四档
 document.getElementById('contentRow').innerHTML =

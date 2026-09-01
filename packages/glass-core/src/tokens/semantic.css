@@ -38,7 +38,13 @@
 
   /* ── 标签色（带 alpha，必须透出玻璃） ──────────────────────────────── */
   --lg-label-primary: rgb(var(--lg-label-base-light));
-  --lg-label-secondary: rgb(var(--lg-label-tint-light) / 0.6);
+  /* 次级标签的 alpha。**默认取 AA 安全值，不是 Apple 原值 0.6。**
+     Apple 的 secondaryLabel（#3C3C43 @ 60%）压在纯白上只有 3.44:1，本身不过 AA，
+     且任何材质不透明度都救不回来 —— PROJECT_SPEC §13 标题写明「不可协商」，故 AA 优先。
+     这是本库对 Apple 的一处明确偏离，推导见 a11y/legibility.ts。
+     需要 Apple 原值时用 GlassProvider 的 legibility="off"。 */
+  --lg-label-secondary-alpha: 0.99;
+  --lg-label-secondary: rgb(var(--lg-label-tint-light) / var(--lg-label-secondary-alpha));
   --lg-label-tertiary: rgb(var(--lg-label-tint-light) / 0.3);
   --lg-label-quaternary: rgb(var(--lg-label-tint-light) / 0.18);
 
@@ -73,7 +79,7 @@
      content layer to help create visual distinction."
      内容型组件（Card / Table / List / Accordion）用这一组，**不用 Liquid Glass**。
      见 docs/research/apple-liquid-glass.md §7。 */
-  --lg-content-ultrathin: rgb(255 255 255 / 0.44);
+  --lg-content-ultrathin: rgb(255 255 255 / 0.47); /* AA 地板 0.4614（含渲染余量），见 a11y/legibility.ts */
   --lg-content-thin: rgb(255 255 255 / 0.62);
   --lg-content-regular: rgb(255 255 255 / 0.78);
   --lg-content-thick: rgb(255 255 255 / 0.92);
@@ -120,7 +126,13 @@
   --lg-gray-6: var(--lg-gray-6-dark);
 
   --lg-label-primary: rgb(var(--lg-label-base-dark));
-  --lg-label-secondary: rgb(var(--lg-label-tint-dark) / 0.6);
+  /* 次级标签的 alpha。**默认取 AA 安全值，不是 Apple 原值 0.6。**
+     Apple 的 secondaryLabel（#3C3C43 @ 60%）压在纯白上只有 3.44:1，本身不过 AA，
+     且任何材质不透明度都救不回来 —— PROJECT_SPEC §13 标题写明「不可协商」，故 AA 优先。
+     这是本库对 Apple 的一处明确偏离，推导见 a11y/legibility.ts。
+     需要 Apple 原值时用 GlassProvider 的 legibility="off"。 */
+  --lg-label-secondary-alpha: 0.99;
+  --lg-label-secondary: rgb(var(--lg-label-tint-dark) / var(--lg-label-secondary-alpha));
   --lg-label-tertiary: rgb(var(--lg-label-tint-dark) / 0.3);
   /* 注意 dark 的 quaternary 是 16% 不是 18% —— 不是笔误，iOS 两侧确实不对称 */
   --lg-label-quaternary: rgb(var(--lg-label-tint-dark) / 0.16);
@@ -137,7 +149,7 @@
   --lg-base-color: 20 20 24;
   --lg-elevated-color: 32 32 38;
 
-  --lg-content-ultrathin: rgb(28 28 30 / 0.5);
+  --lg-content-ultrathin: rgb(28 28 30 / 0.62); /* AA 地板 0.6078（含渲染余量），见 a11y/legibility.ts */
   --lg-content-thin: rgb(28 28 30 / 0.66);
   --lg-content-regular: rgb(28 28 30 / 0.8);
   --lg-content-thick: rgb(28 28 30 / 0.94);

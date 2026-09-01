@@ -42,6 +42,17 @@ import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { decodePng } from './lib/png.mjs';
+import { measureMaskedContrast, parseColor, isLargeText } from './lib/contrast.mjs';
+
+/**
+ * 可读性地板 —— 直接 import TS 源，**不在本脚本里复算**。
+ * Node 24 原生支持 .ts 的类型剥离，故可以直接导入 glass-core 的源文件，
+ * 保证 CI 检查的地板值与运行时实际用的是同一份。
+ */
+import {
+  resolveLegibleAlpha,
+  SECONDARY_ALPHA_AT_FLOOR,
+} from '../packages/glass-core/src/a11y/legibility.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURE = resolve(__dirname, '../packages/glass-core/debug/contrast-fixture.html');
@@ -67,6 +78,22 @@ const TIERS = ['a', 'b', 'c'];
  * 亮色主题文字是黑的 → 暗背景最不利；暗色主题文字是白的 → 亮背景最不利。
  * 两个极端都要覆盖，另加高频棋盘（模糊也抹不平）与高饱和渐变。
  */
+/**
+ * 档位表里的 alpha 一列 —— 与 `provider/glass-provider.tsx` 的 STOPS 对齐。
+ * 只取 alpha 是因为对比度只跟它有关；blur/saturate 由夹具自己插值。
+ */
+const RAW_STOP_ALPHA = {
+  light: (t) => lerpStops([0.34, 0.62, 0.78, 0.96], t),
+  dark: (t) => lerpStops([0.22, 0.44, 0.62, 0.94], t),
+};
+function lerpStops(stops, t) {
+  const clamped = Math.min(1, Math.max(0, t));
+  const pos = clamped * (stops.length - 1);
+  const i = Math.min(stops.length - 2, Math.floor(pos));
+  const f = pos - i;
+  return stops[i] + (stops[i + 1] - stops[i]) * f;
+}
+
 const BACKGROUNDS = ['black', 'white', 'mid', 'checker', 'saturated', 'photo'];
 
 /** sRGB 相对亮度（WCAG 定义） */
@@ -82,60 +109,6 @@ function contrast(l1, l2) {
   return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 }
 
-/** 解析 `rgb(r, g, b)` / `rgba(r, g, b, a)` */
-function parseColor(css) {
-  const m = css.match(/[\d.]+/g);
-  if (!m) throw new Error(`无法解析颜色：${css}`);
-  return {
-    r: Number(m[0]),
-    g: Number(m[1]),
-    b: Number(m[2]),
-    a: m[3] === undefined ? 1 : Number(m[3]),
-  };
-}
-
-/** WCAG 的「大字」定义：≥24px，或 ≥18.66px 且加粗 */
-function isLargeText(fontSize, fontWeight) {
-  const weight = Number(fontWeight) || 400;
-  return fontSize >= 24 || (fontSize >= 18.66 && weight >= 700);
-}
-
-/**
- * 采样一个包围盒，返回最差的对比度。
- * 文字若带 alpha，先把它合成到该像素的背景色上再比 —— 否则会高估。
- */
-function worstContrastInBox(png, box, textColor) {
-  const { width, height, data } = png;
-  const x0 = Math.max(0, box.x);
-  const y0 = Math.max(0, box.y);
-  const x1 = Math.min(width, box.x + box.w);
-  const y1 = Math.min(height, box.y + box.h);
-  if (x1 <= x0 || y1 <= y0) return null;
-
-  let worst = Infinity;
-  let worstPixel = null;
-
-  for (let y = y0; y < y1; y++) {
-    for (let x = x0; x < x1; x++) {
-      const i = (y * width + x) * 4;
-      const br = data[i];
-      const bg = data[i + 1];
-      const bb = data[i + 2];
-
-      // 文字色合成到背景上
-      const fr = textColor.a * textColor.r + (1 - textColor.a) * br;
-      const fg = textColor.a * textColor.g + (1 - textColor.a) * bg;
-      const fb = textColor.a * textColor.b + (1 - textColor.a) * bb;
-
-      const c = contrast(luminance(fr, fg, fb), luminance(br, bg, bb));
-      if (c < worst) {
-        worst = c;
-        worstPixel = { x, y, bg: [br, bg, bb] };
-      }
-    }
-  }
-  return { ratio: worst, pixel: worstPixel };
-}
 
 async function main() {
   const browser = await chromium.launch();
@@ -153,28 +126,38 @@ async function main() {
       for (const tier of TIERS) {
         for (const bg of BACKGROUNDS) {
           combos++;
+          // 与 GlassProvider 完全同源的地板计算：根节点算不出逐元素背景，
+          // 故传 null（= 按最不利背景求地板），与 legibility:'guaranteed' 一致。
+          const rawAlpha = RAW_STOP_ALPHA[theme](tint);
+          const flooredAlpha = resolveLegibleAlpha(rawAlpha, theme, 'guaranteed', null);
+
           const url =
             pathToFileURL(FIXTURE).href +
-            `?theme=${theme}&tint=${tint}&tier=${tier}&bg=${bg}`;
+            `?theme=${theme}&tint=${tint}&tier=${tier}&bg=${bg}` +
+            `&alpha=${flooredAlpha.toFixed(4)}&secalpha=${SECONDARY_ALPHA_AT_FLOOR}`;
           await page.goto(url, { waitUntil: 'load' });
           await page.waitForFunction(() => window.__ready === true);
 
           const points = await page.evaluate(() => window.__collect());
 
-          // 隐藏文字后截图 → 得到「文字背后」的真实合成像素
+          const settle = () =>
+            page.evaluate(
+              () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+            );
+
+          // 差分测量需要两张图：文字可见 / 文字隐藏。
+          // 见 lib/contrast.mjs 头部说明 —— 旧的「读 CSS 色再合成」测法
+          // 会采到圆角之外的像素，且对 mix-blend-mode 失效。
+          await settle();
+          const shownPng = decodePng(await page.screenshot({ type: 'png' }));
+
           await page.evaluate(() => window.__setTextHidden(true));
-          // 等一帧，确保 backdrop-filter 重新合成完毕
-          await page.evaluate(
-            () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
-          );
-          const shot = await page.screenshot({ type: 'png' });
+          await settle();
+          const png = decodePng(await page.screenshot({ type: 'png' }));
           await page.evaluate(() => window.__setTextHidden(false));
 
-          const png = decodePng(shot);
-
           for (const p of points) {
-            const color = parseColor(p.color);
-            const result = worstContrastInBox(png, p.box, color);
+            const result = measureMaskedContrast(shownPng, png, p.box, parseColor(p.color));
             if (!result) continue;
 
             const large = isLargeText(p.fontSize, p.fontWeight);
@@ -325,7 +308,11 @@ async function main() {
       console.log(`    ${f.where.padEnd(26)} ${f.ratio}:1 < ${f.threshold}:1  (${f.theme}/${f.bg})`);
     }
     console.log('');
-    console.log('  根因是元素级明暗自适应未实现，见 docs/research/STATUS.md。');
+    console.log('  剩余项的根因是**着色标签**（tint-blue / tint-red）：');
+    console.log('  系统色是固定值，既压不亮也压不暗，材质地板对它无效。');
+    console.log('  Apple 自己的指引是「把颜色加在背景上，不要加在文字/符号上」');
+    console.log('  （docs/research/apple-liquid-glass.md §5 第 3 条）。');
+    console.log('  处理方案未定，见 docs/research/STATUS.md。');
     console.log('  这些不是「可以接受」，是「已知且被盯住」。');
     return 0;
   }

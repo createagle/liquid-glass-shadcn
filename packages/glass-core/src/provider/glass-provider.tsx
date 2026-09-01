@@ -12,6 +12,12 @@ import {
 import { applyTier, detectTierSync, probeFeImage, type GlassTier } from '../tiers/detect.js';
 import { useGlassPreferences, type GlassPreferences } from './preferences.js';
 import { STORAGE_KEYS } from './ssr-script.js';
+import {
+  resolveLegibleAlpha,
+  SECONDARY_ALPHA_AT_FLOOR,
+  APPLE_SECONDARY_ALPHA,
+  type LegibilityMode,
+} from '../a11y/legibility.js';
 
 /**
  * GlassProvider —— PROJECT_SPEC §5（Provider 职责）/ §7（明暗）/ §8（材质档位）。
@@ -129,6 +135,14 @@ export interface GlassProviderProps {
   defaultTint?: number;
   /** 强制 tier，主要给文档站的审查开关用 */
   tier?: GlassTier;
+  /**
+   * 可读性策略，默认 `guaranteed`（PROJECT_SPEC §13 是「不可协商」项）。
+   *
+   * `guaranteed` 会把材质 alpha 抬到 AA 地板之上，代价是最通透档
+   * 没有名义上那么通透。若确知背景可控，可改 `adaptive` 或 `off`。
+   * 取值含义见 `a11y/legibility.ts`。
+   */
+  legibility?: LegibilityMode;
 }
 
 export function GlassProvider({
@@ -136,6 +150,7 @@ export function GlassProvider({
   defaultTheme = 'system',
   defaultTint = 0.34,
   tier: tierProp,
+  legibility = 'guaranteed',
 }: GlassProviderProps) {
   const preferences = useGlassPreferences();
 
@@ -227,15 +242,37 @@ export function GlassProvider({
     const effective = preferences.reducedTransparency ? 1 : tint;
     const m = resolveMaterial(effective, resolvedTheme);
 
+    /**
+     * 可读性地板 —— PROJECT_SPEC §13「档位 0 + 最不利背景仍需过 AA」。
+     *
+     * 这里传 `null` 当作「没有实测背景」，于是按最不利背景（纯黑↔纯白）求地板。
+     * 元素级的实测范围由 `GlassSurface` 自己探测后局部覆盖，
+     * 因为背景是**逐元素**不同的，根节点上算不出来。
+     */
+    const alpha = resolveLegibleAlpha(m.alpha, resolvedTheme, legibility, null);
+
     root.setAttribute('data-glass-tint', String(effective));
     root.setAttribute('data-glass-tint-step', tintToStep(effective));
+    root.setAttribute('data-glass-legibility', legibility);
     root.style.setProperty('--lg-tint', String(effective));
     // ↓ 连续插值出来的底座材质。Layer I 的折射参数不在这里，故不受档位影响。
-    root.style.setProperty('--lg-base-alpha', m.alpha.toFixed(4));
+    root.style.setProperty('--lg-base-alpha', alpha.toFixed(4));
+    // 原始（未加地板）的档位值，供需要「真·通透」的场合与调试台对照
+    root.style.setProperty('--lg-base-alpha-raw', m.alpha.toFixed(4));
     root.style.setProperty('--lg-base-blur', `${m.blur.toFixed(2)}px`);
     root.style.setProperty('--lg-base-saturate', m.saturate.toFixed(3));
     root.style.setProperty('--lg-stroke-strength', m.stroke.toFixed(3));
-  }, [mounted, tint, resolvedTheme, preferences.reducedTransparency]);
+    /**
+     * secondary 标签的 alpha 也要随地板抬升 —— 否则底座达标了、次级文字仍然不达标。
+     * ⚠️ 这会**偏离 Apple 原值 0.6**：Apple 的 secondaryLabel 压在纯白上只有
+     * 3.44:1，本身就不过 AA，且任何材质不透明度都救不回来。取舍理由见
+     * `a11y/legibility.ts` 的 SECONDARY_ALPHA_AT_FLOOR 注释。
+     */
+    root.style.setProperty(
+      '--lg-label-secondary-alpha',
+      legibility === 'off' ? String(APPLE_SECONDARY_ALPHA) : String(SECONDARY_ALPHA_AT_FLOOR),
+    );
+  }, [mounted, tint, resolvedTheme, preferences.reducedTransparency, legibility]);
 
   useEffect(() => {
     if (!mounted) return;

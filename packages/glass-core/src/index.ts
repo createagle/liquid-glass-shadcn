@@ -93,3 +93,20 @@ export {
   type SpringPreset,
   type SpringName,
 } from './motion/springs.js';
+
+/* ── 可读性地板（PROJECT_SPEC §13） ─────────────────────────────────── */
+export {
+  srgbLuminance,
+  contrastRatio,
+  compositeOver,
+  minBaseAlphaFor,
+  resolveLegibleAlpha,
+  TOKEN_COLORS,
+  AA_FLOOR_PRIMARY,
+  AA_FLOOR_SECONDARY,
+  AA_TARGET_WITH_MARGIN,
+  SECONDARY_ALPHA_AT_FLOOR,
+  APPLE_SECONDARY_ALPHA,
+  type LegibilityMode,
+  type LegibilityQuery,
+} from './a11y/legibility.js';

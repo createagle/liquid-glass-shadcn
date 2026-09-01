@@ -274,10 +274,12 @@ function DropdownMenuContent({
    * 这个属性，比在每个 Item 里各挂一个省得多。
    */
   const observerRef = React.useRef<MutationObserver | null>(null);
+  const clearRafRef = React.useRef(0);
   const attachPanel = React.useCallback(
     (node: HTMLDivElement | null) => {
       observerRef.current?.disconnect();
       observerRef.current = null;
+      cancelAnimationFrame(clearRafRef.current);
       if (!node || compact) {
         setPunch(null);
         return;
@@ -285,9 +287,19 @@ function DropdownMenuContent({
       const sync = () => {
         const item = node.querySelector<HTMLElement>('[data-highlighted]');
         if (!item) {
-          setPunch(null);
+          /**
+           * 换项的一瞬间，Radix 会**先摘掉旧项**的 `data-highlighted`、再给新项挂上 ——
+           * 中间存在一帧「谁都没高亮」。立刻把洞收掉的话，洞会跟着闪一下。
+           * 等一帧再确认：真的没人高亮了才收。
+           * （CI 上还因此翻过一次车：测试在那一帧里读 .lg-punch-layer，读到 null。）
+           */
+          cancelAnimationFrame(clearRafRef.current);
+          clearRafRef.current = requestAnimationFrame(() => {
+            if (!node.querySelector('[data-highlighted]')) setPunch(null);
+          });
           return;
         }
+        cancelAnimationFrame(clearRafRef.current);
         const p = node.getBoundingClientRect();
         const r = item.getBoundingClientRect();
         setPunch({

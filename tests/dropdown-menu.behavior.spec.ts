@@ -162,10 +162,15 @@ test.describe('分层 —— Layer I 终于有地方落了', () => {
       await expect(page.locator('.lg-punch-layer')).toHaveCount(1);
 
       // 洞要跟着高亮项走：换一项之后洞的位置必须变
+      //
+      // ⚠️ 读取要能容忍「洞暂时不在」：换项的一瞬间 Radix 先摘旧项、再挂新项，
+      // 中间有一帧谁都没高亮。组件那边已经把清洞推迟了一帧，但读的时候仍然
+      // 不该假设元素一定在（CI 上就是在这里 getComputedStyle(null) 炸的）。
       const clipOf = () =>
-        page.evaluate(
-          () => getComputedStyle(document.querySelector('.lg-punch-layer')!).clipPath,
-        );
+        page.evaluate(() => {
+          const el = document.querySelector('.lg-punch-layer');
+          return el ? getComputedStyle(el).clipPath : null;
+        });
       const first = await clipOf();
       await page.locator('[data-slot="dropdown-menu-item"]').nth(1).hover();
       await expect.poll(clipOf).not.toBe(first);

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>Sheet 验证台</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="./tailwind.css">
+<link rel="stylesheet" href="../../../packages/glass-core/src/tokens/theme.css">
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+       background:#000 /* 缩小后露出的底色 */}
+  /* ── 背后那一层 ──────────────────────────────────────────────────────
+     data-glass-sheet-wrapper 是 @glass/core 约定的**可选**外壳标记：
+     sheet 打开时 theme.css 会让它按 --lg-sheet-wrapper-scale 缩小并加圆角，
+     做出 iOS 的层叠观感（PROJECT_SPEC §9）。
+
+     ⚠️ 这一层上有 transform，会成为 position:fixed 后代的包含块 ——
+     所以 #bg 必须是 absolute（不能 fixed），否则缩放时背景会跟着变形。
+     sheet 本身走 portal 挂在 body 上，不在这一层里，不受影响。 */
+  #page{position:relative;min-height:100%;overflow:hidden;background:#000}
+  #bg{position:absolute;inset:0;
+    background:
+      radial-gradient(40% 55% at 12% 18%,#ff2d55 0,transparent 60%),
+      radial-gradient(45% 60% at 84% 14%,#ffcc00 0,transparent 60%),
+      radial-gradient(55% 50% at 78% 86%,#001133 0,transparent 62%),
+      radial-gradient(45% 55% at 18% 88%,#30d158 0,transparent 60%),
+      linear-gradient(115deg,#000 0,#fff 35%,#0a84ff 70%,#000 100%)}
+  #bg[data-bg="stripes"]{background:repeating-linear-gradient(90deg,#000 0 6px,#fff 6px 12px)}
+  #bg[data-bg="grouped"]{background:var(--lg-grouped-bg)}
+  #root{position:relative;padding:28px}
+</style></head>
+<body>
+<div id="page" data-glass-sheet-wrapper><div id="bg"></div><div id="root"></div></div>
+<script>
+  const p = new URLSearchParams(location.search);
+  if (p.get('bg')) document.getElementById('bg').dataset.bg = p.get('bg');
+</script>
+<script src="./sheet-demo.js"></script></body></html>

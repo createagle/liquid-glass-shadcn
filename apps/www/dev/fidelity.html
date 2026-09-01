@@ -28,6 +28,11 @@
   .frame.crop-card{width:372px;height:106px;overflow:hidden;position:relative;background:#f2f2f7}
   .frame.crop-card img{width:402px;max-width:none;position:absolute;left:-16px;top:-126px}
   .frame.on-grouped{background:#f2f2f7}
+  /* Sheet：整屏 402 宽的渲染图里面板位于 (6,409)，尺寸 390×459。
+     右栏引的是**真实组件**按同一组坐标截出来的图（见 fidelity-sheets.mjs）。 */
+  .sheet.wide{width:880px}
+  .frame.crop-sheet{width:392px;height:461px;overflow:hidden;position:relative;background:#fff}
+  .frame.crop-sheet img{width:402px;max-width:none;position:absolute;left:-6px;top:-409px}
   .frame.crop img{width:450px;max-width:none;position:absolute;left:-24px;top:-812px}
   .note{margin-top:14px;font-size:11.5px;line-height:1.65;color:#3c3c43;
         border-left:3px solid #c7c7cc;padding-left:10px}
@@ -164,6 +169,38 @@
     ③ <b>Card 本身没有任何玻璃</b> —— 这是 PROJECT_SPEC §2 的规定，不是没做完：
     Apple 明确说 Liquid Glass 属于控件与导航层，内容层不用。所以这一张里
     <b>唯一有玻璃的东西是行里的 Switch</b>。
+  </div>
+</div>
+
+<div class="sheet wide" id="sheet-sheet">
+  <h2>Sheet / Drawer —— Apple iOS 27 参考图 vs 本库组件</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="cap">Apple <span>· Sheet（节点 12740:24130），裁到面板的 390×459</span></div>
+      <div class="frame crop-sheet"><img src="../../../docs/research/screenshots/ios27-sheet.png" alt=""></div>
+    </div>
+    <div class="col">
+      <div class="cap">本库 <span>· &lt;Sheet&gt; medium 档，Tier A / 默认档位（真实组件的截图）</span></div>
+      <div class="frame" style="width:392px"><img src="./sheet-shot.png" alt="" style="width:390px"></div>
+    </div>
+  </div>
+  <div class="note">
+    <b>两边用的是同一组裁切坐标。</b>验证台按 402×874 渲染 —— 就是参考图那块屏 ——
+    而 medium 档正好是 0.525 × 874 = <b>459</b>，于是左右两张都裁
+    <code>x=6, y=409, 390×459</code>，可以逐像素叠着看。
+    右侧是把**真实运行的组件**单独截出来再引进本页的（sheet 是 portal + fixed，塞不进栏里）。<br>
+    已对齐：左右 / 底部边距 6、面板 390×459、<b>圆角 34</b>（沿轮廓暗线拟合 34.08，
+    RMSE 0.376，28 个采样点 —— 与 <code>--lg-radius-xl</code> 第三次撞上）、
+    抓手 58×4 且距面板顶 5、抓手占位区 16、工具栏区 54。<br>
+    <b>已知差异：</b>
+    ① <b>背景不同</b>：参考图背后是空白页，本库这张压在验证台的渐变上 ——
+    材质本来就不可比（Figma 画不出折射），换成渐变至少能看见本库真的在折射；
+    ② 参考图的工具栏里是圆形图标按钮（×、✓），本库不提供图标，
+    演示里放的是标题 + 说明文字，所以工具栏区的内容对不上，<b>可比的是那 54pt 的高度</b>；
+    ③ <b>下面两个角的圆角是推定的</b>：参考图里它们紧贴设备边框与落影，量出来是噪声
+    （拟合 r≈60，明显在量影子），本库四角同取 34；
+    ④ 抓手在 PROJECT_SPEC §2 里属于 Layer I（强玻璃），但它只有 4pt 高 ——
+    <b>色散在这个尺度上看不出来</b>，这一条没达标，如实记在 STATUS 的自查里。
   </div>
 </div>
 

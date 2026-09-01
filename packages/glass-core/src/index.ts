@@ -64,6 +64,8 @@ export {
 export {
   useMediaQuery,
   useGlassPreferences,
+  useIsCompact,
+  COMPACT_QUERIES,
   type GlassPreferences,
 } from './provider/preferences.js';
 

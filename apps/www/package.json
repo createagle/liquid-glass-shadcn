@@ -8,7 +8,7 @@
     "registry:build": "npm run registry:generate && shadcn build",
     "registry:validate": "shadcn registry validate registry.json",
     "registry:serve": "node scripts/serve-registry.mjs",
-    "dev:build": "esbuild dev/tabs-demo.tsx dev/controls-demo.tsx dev/button-demo.tsx dev/dialog-demo.tsx dev/card-demo.tsx dev/fidelity.tsx --bundle --format=iife --outdir=dev --jsx=automatic --alias:@glass/core=../../packages/glass-core/src/index.ts --alias:@/lib/utils=./registry/glass/lib/utils.ts --alias:@/components/ui/button=./registry/glass/ui/button.tsx --log-level=warning",
+    "dev:build": "esbuild dev/tabs-demo.tsx dev/controls-demo.tsx dev/button-demo.tsx dev/dialog-demo.tsx dev/card-demo.tsx dev/sheet-demo.tsx dev/fidelity.tsx --bundle --format=iife --outdir=dev --jsx=automatic --alias:@glass/core=../../packages/glass-core/src/index.ts --alias:@/lib/utils=./registry/glass/lib/utils.ts --alias:@/components/ui/button=./registry/glass/ui/button.tsx --log-level=warning",
     "dev:css": "tailwindcss -i dev/input.css -o dev/tailwind.css",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

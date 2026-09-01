@@ -56,6 +56,33 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════
+   Sheet 背后页面的层叠后退（PROJECT_SPEC §9）
+   iOS 弹出 sheet 时，背后那一层会**轻微缩小并后退**，做出层叠观感。
+
+   这是**可选**的：给你的应用外壳加 `data-glass-sheet-wrapper`，Sheet 打开时
+   会把 --lg-sheet-wrapper-scale / -radius 写到 <html> 上，逐帧跟随拖拽。
+   不加也能正常工作，只是没有那层观感。
+
+   为什么用 CSS 变量而不是让组件直接改 style：
+   变量写在 <html>，任何后代都能读；万一你的外壳不止一个元素，
+   多写几条 CSS 就行，不用改组件。
+   ══════════════════════════════════════════════════════════════════════ */
+
+[data-glass-sheet-wrapper] {
+  transform-origin: top center;
+  transform: scale(var(--lg-sheet-wrapper-scale, 1));
+  border-radius: var(--lg-sheet-wrapper-radius, 0px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* 缩放后退纯粹是动效观感，reduce 下直接不做 —— 组件那边也不会再写变量，
+     这一条是没挂 Provider 时的兜底。 */
+  [data-glass-sheet-wrapper] {
+    transform: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    连续曲率（squircle）
    Chromium 148+ 原生支持 `corner-shape`，实测 getComputedStyle 能读回 "squircle"，
    与普通 border-radius 并排对比肉眼差异明显。

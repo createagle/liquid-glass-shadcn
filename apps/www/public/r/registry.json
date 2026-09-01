@@ -186,6 +186,7 @@
           "lg-material-elevated": "rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)))",
           "lg-material-indicator": "transparent",
           "lg-knob-fill": "rgb(255 255 255 / 0.86)",
+          "lg-grabber-fill": "rgb(0 0 0 / 0.2)",
           "lg-content-ultrathin": "rgb(255 255 255 / 0.52)",
           "lg-content-thin": "rgb(255 255 255 / 0.62)",
           "lg-content-regular": "rgb(255 255 255 / 0.78)",
@@ -283,6 +284,7 @@
           "lg-base-color": "20 20 24",
           "lg-elevated-color": "32 32 38",
           "lg-knob-fill": "rgb(255 255 255 / 0.9)",
+          "lg-grabber-fill": "rgb(255 255 255 / 0.28)",
           "lg-content-ultrathin": "rgb(28 28 30 / 0.67)",
           "lg-content-thin": "rgb(28 28 30 / 0.66)",
           "lg-content-regular": "rgb(28 28 30 / 0.8)",
@@ -337,6 +339,7 @@
           ":root[data-glass-contrast='more']": {
             "--lg-stroke-boost": "1.8",
             "--lg-knob-fill": "rgb(255 255 255 / 0.96)",
+            "--lg-grabber-fill": "rgb(0 0 0 / 0.45)",
             "--lg-label-secondary": "rgb(var(--lg-label-tint-light) / 0.85)",
             "--lg-label-tertiary": "rgb(var(--lg-label-tint-light) / 0.6)",
             "--lg-label-quaternary": "rgb(var(--lg-label-tint-light) / 0.4)",
@@ -356,6 +359,7 @@
             "--lg-separator": "rgb(200 200 210 / 0.7)",
             "--lg-separator-opaque": "#6e6e73",
             "--lg-list-separator": "rgb(255 255 255 / 0.36)",
+            "--lg-grabber-fill": "rgb(255 255 255 / 0.55)",
             "--muted-foreground": "var(--lg-label-secondary)",
             "--border": "var(--lg-separator)",
             "--input": "var(--lg-separator)"
@@ -487,6 +491,19 @@
           "[data-glass-tier='c'] .lg-content": {
             "background-color": "var(--lg-content-thick)"
           },
+          "[data-glass-sheet-wrapper]": {
+            "transform-origin": "top center",
+            "transform": "scale(var(--lg-sheet-wrapper-scale, 1))",
+            "border-radius": "var(--lg-sheet-wrapper-radius, 0px)"
+          },
+          "@media (prefers-reduced-motion: reduce)": {
+            "[data-glass-sheet-wrapper]": {
+              "transform": "none"
+            },
+            ".lg-surface": {
+              "transition-duration": "120ms"
+            }
+          },
           "@media (prefers-reduced-transparency: reduce)": {
             ":root": {
               "--lg-base-alpha": "0.98",
@@ -502,11 +519,6 @@
             },
             ".lg-surface[data-layer='indicator']": {
               "background-color": "rgb(var(--lg-base-color) / 0.98)"
-            }
-          },
-          "@media (prefers-reduced-motion: reduce)": {
-            ".lg-surface": {
-              "transition-duration": "120ms"
             }
           }
         }
@@ -721,6 +733,31 @@
         }
       ],
       "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 Card 的差别：\n  1) 多一个 CardRow —— 这才是 Apple 对 Card 的定义（grouped list section）。\n     CardRow 必须是 Card 的**直接子元素**：区块的竖直内边距靠 :has(> [data-slot=card-row]) 去掉，套一层 CardContent 会让选择器落空。\n  2) variant 是 grouped / material / plain，**没有 glass** —— Apple 明令内容层不用 Liquid Glass，material 走的是 ultraThin/thin/regular/thick 四档标准材质，只有模糊与不透明度，没有折射与色散。\n  3) 内边距 16 而不是 24，来自 iOS 27 实测。\n\n页面底色请用 var(--lg-grouped-bg)：iOS 的分组列表是「白区块压在灰底上」，区块与页面同色会看不出边界。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "sheet",
+      "title": "Sheet / Drawer",
+      "author": "Liquid Glass UI",
+      "description": "底部浮出面板，对应 UISheetPresentationController。档位（detents）、拖拽抓手、速度感应的甩动关闭、背后页面层叠后退、safe-area 适配都在。几何取自 iOS 27 官方设计资源：左右/底部边距 6、圆角 34（轮廓拟合 34.08 / RMSE 0.376）、抓手 58×4、medium 档 = 视口高的 0.525。",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-dialog",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/button"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/sheet.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 Sheet 的差别：\n  1) 只做**底部**面板，没有 top/right/left —— Apple 的对应物是底部 sheet，侧边抽屉不是这个组件的语义。\n  2) 有档位（detents）与抓手：点抓手在档位间循环（HIG 明确要求），拖或甩可以关闭。\n  3) SheetClose **直接渲染本库的 Button**（同 DialogClose）—— 本库禁用 asChild，<SheetClose><Button/></SheetClose> 会变成 button 套 button。\n  4) **默认只有抓手区与 SheetHeader 能起手拖拽**。sheet 里通常有可滚动内容，整片可拖需要滚动协调，那套没做；内容不滚动时传 dragFrom=\"sheet\" 打开整片拖拽。\n\n想要「背后页面缩小后退」的层叠观感：给你的应用外壳加 data-glass-sheet-wrapper。可选，不加也能正常工作。注意那一层上会有 transform，会成为 position:fixed 后代的包含块 —— 外壳里的固定定位元素要改成 absolute。",
       "type": "registry:ui"
     }
   ]

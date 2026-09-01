@@ -38,6 +38,7 @@ const HARNESS = {
   button: pathToFileURL(resolve('apps/www/dev/button-demo.html')).href,
   tabs: pathToFileURL(resolve('apps/www/dev/tabs-demo.html')).href,
   dialog: pathToFileURL(resolve('apps/www/dev/dialog-demo.html')).href,
+  sheet: pathToFileURL(resolve('apps/www/dev/sheet-demo.html')).href,
   card: pathToFileURL(resolve('apps/www/dev/card-demo.html')).href,
 };
 
@@ -166,6 +167,27 @@ const CASES = [
     label: '[data-slot="card-title"]',
     press: false,
     gated: false,
+  },
+  {
+    /** Sheet 的标题与正文压在 elevated 面板上，与 Dialog 同类但面板更大、更靠下。 */
+    name: 'Sheet · 标题',
+    harness: 'sheet',
+    query: 'open=1',
+    target: '[data-slot="sheet-title"]',
+    nth: 0,
+    label: '[data-slot="sheet-title"]',
+    press: false,
+    gated: true,
+  },
+  {
+    name: 'Sheet · 正文（次级标签色）',
+    harness: 'sheet',
+    query: 'open=1',
+    target: '[data-slot="sheet-description"]',
+    nth: 0,
+    label: '[data-slot="sheet-description"]',
+    press: false,
+    gated: true,
   },
   {
     /**

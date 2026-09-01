@@ -168,6 +168,18 @@
    */
   --lg-knob-fill: rgb(255 255 255 / 0.86);
 
+  /**
+   * Sheet 抓手（grabber）的填充。
+   *
+   * 实测：iOS 27 资源里抓手是 58×4，灰度中位 197，压在 sheet 底色 248 上
+   * → 黑色 α = 1 − 197/248 = 0.206，取 **0.2**（回算 198，差 1/255）。[实测]
+   *
+   * 抓手在 PROJECT_SPEC §2 里被归为 **Layer I**，所以它是强玻璃 ——
+   * 但 `.lg-surface[data-layer='indicator']` 的底色是 transparent，
+   * 4px 高的透明条等于看不见。这一层就是补回来的那个底。
+   */
+  --lg-grabber-fill: rgb(0 0 0 / 0.2);
+
   /* ── 内容层标准材质（PROJECT_SPEC 未覆盖，由研究阶段补入） ──────────
      Apple 原文："iOS and iPadOS continue to provide four standard materials —
      ultra-thin, thin, regular (default), and thick — which you can use in the
@@ -319,6 +331,10 @@
      半透明的白压在暗背景上会明显发灰，同样的 alpha 读起来不再是「白」。 */
   --lg-knob-fill: rgb(255 255 255 / 0.9);
 
+  /* 暗色抓手 `[推定]` —— 资源里的 Sheet 只有亮色版，没量到。
+     取白 28%：与亮色的黑 20% 在各自底色上观感相当。 */
+  --lg-grabber-fill: rgb(255 255 255 / 0.28);
+
   --lg-content-ultrathin: rgb(28 28 30 / 0.67); /* AA 地板 0.6671，见 a11y/legibility.ts */
   --lg-content-thin: rgb(28 28 30 / 0.66);
   --lg-content-regular: rgb(28 28 30 / 0.8);
@@ -354,6 +370,8 @@
   --lg-stroke-boost: 1.8;
   /* 高对比下折射已经收敛，knob 干脆做到接近实色，边界更清楚 */
   --lg-knob-fill: rgb(255 255 255 / 0.96);
+  /* 抓手是**唯一的下滑关闭提示**，高对比下必须看得见 */
+  --lg-grabber-fill: rgb(0 0 0 / 0.45);
   --lg-label-secondary: rgb(var(--lg-label-tint-light) / 0.85);
   --lg-label-tertiary: rgb(var(--lg-label-tint-light) / 0.6);
   --lg-label-quaternary: rgb(var(--lg-label-tint-light) / 0.4);
@@ -377,5 +395,6 @@
   --lg-separator: rgb(200 200 210 / 0.7);
   --lg-separator-opaque: #6e6e73;
   --lg-list-separator: rgb(255 255 255 / 0.36);
+  --lg-grabber-fill: rgb(255 255 255 / 0.55);
   /* 描边同上，由 --lg-stroke-boost 统一放大，不重复写 */
 }

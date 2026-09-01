@@ -8,9 +8,13 @@
  *    静态设计稿画不出折射与色散，所以「材质」那一栏本来就不可比；
  *    可比的是**几何**。每张图的说明里都写了具体差异，不要泛泛说「基本一致」。
  *
- * Dialog 那张要分两趟：弹窗是 portal + fixed 的，塞不进对照页的栏里，
+ * Dialog 与 Sheet 那两张要分开先截：它们都是 portal + fixed 的，塞不进对照页的栏里，
  * 所以先把**真实组件**单独截一张，再让对照页把它当图片引进去 ——
  * 这样对照的仍然是真组件，而不是照着尺寸另画一遍（那样会和组件悄悄漂移）。
+ *
+ * Sheet 那张更进一步：验证台按 **402×874** 渲染（就是参考图那块屏），
+ * medium 档正好是 0.525×874 = 459 —— 于是裁切框与参考图**用的是同一组坐标**
+ * （x=6, y=409, 390×459），两边逐像素对得上。
  *
  *   node scripts/fidelity-sheets.mjs
  */
@@ -50,13 +54,45 @@ const browser = await chromium.launch();
   await page.close();
 }
 
-/* ── 第二趟：渲染对照页 ─────────────────────────────────────────────── */
+/* ── 第二趟：把真实的 Sheet 单独截出来 ───────────────────────────────── */
+{
+  const page = await browser.newPage({
+    viewport: { width: 402, height: 874 },
+    deviceScaleFactor: 2,
+  });
+  await page.goto(`${dev('sheet-demo.html')}?theme=light&tier=a&tint=0.34&open=1&detent=0`);
+  await page.waitForFunction(() => window.__ready === true);
+  // 等入场 spring 停下来：面板位移连续几帧不变
+  await page.waitForFunction(
+    () => {
+      const el = document.querySelector('[data-slot="sheet-panel"]');
+      if (!el) return false;
+      const y = new DOMMatrixReadOnly(getComputedStyle(el).transform).m42;
+      if (window.__y !== undefined && Math.abs(window.__y - y) < 0.05) window.__n = (window.__n ?? 0) + 1;
+      else window.__n = 0;
+      window.__y = y;
+      return (window.__n ?? 0) >= 4;
+    },
+    null,
+    { timeout: 8000 },
+  );
+  await page.evaluate(() => document.activeElement?.blur?.());
+  await page.waitForTimeout(120);
+  // 与参考图同一组坐标：面板左右各内缩 6，medium 档露出 459
+  await page.screenshot({
+    path: 'apps/www/dev/sheet-shot.png',
+    clip: { x: 6, y: 874 - 6 - 459, width: 390, height: 459 },
+  });
+  await page.close();
+}
+
+/* ── 第三趟：渲染对照页 ─────────────────────────────────────────────── */
 {
   const page = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 2 });
   await page.goto(dev('fidelity.html'));
   await page.waitForFunction(() => window.__ready === true);
   await page.waitForTimeout(700);
-  for (const id of ['sheet-switch', 'sheet-slider', 'sheet-button', 'sheet-dialog', 'sheet-card']) {
+  for (const id of ['sheet-switch', 'sheet-slider', 'sheet-button', 'sheet-dialog', 'sheet-card', 'sheet-sheet']) {
     const name = id.replace('sheet-', '');
     await page.locator(`#${id}`).screenshot({ path: `${OUT}/compare-${name}.png` });
     console.log(`✓ ${OUT}/compare-${name}.png`);

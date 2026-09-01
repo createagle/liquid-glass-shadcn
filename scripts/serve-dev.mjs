@@ -44,6 +44,7 @@ const HARNESSES = [
   ['button-demo.html', 'Button —— 四个变体；按住能看到升级为 Layer I'],
   ['dialog-demo.html', 'Dialog / Alert —— 面板层（没有 Layer I）；?open=1 直接打开'],
   ['card-demo.html', 'Card —— 分组列表区块；内容层，没有玻璃。?bg=grouped 是它真正的场景'],
+  ['sheet-demo.html', 'Sheet / Drawer —— 档位、抓手、甩动关闭、背后页面层叠后退。?open=1 直接打开'],
   ['fidelity.html', 'Fidelity 对照 —— Apple 参考图 vs 本库组件，1:1 并排'],
   ['sweep.html', '（调试）折射参数扫描'],
   ['ab.html', '（调试）A/B 对照'],

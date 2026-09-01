@@ -640,9 +640,10 @@ Toggle 的**选中态**用 Layer I，而它是带标签的 —— 与 Button 的
 
 - 🔴 **文档页未做** —— Phase 6（两个组件都是）
 - 🟡 **视觉快照只有 win32 基线** —— 与前几批同因
-- 🟡 **Dialog 的移动端 Drawer 路径未做** —— SPEC §9 要求下拉/浮层类组件在移动端
-  切成底部 Drawer，那是 **Phase 4 ResponsiveOverlay** 的任务。现在的 Dialog
-  在移动 viewport 下仍然是居中浮层，**这是一处已知的未完成**，不是设计选择。
+- ~~🟡 **Dialog 的移动端 Drawer 路径未做**~~ —— **这条判断是错的，已在 §0.48 更正。**
+  SPEC §9 限定的是「从触发点弹出浮层」的那一类（Select / DropdownMenu / Popover …），
+  **Dialog 不在其中**；iOS 的 `UIAlertController` 用 `.alert` 样式时在 iPhone 上
+  同样是居中弹窗。Dialog 保持居中是对的，不是欠账。
 - 🟡 **Toggle 没有 Apple 参考图** —— 几何有来源（继承 Button）但来源不是 Apple
   的 Toggle 本身；ToggleGroup 未交付。
 
@@ -814,6 +815,160 @@ Card 的降级测试用的就是这条。
 
 本机全绿：typecheck ×2 · registry 静态检查 · 派生色漂移 · 探针契约 ·
 对比度审计 1512 采样 · 交互态可读性 **30** 测点 · 行为回归 **108** 项 · 视觉 **93** 项。
+
+---
+
+## 0.48 Phase 4 起步 · Sheet / Drawer —— §14 逐条自查（2026-09-01）
+
+**12 项过 9，1 项明确未达标，2 项不适用。**
+
+### 为什么先做 Sheet，而不是先做 ResponsiveOverlay
+
+Phase 4 的任务卡是「实现 `<ResponsiveOverlay>` 原语，并把 Phase 3 的
+Select / DropdownMenu / Popover 迁移过去」。但那三个组件**还不存在** ——
+它们正是我上一批建议推迟的四个浮层类之一。也就是说卡片写的迁移步骤
+目前没有东西可迁。
+
+而 ResponsiveOverlay 的移动端那条路径**就是 Drawer**。所以顺序倒过来：
+先把 Drawer 做扎实（它本身也是 P0 清单里的 Sheet/Drawer），
+下一批再把 ResponsiveOverlay 连同 Popover / Select / DropdownMenu 一起做 ——
+那时它才有真实的桌面端消费者，不必凭空造一个。
+
+### 🔴 一处要更正我自己写的东西
+
+§0.45 里我把「Dialog 的移动端 Drawer 路径未做」记成了**未完成项**，
+理由写的是「SPEC §9 要求下拉/浮层类在移动端切 Drawer」。**这条判断是错的。**
+
+SPEC §9 的原文限定是「Select、DropdownMenu、Combobox、ContextMenu、Menubar、
+NavigationMenu、DatePicker、Popover 等所有**从触发点弹出浮层**的组件」——
+**Dialog / AlertDialog 不在其中**，它也不从触发点弹出。iOS 自己的
+`UIAlertController` 用 `.alert` 样式时在 iPhone 上同样是居中弹窗，
+只有 `.actionSheet` 才从底部出来。
+
+所以 Dialog 保持居中是**对的**，不是欠账。已知缺口少一项。
+
+### 补上了 apple-metrics 里空着的那一格
+
+§7.5 的圆角一栏此前写的是「仍未取得」。这次量到了。
+
+面板外面有一圈落影，按颜色阈值找边会量到影子（试过，拟合出 r≈60、RMSE 2.5，
+一眼假）。改成沿每行找**亮度最低点** —— 那条 1px 暗轮廓线才是面板边缘 ——
+再做圆弧最小二乘：
+
+| | 值 |
+|---|---|
+| 拟合半径 | **34.08** |
+| RMSE | **0.376 px**（28 个采样点） |
+| 固定半径复算 | 34 → 0.379 · 32 → 1.175 · 36 → 1.116 |
+
+> ✅ **34 与 `--lg-radius-xl` 第三次撞上。** 前两次是 Phase 1 定 token 时、
+> 与 Alert 的轮廓拟合。三处独立来源同值。
+
+同时确认了一件让人放心的事：**抓手的元数据与像素扫描逐位吻合** ——
+元数据说 58×4 位于面板内 (166, 5)，像素扫出来是 x 172…229、y 414…417，
+面板在 x=6/y=409，减一减正好。抓手灰度中位 197 压在面板底色 248 上，
+反推黑色 20.6%，取 `--lg-grabber-fill: rgb(0 0 0 / 0.2)`（回算 198，差 1/255）。
+
+### ⚠️ 一条明确没达标的：4pt 高的 Layer I
+
+SPEC §2 给 Sheet 的分层是 `面板 | grabber 抓手`，也就是**抓手是 Layer I**。
+§14 要求 Layer I「有可见色散」。
+
+**抓手只有 4pt 高，色散在这个尺度上看不出来** —— 本库最强档的色散偏移也就
+1–2px 量级，压在一条 4px 的横条上就是一片糊。抓手仍然走 indicator 层
+（规格如此，Tier A 下确实挂着 SVG 折射，有测试钉住），
+但「可见色散」这一条**没达标，不假装达标**。视觉快照里专门存了一张
+抓手特写（`sheet-grabber-zoom`），将来真要改这条，那张图会说话。
+
+顺带：抓手是 α=0 的 indicator 层，与 Button 按下态、Toggle 选中态是同一个陷阱 ——
+不补底色就是一条隐形的横条。补了 `--lg-grabber-fill`，有测试卡住 α > 0.1。
+
+### 手势：速度投影，以及一条差点长期偶发的测试
+
+甩动关闭不是「拖过某个距离」，而是**把松手瞬间的速度外推 200ms，用落点判档**。
+只看位移的话，快速小幅度的甩动会被判成「没动」，手感很木。
+
+这条的测试踩了个坑值得记：**它一度只在机器空闲时通过。**
+速度 = 位移 / 采样间隔，而 `page.mouse.move()` 逐步下发时每一步都是一次
+CDP 往返 —— 单 worker 下实测 v ≈ 760 px/s 很稳，并行跑测试时往返被拉长，
+v 掉到 500 的阈值以下就误判。同一手势实测在 **679–1227 px/s** 之间抖。
+
+最后的做法是三条一起上：
+1. 指针序列改在**页面内按 rAF 派发**，采样间隔与测试进程负载无关；
+2. 视口加高到 1400 —— 「速度够快」与「位移必须小于阈值」是一对矛盾约束，
+   视口越矮余量越小；
+3. 这条用 **Tier C** —— 速度按帧间隔算，而并行时最贵的正是 Tier A 的
+   backdrop-filter + SVG 折射，帧一慢速度就假性偏低。甩动判定与渲染路径无关。
+
+改完 `--repeat-each=5` 全绿，全量套件连跑两遍也全绿。
+
+### 做的时候被视觉快照抓到的两个真问题
+
+**1. footer 被推出屏幕。** 面板按**最高档**渲染再往下位移（改 height 会重排，
+拖起来会卡），于是低档位时面板底部有一截在屏幕外 —— 内容若按面板全高排版，
+`SheetFooter` 就落到可视区之外（实测视口 734、medium 档下 footer 的 y 是 **953**）。
+修法是给内容加一条跟着位移走的 `padding-bottom`，把屏幕外那一截让出来，
+内容始终按**可见高度**排版。iOS 的 sheet 在 medium 档下也是这个行为
+（它是真的变矮，不是被裁掉）。已写成回归测试。
+
+**2. 一打开就有一道焦点环套在抓手上。** Radix 默认把焦点给第一个可聚焦元素，
+而那正是抓手 —— 一条 4pt 的横条上套着蓝框，视觉快照里当场看见。
+而且屏幕阅读器先读到的是「调整面板高度」而不是标题。
+改成 `onOpenAutoFocus` 里聚焦面板本身（Radix 给了 tabIndex=-1）。
+
+还有一个是**写验证台时**撞出来的：`<SheetClose><Button/></SheetClose>` 会变成
+button 套 button（无效 HTML，React 直接报 hydration 错）。原因还是禁用 asChild ——
+与 Dialog 同一个约束。`SheetClose` 因此也改成**直接渲染本库的 Button**，
+两个组件的写法就此统一。
+
+### §14 逐条
+
+| 验收项 | Sheet |
+|---|---|
+| light / dark 各自独立调过 | ✅ 各录 6 张快照 |
+| 材质档位 0/1/2/3 正常可读 | ✅ 录了 0 / 0.34 / 1；0.67 没单独录（档位是连续插值，没有分段行为） |
+| Tier A/B/C 三条路径完整 | ✅ 各录快照；抓手只有 Tier A 走 SVG 折射，有测试 |
+| Layer B / Layer I 分层正确 | 🟡 **分层对了，「可见色散」没达标** —— 抓手 4pt 高，色散在这个尺度上看不出来 |
+| 交互态齐全，用 spring 预设 | ✅ 拖拽 / 甩动 / 换档 / 回弹 / 焦点，全走 `transitionFor()` |
+| 移动端下拉类改 Drawer | ➖ 它**就是** Drawer。ResponsiveOverlay 下一批 |
+| 三种无障碍偏好正确降级 | ✅ 三条全有测试；reduced-transparency 用 CDP **真模拟** |
+| WCAG AA 对比度检查通过 | ✅ 标题 17.54 / 正文 8.36（条纹 16.67 / 8.46） |
+| registry item + 干净工程冒烟 | ✅ 已加进冒烟工作流，并断言 `--lg-grabber-fill` 落地 |
+| 文档页 Preview/Code/Fidelity/API | ❌ Phase 6 |
+| `// APPLE REFERENCE:` + 可信度标注 | ✅ 含拟合方法、四个角哪两个是推定的、档位哪一档没量到 |
+| Playwright 视觉回归快照 | ⚠️ 13 张，只有 win32 基线 |
+
+### 未过的项
+
+- 🔴 **文档页未做** —— Phase 6
+- 🔴 **抓手的「可见色散」没达标** —— 见上，4pt 高的物理限制，不是没做
+- 🟡 **视觉快照只有 win32 基线**
+- 🟡 **large 档没有实测依据。** 参考图只给了一个档位（0.525，与 HIG 的
+  「about half」相符）。`0.94` 是 `[推定]`，只为在顶部留出一点背后页面。
+- 🟡 **下面两个角的圆角是推定的**（按对称）—— 参考图里它们紧贴设备边框与落影
+- 🟡 **正文区不参与拖拽。** sheet 里通常有可滚动内容，「手指下滑」该滚内容还是拖面板
+  需要一套滚动协调，那套没做。默认只有抓手区与标题区能起手拖拽，内容不滚动时可以传
+  `dragFrom="sheet"` 打开整片拖拽。**这是已知的未完成，不是设计选择。**
+- 🟡 **ResponsiveOverlay 本体还没有。** Phase 4 的核心原语要等下一批与
+  Popover / Select / DropdownMenu 一起落地。本批只把它的移动端那条路径
+  （Drawer）和判定用的 `useIsCompact()` 做好了。
+
+### 顺带修的 core 缺陷
+
+`useMediaQuery` 的 `subscribe` / `getSnapshot` 是工厂函数，每次 render 都返回新闭包 ——
+React 认为订阅源变了，于是**每一次 render 都退订再重订**一遍。行为没错（store 在模块级），
+但四个偏好查询乘以每次 render 纯属白烧。改成按 query 缓存函数身份。
+
+### 测试增量
+
+| 文件 | 数量 | 进 CI |
+|---|---|---|
+| `tests/sheet.behavior.spec.ts` | 23 | ✅ |
+| `scripts/press-legibility.mjs` | 30 → **34** 个测点 | ✅ |
+| `tests/sheet.visual.spec.ts` | 13 张 | ❌ 平台相关 |
+
+本机全绿：typecheck ×2 · registry 静态检查 · 派生色漂移 · 探针契约 ·
+对比度审计 1512 采样 · 交互态可读性 **34** 测点 · 行为回归 **131** 项 · 视觉 **106** 项。
 
 ---
 
@@ -1579,7 +1734,7 @@ docs/research/
 
 ## 10. 下一步（2026-09-01 更新）
 
-**Phase 0 / 1 / 2 / 5 已完成；Phase 3 进行中 —— 11 个 P0 已交付 7 个。**
+**Phase 0 / 1 / 2 / 5 已完成；Phase 3 交付 8 / 11；Phase 4 已起步。**
 
 | 已交付 | §14 成绩 |
 |---|---|
@@ -1589,17 +1744,20 @@ docs/research/
 | Button | 12 项过 10 |
 | Dialog | 12 项过 10 |
 | Toggle | 12 项过 9 |
-| Card | 12 项过 9（另 2 项按规格不适用） |
+| Card | 12 项过 9（另 2 项不适用） |
+| Sheet / Drawer | 12 项过 9（1 项明确未达标、2 项不适用） |
 
-**剩下 4 个：Sheet/Drawer · Select · DropdownMenu · Popover —— 全是浮层类。**
+**剩下 3 个 P0：Select · DropdownMenu · Popover —— 全是从触发点弹出的浮层。**
 
-### 建议：先做 Phase 4，再回头一次做完这四个
+### 下一批：ResponsiveOverlay + 这三个一起做
 
-这四个都被 SPEC §9 要求「移动端切成底部 Drawer」，而 ResponsiveOverlay、
-snap points、拖拽把手、甩动关闭全在 **Phase 4** 的任务卡上。现在硬做，
-移动端那条路径只有两个选择：**不做**（像 Dialog 现在这样留个已知的洞），
-或者等 Phase 4 返工。**先把 ResponsiveOverlay 搭起来，浮层类就只用做一遍**，
-顺带把 Dialog 的移动端路径一起补上。
+Sheet 已经把 ResponsiveOverlay 的**移动端那条路径**做完了（档位、抓手、
+甩动关闭、层叠后退、safe-area），判定用的 `useIsCompact()`（SPEC §9 的
+`max-width:768 || pointer:coarse`，走 `useSyncExternalStore`）也在 core 里了。
+
+缺的是**桌面端那条路径**与切换外壳 —— 而它需要一个真实的桌面消费者才好定形状。
+所以下一批：Popover（桌面锚定浮层的最小样本）→ ResponsiveOverlay →
+Select / DropdownMenu 挂上去。**浮层类只做一遍。**
 
 ### 长期挂着的两件事（不阻塞，但迟早要做）
 
@@ -1610,7 +1768,8 @@ snap points、拖拽把手、甩动关闭全在 **Phase 4** 的任务卡上。�
 
 ### 仍然没有的东西
 
-🔴 **iOS 真机截图。** Figma 资源解决了**几何**，但解决不了**光学** ——
-折射强度、色散偏移、镜面高光、knob 静止态该白到什么程度，
-这些至今全是 `[推定]`，也是 Tier A 与 Tier B 至今无法真正区分开的原因。
+🔴 **iOS 真机截图。** Figma 资源解决了**几何**（到 Sheet 这一批为止，
+Tab Bar / Switch / Slider / Alert / Menu / Button / Grouped List / Sheet 都有实测），
+但解决不了**光学** —— 折射强度、色散偏移、镜面高光、knob 与抓手静止态该白到
+什么程度，这些至今全是 `[推定]`，也是 Tier A 与 Tier B 至今无法真正区分开的原因。
 Fidelity 对照图里每一处相关差异都已逐条写明，没有含糊过去。

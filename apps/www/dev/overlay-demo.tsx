@@ -15,6 +15,14 @@ import {
   ResponsiveOverlayTrigger,
   ResponsiveOverlayContent,
 } from '../registry/glass/ui/responsive-overlay';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '../registry/glass/ui/dropdown-menu';
 
 const params = new URLSearchParams(location.search);
 const theme = (params.get('theme') ?? 'light') as 'light' | 'dark';
@@ -71,43 +79,23 @@ function ResponsiveDemo() {
 }
 
 /**
- * 照着 iOS 27 Edit Menu 的**结构**摆一遍，只为 Fidelity 对照图用。
+ * DropdownMenu 验证台 + Fidelity 对照场景。
  *
- * ⚠️ 面板（宽度、内边距、圆角、材质）是**真的 Popover 组件**；
- *    里面的 Quick Actions 行、菜单项、分隔线是**对照台自己画的** ——
- *    DropdownMenu 还没做（下一批）。所以那几部分只能算「按实测数值摆的占位」，
- *    不是被测组件。图注里写明了这一点。
- *
- * 数值全部来自 apple-metrics §7.7：
- *   Quick Actions 56 高，3 项各 72.67，间距 6
- *   分隔区 21 高，其中 1pt 线在区顶 +2，左右各内缩 8（面板内共 24）
- *   菜单项 40 高（带副标题的 60）
+ * 结构照着 iOS 27 Edit Menu 摆（apple-metrics §7.7）：
+ *   Quick Actions 56 高（3 项各 72.67、间距 6）· 分隔区 21 · 项 40（双行 60）
  * 加起来正好 10 + 56 + 262 + 10 = 338，与参考图逐位对齐。
+ *
+ * ⚠️ **Quick Actions 那一行仍然是对照台自己画的** —— Apple 的菜单顶部有一种
+ *    「图标三连」的特殊行，本库没有对应组件（也不在 P0 清单里）。
+ *    其余部分（面板、菜单项、分隔线、高亮项）**全是真组件**。
  */
 function MenuScene() {
-  const label = { fontSize: 17, color: 'var(--lg-label-primary)' } as const;
-  const Sep = () => (
-    <div style={{ height: 21, position: 'relative' }}>
-      <div
-        style={{
-          position: 'absolute',
-          top: 2,
-          left: 8,
-          right: 8,
-          height: 1,
-          background: 'var(--lg-separator)',
-        }}
-      />
-    </div>
-  );
-  const Item = ({ text, h = 40 }: { text: string; h?: number }) => (
-    <div style={{ height: h, display: 'flex', alignItems: 'center', ...label }}>{text}</div>
-  );
   return (
-    <Popover defaultOpen>
-      <PopoverTrigger>打开菜单</PopoverTrigger>
-      <PopoverContent side="bottom" align="start" aria-label="编辑菜单">
-        <div style={{ height: 56, display: 'flex', gap: 6 }}>
+    <DropdownMenu defaultOpen={startOpen} responsive={responsive}>
+      <DropdownMenuTrigger>打开菜单</DropdownMenuTrigger>
+      <DropdownMenuContent title="编辑菜单" side={side} align={align}>
+        {/* 对照台自己画的占位行，不是被测组件 */}
+        <div data-testid="quick-actions" style={{ height: 56, display: 'flex', gap: 6 }}>
           {['Cut', 'Copy', 'Paste'].map((t) => (
             <div
               key={t}
@@ -125,20 +113,38 @@ function MenuScene() {
             </div>
           ))}
         </div>
-        <Sep />
-        <Item text="Paste and Match Style" h={60} />
-        <Item text="Add Link" />
-        <Sep />
-        <Item text="Replace…" />
-        <Item text="Writing Tools" />
-        <Item text="AutoFill" />
-      </PopoverContent>
-    </Popover>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Paste and Match Style</DropdownMenuItem>
+        <DropdownMenuItem>Add Link</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Replace…</DropdownMenuItem>
+        <DropdownMenuItem>Writing Tools</DropdownMenuItem>
+        <DropdownMenuItem>AutoFill</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** 带标题、禁用项、破坏性项的完整菜单 —— 行为测试用这个 */
+function DropdownDemo() {
+  return (
+    <DropdownMenu defaultOpen={startOpen} responsive={responsive}>
+      <DropdownMenuTrigger>打开菜单</DropdownMenuTrigger>
+      <DropdownMenuContent title="编辑菜单" side={side} align={align}>
+        <DropdownMenuLabel>编辑</DropdownMenuLabel>
+        <DropdownMenuItem>Cut</DropdownMenuItem>
+        <DropdownMenuItem>Copy</DropdownMenuItem>
+        <DropdownMenuItem disabled>Paste</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem destructive>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
 function Demo() {
   if (only === 'menu') return <MenuScene />;
+  if (only === 'dropdown') return <DropdownDemo />;
   if (only === 'popover') return <PopoverDemo />;
   if (only === 'responsive') return <ResponsiveDemo />;
   return (

@@ -217,15 +217,14 @@
       <div class="frame crop-menu"><img src="../../../docs/research/screenshots/ios27-menu.png" alt=""></div>
     </div>
     <div class="col">
-      <div class="cap">本库 <span>· &lt;Popover&gt; 面板（真实组件的截图），内容按实测数值摆位</span></div>
+      <div class="cap">本库 <span>· &lt;DropdownMenu&gt;（真实组件的截图）</span></div>
       <div class="frame on-mid" style="width:252px"><img src="./menu-shot.png" alt="" style="width:250px"></div>
     </div>
   </div>
   <div class="note">
-    <b>这一张只有「面板」可比。</b>右侧的面板 —— 宽度、内边距、圆角、材质 —— 是**真实的
-    Popover 组件**；但里面的 Quick Actions 行、菜单项、分隔线是<b>对照台自己按实测数值摆的占位</b>，
-    <b>不是被测组件</b>：DropdownMenu 还没做（下一批）。摆位加起来正好
-    10 + 56 + 262 + 10 = 338，所以两边总高一致。<br>
+    <b>面板、菜单项、分隔线现在全是真组件</b>（<code>&lt;DropdownMenu&gt;</code>）。
+    只剩顶部的 Quick Actions 那一行还是<b>对照台自己画的占位</b> —— Apple 的菜单顶部有一种
+    「图标三连」的特殊行，本库没有对应组件，也不在 P0 清单里。<br>
     已对齐：面板 250 宽、上下内边距 10、左右 16、Quick Actions 56 高（3 项各 72.67、间距 6）、
     菜单项 40（双行 60）、分隔区 21（1pt 线在区顶 +2、左右各内缩 24）。<br>
     <b>已知差异：</b>
@@ -235,8 +234,15 @@
     本库取 <code>--lg-radius-lg</code>（22，落在圆弧拟合的 20–25 带内）并标<b>推定</b>；
     ② 左边 Quick Actions 里是 SF Symbols 图标（剪刀/复制/粘贴），本库不提供图标，右边只放了文字；
     ③ 参考图是 Figma 静态稿，面板材质是位图近似；本库是真的 backdrop-filter ——
-    <b>但注意面板是 Layer B（磨砂），不折射</b>：折射只属于 Layer I，
-    而菜单的 Layer I 是「高亮项」，那部分在下一批。
+    <b>面板是 Layer B（磨砂）不折射，高亮项才是 Layer I</b>。参考图是静态稿，
+    <b>没有高亮态可比</b>，所以这张图上看不到 Layer I；它的样子见视觉快照
+    <code>menu-highlight-zoom</code>；
+    ④ 左边每项前面有 SF Symbols 图标、"Replace…" 与 "AutoFill" 右侧有子菜单箭头，
+    本库都没有 —— 图标本库不提供，子菜单（Sub）**未交付**；
+    ⑤ <b>右边比左边矮 20pt</b>，原因是 "Paste and Match Style" 那一项在参考图里
+    <b>折成两行</b>（图标占掉了宽度，项高 60），本库没有图标所以一行放得下（项高 40）。
+    <b>这不是行高对不上</b> —— 逐项量的话两边的 40 / 60 都对得上，
+    差的是那一项换行与否。
   </div>
 </div>
 

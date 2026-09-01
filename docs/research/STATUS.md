@@ -1101,6 +1101,117 @@ Radix 树）。跨过 768 或指针类型变化才会发生，属于罕见事件
 
 ---
 
+## 0.51 Phase 3 · DropdownMenu —— §14 逐条自查（2026-09-02）
+
+**12 项过 10。** P0 只剩 Select 一个。
+
+### Layer I 第一次真的看得见色散 —— 有数字
+
+Sheet 的抓手那条我记成了「没达标」：Layer I 要求可见色散，而 4pt 高的横条上
+色散偏移（1–2px 量级）根本看不出来。菜单的高亮项是 **218×40**，尺度够了。
+
+判据不能靠肉眼。做法：把高亮项压在 **6px 黑白条纹**上截特写，逐像素统计
+**通道差**（无色散时 R=G=B，有色散时三个通道的边缘错开，会出现彩边）：
+
+| 采样区 | 最大通道差 | 亮度 σ（条纹清晰度） |
+|---|---|---|
+| **高亮项内**（Layer I + 挖洞） | **29** | **34.7** |
+| 同一面板、未高亮（上方） | 2 | 18.4 |
+| 同一面板、未高亮（下方） | 2 | 17.0 |
+
+- **色散：29 vs 2，差 14.5 倍** —— 这一条这次是真的达标了。
+- **挖洞：条纹清晰度 34.7 vs 17–18，约 2 倍** —— 洞里看到的是没被面板模糊过的
+  背景，正是 Tabs 那批做挖洞时要的效果。
+
+> 平滑渐变上这两件事**都看不出来**，所以特写存了两张（gradient / stripes），
+> 判读只看条纹那张。全库的光学诊断一直是这个口径。
+
+### 移动端那条路径是**我们自己接的线**，说清楚不对称在哪
+
+两条路径的实现不对称，这一点写进了组件注释、registry 文档和测试：
+
+| | 桌面 | 移动 |
+|---|---|---|
+| 原语 | `@radix-ui/react-dropdown-menu` | 本库 `<Sheet>` + 自己写的 `role=menu` |
+| 方向键 / Home / End | Radix | 自己写的，有测试 |
+| **typeahead（首字母跳转）** | Radix 有 | ❌ **没有** |
+| 可访问名称 | 由**触发器**命名（WAI-ARIA menu 模式） | 由 Drawer 的**可见标题**命名 |
+| 高亮项 | Layer I（折射 + 色散 + 挖洞） | 无 —— Drawer 里没有悬停这一说 |
+
+**为什么不能两边都用 Radix**：Radix 的 `DropdownMenu.Content` 自带 popper 定位、
+必须挂在自己的 Portal 里，塞不进 Sheet 的面板；而 Sheet 的档位、拖拽、甩动关闭
+又是 SPEC §9 点名要求的。二者只能取其一。
+
+typeahead 这条**写成了测试**（按 `d` 之后焦点不动）。它钉的是**已知缺口**：
+哪天补上了这条会红，那正是提醒去改文档与本节的时机。
+
+可访问名称不一致这件事，与上一批发现的「模态性差异」是同一类：
+**等价的是「能用键盘走完、能 Esc、焦点还得回去」，不是每个属性都一样。**
+
+### 一个坑踩了两次：`useEffect` + ref 装不上监听器
+
+挖洞的 observer 和移动端的方向键监听，第一版都写成
+`useEffect(() => { const el = ref.current; if (!el) return; ... }, [deps])`。
+
+**两处都失灵**，原因相同：浮层是 Portal 里的东西，effect 第一次跑的时候
+`ref.current` 还是 null；而 ref 的赋值**不会触发 effect 重跑** —— 监听器永远装不上。
+`data-punched` 一直是 null，移动端按方向键毫无反应。
+
+改法：
+- 挖洞 → **回调 ref**（节点挂上/卸下时各跑一次，天然对齐生命周期）
+- 方向键 → 直接用 `onKeyDown` 属性，根本不需要手动 addEventListener
+
+两处都在注释里写明了原因，免得下次又这么写。
+
+### 顺带修正一处对照图的说法
+
+Fidelity 图里菜单项从「对照台自己摆的占位」换成了**真组件**。
+换完发现右边比左边**矮 20pt**，查下来不是行高错了：参考图里
+"Paste and Match Style" 那一项**折成两行**（前面的 SF Symbols 图标占掉了宽度，
+项高 60），本库没有图标所以一行放得下（项高 40）。图注里改成了这个说法，
+原来那句「两边总高一致」已经不成立，删掉了。
+
+### §14 逐条
+
+| 验收项 | DropdownMenu |
+|---|---|
+| light / dark 各自独立调过 | ✅ 各录 5 张快照 |
+| 材质档位 0/1/2/3 正常可读 | 🟡 只录了默认档 0.34 —— 面板与 Popover 同一层材质，那边录了 0/0.34/1 |
+| Tier A/B/C 三条路径完整 | ✅ 各录快照；高亮项只有 Tier A 走 SVG 折射，有测试 |
+| Layer B / Layer I 分层正确 | ✅ **面板磨砂不折射 + 高亮项折射且色散可见（29 vs 2）+ 挖洞（σ 34.7 vs 17）** |
+| 交互态齐全，用 spring 预设 | ✅ 高亮 / 禁用 / 破坏性；过渡走 `transitionFor()` |
+| 移动端下拉类改 Drawer | ✅ 有测试；`responsive={false}` 逃生口也有 |
+| 三种无障碍偏好正确降级 | 🟡 reduced-motion 走 spring 预设、contrast 走 token，但**这三条没给 DropdownMenu 单独写测试**（Popover / Sheet 那两套覆盖了同一条材质路径） |
+| WCAG AA 对比度检查通过 | ✅ 高亮项标签 17.94:1（条纹同值）—— 与 Tabs 同理，不需要补底色 |
+| registry item + 干净工程冒烟 | ✅ 已加进冒烟工作流 |
+| 文档页 Preview/Code/Fidelity/API | ❌ Phase 6 |
+| `// APPLE REFERENCE:` + 可信度标注 | ✅ 含圆角是推定值的完整说明 |
+| Playwright 视觉回归快照 | ⚠️ 12 张，只有 win32 基线 |
+
+### 未过的项
+
+- 🔴 **文档页未做** —— Phase 6
+- 🔴 **移动路径没有 typeahead** —— 见上，已写成测试钉住
+- 🔴 **CheckboxItem / RadioItem / Sub（子菜单）/ Shortcut 未交付** ——
+  shadcn 的 DropdownMenu 有这些槽位，本批只做了 Root / Trigger / Content /
+  Item / Separator / Label / Group。
+- 🟡 **面板圆角仍是推定值 22**（拟合不收敛，见 §0.49）
+- 🟡 **材质档位只录了默认档**；三种无障碍偏好没给本组件单独写测试
+- 🟡 **视觉快照只有 win32 基线**
+
+### 测试增量
+
+| 文件 | 数量 | 进 CI |
+|---|---|---|
+| `tests/dropdown-menu.behavior.spec.ts` | 18 | ✅ |
+| `scripts/press-legibility.mjs` | 36 → **40** 个测点 | ✅ |
+| `tests/dropdown-menu.visual.spec.ts` | 12 张 | ❌ 平台相关 |
+
+本机全绿：typecheck ×2 · registry 静态检查 · 派生色漂移 · 探针契约 ·
+对比度审计 1512 采样 · 交互态可读性 **40** 测点 · 行为回归 **175** 项 · 视觉 **133** 项。
+
+---
+
 ## 0.5 CI 第一次真跑（2026-09-01）—— 抓出 4 个真实故障
 
 仓库此前**没有远程**，两个 workflow 从建好起一次都没执行过。
@@ -1861,50 +1972,45 @@ docs/research/
 
 ---
 
-## 10. 下一步（2026-09-01 更新）
+## 10. 下一步（2026-09-02 更新）
 
-**Phase 0 / 1 / 2 / 5 已完成；Phase 3 交付 9 / 11；Phase 4 的核心原语已落地。**
+**Phase 0 / 1 / 2 / 5 已完成；Phase 3 交付 10 / 11；Phase 4 的核心原语已落地。**
 
 | 已交付 | §14 成绩 |
 |---|---|
-| Tabs / Segmented | 12 项过 10 |
-| Slider | 12 项过 10 |
-| Switch | 12 项过 10 |
-| Button | 12 项过 10 |
-| Dialog | 12 项过 10 |
+| Tabs / Segmented · Slider · Switch · Button · Dialog | 各 12 项过 10 |
 | Toggle | 12 项过 9 |
 | Card | 12 项过 9（另 2 项不适用） |
 | Sheet / Drawer | 12 项过 9（1 项明确未达标、2 项不适用） |
 | Popover | 12 项过 9（2 项不适用 —— Layer I 属于菜单项） |
+| DropdownMenu | 12 项过 10 |
 | **ResponsiveOverlay**（Phase 4 原语） | 任务卡四条重点全部落地并有测试 |
 
-**剩下 2 个 P0：Select · DropdownMenu。**
+**P0 只剩 Select 一个。**
 
-### 下一批：Select + DropdownMenu
+### 下一批：Select
 
-两个都直接挂在 `<ResponsiveOverlay>` 上 —— 桌面锚定浮层、移动端底部 Drawer，
-那条路已经通了。要补的是**菜单项本身**：
+结构与 DropdownMenu 高度相似，路已经趟平了：桌面 Radix Select、
+移动端 Sheet + 自己接的 `role=listbox`。要多做的是**选中态**——
+`role="option"` + `aria-selected`、选中项的对勾、以及「当前值」回填触发器。
 
-- **Layer I 终于有地方落了。** SPEC §2 给这一类的 Layer I 是「高亮项（hover/focus）」，
-  Popover 里没有「项」这个概念，所以那一半一直空着。
-- 项的几何已经量好了（apple-metrics §7.7）：项高 40（双行 60）、左右内缩 16、
-  分隔区 21（1pt 线在区顶 +2、左右各内缩 24）。
-- Fidelity 对照图里现在那些菜单项是**对照台自己摆的占位**，做完之后要换成真组件。
+DropdownMenu 那批留下的两条债，Select 要么一起还、要么明确同样欠着：
+typeahead（移动路径）与三种无障碍偏好的单独测试。
 
 ### 长期挂着的三件事
 
 - **发布 `@glass/core` 到 npm** —— 否则真实用户装不了 registry item。
 - **在 Linux 环境录一次视觉基线** —— 视觉回归目前只有 win32 基线，CI 里刻意不跑。
-- **补一条真正的 SSR 验证** —— 冒烟测试里那个干净 Next 工程目前只跑 `next build`，
-  没起服务验证首屏。ResponsiveOverlay 的「SSR 首帧走桌面路径、无 hydration mismatch」
-  目前只有推理，没有实测。
+- **补一条真正的 SSR 验证** —— 冒烟测试里那个干净 Next 工程目前只跑 `next build`。
+  ResponsiveOverlay 的「SSR 首帧走桌面路径、无 hydration mismatch」只有推理没有实测。
 
 ### 仍然没有的东西
 
-🔴 **iOS 真机截图。** Figma 资源解决了大部分**几何**，但解决不了**光学** ——
-折射强度、色散偏移、镜面高光、knob 与抓手静止态该白到什么程度，至今全是 `[推定]`，
-也是 Tier A 与 Tier B 至今无法真正区分开的原因。
+🔴 **iOS 真机截图。** 几何这边已经推到能推的极限了 —— Tab Bar / Switch / Slider /
+Alert / Menu / Button / Grouped List / Sheet 都有实测，而 **Popover 的圆角就是没量出来**
+（半透明玻璃压在中灰背景上，轮廓拟合不收敛）。
 
-而且几何也开始碰到天花板了：**Popover 的圆角这次就没量出来** ——
-半透明玻璃压在中灰背景上，边缘不是干净的两色台阶，轮廓拟合不收敛。
-Fidelity 对照图里每一处相关差异都已逐条写明，没有含糊过去。
+光学则**始终没有基准**：折射强度、色散偏移、镜面高光、knob 与抓手静止态该白到什么程度，
+至今全是 `[推定]`，也是 Tier A 与 Tier B 至今无法真正区分开的原因。
+这一批第一次给出了色散的**相对**证据（高亮项内通道差 29 vs 面板 2），
+但「29 是不是对的」仍然无从校准。

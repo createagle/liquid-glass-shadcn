@@ -283,6 +283,31 @@
         }
       ],
       "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n```tsx\n<ResponsiveOverlay>\n  <ResponsiveOverlayTrigger>打开</ResponsiveOverlayTrigger>\n  <ResponsiveOverlayContent title=\"编辑菜单\" popover={{ side: 'bottom' }}>\n    …\n  </ResponsiveOverlayContent>\n</ResponsiveOverlay>\n```\n\n  1) `title` **必填** —— 两条路径的可访问名称必须一致。移动路径下它会显示出来（iOS 的 action sheet 也有标题），桌面路径下落到 aria-label。\n  2) `responsive={false}` 是逃生口，强制桌面行为（SPEC §9 明确要求提供）。\n  3) 两条路径参数分开传：`popover={{…}}` 与 `sheet={{…}}`。\n  4) ⚠️ 切换视口档位会**把子树整个重挂**（两条路径是两棵不同的 Radix 树）。跨过 768 或指针类型变化才会发生，属于罕见事件。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "dropdown-menu",
+      "type": "registry:ui",
+      "title": "DropdownMenu",
+      "description": "下拉菜单。桌面端是 Radix 的锚定菜单，紧凑视口下按 PROJECT_SPEC §9 换成底部 Drawer。几何取自 iOS 27 官方设计资源的 Edit Menu：面板 250、内边距 10/16、项高 40（双行 60）、分隔区 21（1pt 线在区顶 +2、左右各内缩 24）。**高亮项是 Layer I** —— 强玻璃、有折射与色散，面板会为它挖洞。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-dropdown-menu",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/sheet"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/dropdown-menu.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 DropdownMenu 的差别：\n  1) `DropdownMenuContent` 的 `title` **必填** —— 移动路径走 Radix Dialog，它要求必须有可见 Title。⚠️ 两条路径的可访问名称**不一样，而且都对**：桌面由触发器命名（WAI-ARIA 的 menu 模式），移动由 Drawer 的可见标题命名。\n  2) `responsive={false}` 是逃生口，强制桌面行为。\n  3) **未交付**：CheckboxItem / RadioItem / Sub（子菜单）/ Shortcut。\n  4) ⚠️ **移动路径没有 typeahead（首字母跳转）**。桌面路径 Radix 自带；移动路径的 role=menu 与方向键是本库自己接的线，只覆盖 ↑ ↓ Home End。移动端没有物理键盘时用不上，接了外接键盘就会缺 —— 这是已知缺口，测试里钉住了。\n  5) 触发器是原语的原生 button（本库禁用 asChild），要自定义外观就给 className。"
     }
   ]
 }

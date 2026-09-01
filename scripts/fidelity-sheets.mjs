@@ -86,20 +86,23 @@ const browser = await chromium.launch();
   await page.close();
 }
 
-/* ── 第三趟：把真实的 Popover 面板单独截出来 ─────────────────────────── */
+/* ── 第三趟：把真实的 DropdownMenu 面板单独截出来 ─────────────────────── */
 {
   const page = await browser.newPage({
-    viewport: { width: 520, height: 640 },
+    // 宽度必须 > 768 —— 否则 useIsCompact() 判成紧凑视口，菜单会渲染成底部 Drawer，
+    // 那就不是这张对照图要比的东西了（第一次就踩了：截图等了 30s 等不到面板）
+    viewport: { width: 900, height: 800 },
     deviceScaleFactor: 2,
   });
   // bg=mid：参考图背后是中灰，两边底色一致才谈得上比材质
-  await page.goto(`${dev('overlay-demo.html')}?theme=light&tier=a&tint=0.34&only=menu&bg=mid`);
+  await page.goto(`${dev('overlay-demo.html')}?theme=light&tier=a&tint=0.34&only=menu&open=1&bg=mid`);
   await page.waitForFunction(() => window.__ready === true);
   await page.waitForTimeout(700); // 等入场 spring 静止
   await page.evaluate(() => document.activeElement?.blur?.());
   await page.waitForTimeout(120);
   await page
-    .locator('[data-slot="popover-content"] .lg-surface')
+    // 必须锁到 elevated —— 每个菜单项自己也带一层 Layer I 的 .lg-surface
+    .locator('[data-slot="dropdown-menu-content"] .lg-surface[data-layer="elevated"]')
     .screenshot({ path: 'apps/www/dev/menu-shot.png' });
   await page.close();
 }

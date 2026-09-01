@@ -207,6 +207,27 @@ const CASES = [
   },
   {
     /**
+     * DropdownMenu 的**高亮项**是 Layer I，而且带标签 —— 与 Button 按下态、
+     * Toggle 选中态是同一类结构，必须量。
+     *
+     * 预期结论与 Tabs 一致（而不是与 Button 一致）：高亮项是**叠在面板材质上面**的，
+     * 面板底色仍在标签背后，所以不需要像 Button 那样补底色。
+     * 这条就是那个判断的实测依据 —— 万一哪天面板改成透明的，这里会先红。
+     *
+     * 「按下」那一行才是高亮态：脚本会先把指针移上去，hover 即高亮。
+     */
+    name: 'DropdownMenu · 高亮项（Layer I）',
+    harness: 'overlay',
+    query: 'only=dropdown&open=1',
+    target: '[data-slot="dropdown-menu-item"]',
+    nth: 0,
+    label: '[data-slot="dropdown-menu-item"]',
+    press: true,
+    gated: true,
+    viewport: { width: 900, height: 700 },
+  },
+  {
+    /**
      * Tabs 的选中项标签压在 Layer I 指示器之上，与 Button 是同一类结构 ——
      * 必须一起量。（结论：它没事，因为指示器是**叠在底座材质上面**的，
      * 底座的底色仍在标签背后；Button 翻车是因为按钮**自己就是**那层底座。）
@@ -234,7 +255,9 @@ const rows = [];
 for (const c of CASES) {
   for (const b of BACKGROUNDS) {
     for (const pressed of c.press ? [false, true] : [false]) {
-      const page = await browser.newPage({ viewport: { width: 640, height: 260 } });
+      // 个别用例要自己的视口：菜单在 768 以下会渲染成底部 Drawer（SPEC §9），
+      // 那就不是这条要量的东西了
+      const page = await browser.newPage({ viewport: c.viewport ?? { width: 640, height: 260 } });
       const q = `theme=light&tier=a&tint=0.34${c.query ? `&${c.query}` : ''}${b.bg ? `&bg=${b.bg}` : ''}`;
       await page.goto(`${HARNESS[c.harness]}?${q}`);
       await page.waitForFunction(() => window.__ready === true);

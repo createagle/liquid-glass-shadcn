@@ -143,6 +143,30 @@ async function main() {
            * 导致 CI 上同一提交时绿时红。这类错误不会自己报错，
            * 只会安静地给出错的数 —— 所以宁可直接 fail。
            */
+          /**
+           * 连拍两张一致才采信 —— 防的是**撕裂 / 陈旧的合成帧**。
+           *
+           * CI 上出现过一次无法解释的读数：背后像素 rgb(111,111,112)，
+           * 反推有效 alpha 约 0.155，而设定值是 0.696。关键在于：
+           * 若 alpha 真是 0.696，反解所需的背景值是 319（超出 0–255）——
+           * 也就是说**任何背景都产生不出那个像素**，只能是渲染用的 alpha 不对。
+           * 本机在 4 种渲染配置下各跑 4 次都复现不了。
+           *
+           * 目前最可能的解释是截图拿到了尚未完成合成的帧。连拍比对能挡住这类，
+           * 挡不住的话日志里会留下证据（见下面失败记录里的 computedBg）。
+           */
+          const shoot = async () => {
+            for (let attempt = 0; attempt < 5; attempt++) {
+              const a = await page.screenshot({ type: 'png' });
+              await settle();
+              const b = await page.screenshot({ type: 'png' });
+              if (a.equals(b)) return b;
+            }
+            throw new Error(
+              `连续 5 次截图都不稳定（${theme}/tint${tint}/tier${tier}/${bg}）—— 页面可能一直在动`,
+            );
+          };
+
           const settledCheck = await page.evaluate(() => window.__settled());
           if (!settledCheck.stable) {
             throw new Error(
@@ -163,12 +187,18 @@ async function main() {
           // 见 lib/contrast.mjs 头部说明 —— 旧的「读 CSS 色再合成」测法
           // 会采到圆角之外的像素，且对 mix-blend-mode 失效。
           await settle();
-          const shownPng = decodePng(await page.screenshot({ type: 'png' }));
+          const shownPng = decodePng(await shoot());
 
           await page.evaluate(() => window.__setTextHidden(true));
           await settle();
-          const png = decodePng(await page.screenshot({ type: 'png' }));
+          const png = decodePng(await shoot());
           await page.evaluate(() => window.__setTextHidden(false));
+
+          /** 夹具自己认为底座渲染成了什么 —— 与像素对不上时用来分诊 */
+          const computedBg = await page.evaluate(() => {
+            const el = document.querySelector('.lg-surface[data-layer="base"]');
+            return getComputedStyle(el).backgroundColor;
+          });
 
           for (const p of points) {
             const result = measureMaskedContrast(shownPng, png, p.box, parseColor(p.color));
@@ -187,6 +217,8 @@ async function main() {
               ratio: Number(result.ratio.toFixed(2)),
               textColor: p.color,
               bgPixel: result.pixel?.bg,
+              // 与 bgPixel 对不上就说明问题出在渲染/截图，而不是 token 值
+              computedBg,
             };
             all.push(record);
             if (result.ratio < threshold) failures.push(record);
@@ -290,6 +322,10 @@ async function main() {
     最差组合 ${f.theme} / 档位 ${f.tint} / Tier ${f.tier} / 背景 ${f.bg}
 ` +
     `    文字色 ${f.textColor}  背后像素 rgb(${f.bgPixel?.join(', ')})
+` +
+    // 夹具自己认为底座渲染成了什么。与「背后像素」对不上就说明问题出在
+    // 渲染或截图，而不是 token 值 —— 这是 CI 偶发的分诊依据。
+    `    夹具计算值 ${f.computedBg}
 `;
 
   if (regressions.length || newPoints.length) {

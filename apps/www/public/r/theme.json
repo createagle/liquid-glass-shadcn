@@ -70,12 +70,12 @@
       "lg-sat-1": "1.2",
       "lg-sat-2": "1.7",
       "lg-sat-3": "2.2",
-      "lg-refract-1": "-110",
-      "lg-refract-2": "-180",
-      "lg-refract-3": "-260",
-      "lg-disperse-1": "19",
-      "lg-disperse-2": "38",
-      "lg-disperse-3": "58",
+      "lg-refract-1": "-0.45",
+      "lg-refract-2": "-0.7",
+      "lg-refract-3": "-1",
+      "lg-disperse-1": "0.16",
+      "lg-disperse-2": "0.32",
+      "lg-disperse-3": "0.48",
       "lg-radius-sm": "8px",
       "lg-radius-md": "14px",
       "lg-radius-lg": "22px",
@@ -135,6 +135,15 @@
       "lg-purple": "var(--lg-ios-purple-light)",
       "lg-indigo": "var(--lg-ios-indigo-light)",
       "lg-teal": "var(--lg-ios-teal-light)",
+      "lg-on-glass-blue": "#003c7e",
+      "lg-on-glass-green": "#134720",
+      "lg-on-glass-red": "#771c16",
+      "lg-on-glass-orange": "#5b3500",
+      "lg-on-glass-yellow": "#4b3c00",
+      "lg-on-glass-pink": "#791528",
+      "lg-on-glass-purple": "#58296f",
+      "lg-on-glass-indigo": "#353481",
+      "lg-on-glass-teal": "#13444d",
       "lg-gray-1": "var(--lg-gray-1-light)",
       "lg-gray-2": "var(--lg-gray-2-light)",
       "lg-gray-3": "var(--lg-gray-3-light)",
@@ -142,7 +151,8 @@
       "lg-gray-5": "var(--lg-gray-5-light)",
       "lg-gray-6": "var(--lg-gray-6-light)",
       "lg-label-primary": "rgb(var(--lg-label-base-light))",
-      "lg-label-secondary": "rgb(var(--lg-label-tint-light) / 0.6)",
+      "lg-label-secondary-alpha": "0.99",
+      "lg-label-secondary": "rgb(var(--lg-label-tint-light) / var(--lg-label-secondary-alpha))",
       "lg-label-tertiary": "rgb(var(--lg-label-tint-light) / 0.3)",
       "lg-label-quaternary": "rgb(var(--lg-label-tint-light) / 0.18)",
       "lg-separator": "rgb(var(--lg-separator-tint-light) / 0.29)",
@@ -161,7 +171,7 @@
       "lg-material-base": "rgb(var(--lg-base-color) / var(--lg-base-alpha))",
       "lg-material-elevated": "rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)))",
       "lg-material-indicator": "transparent",
-      "lg-content-ultrathin": "rgb(255 255 255 / 0.44)",
+      "lg-content-ultrathin": "rgb(255 255 255 / 0.52)",
       "lg-content-thin": "rgb(255 255 255 / 0.62)",
       "lg-content-regular": "rgb(255 255 255 / 0.78)",
       "lg-content-thick": "rgb(255 255 255 / 0.92)",
@@ -219,6 +229,15 @@
       "lg-purple": "var(--lg-ios-purple-dark)",
       "lg-indigo": "var(--lg-ios-indigo-dark)",
       "lg-teal": "var(--lg-ios-teal-dark)",
+      "lg-on-glass-blue": "#daedff",
+      "lg-on-glass-green": "#cdf4d7",
+      "lg-on-glass-red": "#ffe4e3",
+      "lg-on-glass-orange": "#ffe7c3",
+      "lg-on-glass-yellow": "#ffeb88",
+      "lg-on-glass-pink": "#ffe4e9",
+      "lg-on-glass-purple": "#f5e5fd",
+      "lg-on-glass-indigo": "#e9e9fc",
+      "lg-on-glass-teal": "#cdf1f7",
       "lg-gray-1": "var(--lg-gray-1-dark)",
       "lg-gray-2": "var(--lg-gray-2-dark)",
       "lg-gray-3": "var(--lg-gray-3-dark)",
@@ -226,7 +245,8 @@
       "lg-gray-5": "var(--lg-gray-5-dark)",
       "lg-gray-6": "var(--lg-gray-6-dark)",
       "lg-label-primary": "rgb(var(--lg-label-base-dark))",
-      "lg-label-secondary": "rgb(var(--lg-label-tint-dark) / 0.6)",
+      "lg-label-secondary-alpha": "0.99",
+      "lg-label-secondary": "rgb(var(--lg-label-tint-dark) / var(--lg-label-secondary-alpha))",
       "lg-label-tertiary": "rgb(var(--lg-label-tint-dark) / 0.3)",
       "lg-label-quaternary": "rgb(var(--lg-label-tint-dark) / 0.16)",
       "lg-separator": "rgb(var(--lg-separator-tint-dark) / 0.65)",
@@ -238,7 +258,7 @@
       "lg-base-alpha": "0.44",
       "lg-base-color": "20 20 24",
       "lg-elevated-color": "32 32 38",
-      "lg-content-ultrathin": "rgb(28 28 30 / 0.5)",
+      "lg-content-ultrathin": "rgb(28 28 30 / 0.67)",
       "lg-content-thin": "rgb(28 28 30 / 0.66)",
       "lg-content-regular": "rgb(28 28 30 / 0.8)",
       "lg-content-thick": "rgb(28 28 30 / 0.94)",
@@ -325,7 +345,7 @@
         "isolation": "isolate",
         "border-radius": "var(--lg-surface-radius, var(--lg-radius-md))",
         "color": "var(--lg-label)",
-        "transition": "background-color 240ms linear,\r\n    box-shadow 240ms linear"
+        "transition": "background-color 240ms linear,\n    box-shadow 240ms linear"
       },
       "@supports (corner-shape: squircle)": {
         ".lg-surface[data-continuous='true']": {
@@ -340,15 +360,15 @@
       },
       ".lg-surface[data-layer='base']": {
         "background-color": "rgb(var(--lg-base-color) / var(--lg-base-alpha))",
-        "box-shadow": "inset 0 1px 0 0 var(--lg-stroke-top),\r\n    inset 0 -1px 0 0 var(--lg-stroke-bottom),\r\n    var(--lg-shadow)"
+        "box-shadow": "inset 0 1px 0 0 var(--lg-stroke-top),\n    inset 0 -1px 0 0 var(--lg-stroke-bottom),\n    var(--lg-shadow)"
       },
       ".lg-surface[data-layer='elevated']": {
         "background-color": "rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)))",
-        "box-shadow": "inset 0 1px 0 0 var(--lg-stroke-top),\r\n    inset 0 -1px 0 0 var(--lg-stroke-bottom),\r\n    var(--lg-shadow),\r\n    var(--lg-glow)"
+        "box-shadow": "inset 0 1px 0 0 var(--lg-stroke-top),\n    inset 0 -1px 0 0 var(--lg-stroke-bottom),\n    var(--lg-shadow),\n    var(--lg-glow)"
       },
       ".lg-surface[data-layer='indicator']": {
         "background-color": "transparent",
-        "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\r\n    \r\n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.28),\r\n    \r\n    inset 1px 0 1px -0.5px var(--lg-stroke-side),\r\n    inset -1px 0 1px -0.5px var(--lg-stroke-side),\r\n    0 3px 10px rgb(0 0 0 / 0.26)"
+        "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\n    \n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.28),\n    \n    inset 1px 0 1px -0.5px var(--lg-stroke-side),\n    inset -1px 0 1px -0.5px var(--lg-stroke-side),\n    0 3px 10px rgb(0 0 0 / 0.26)"
       },
       "[data-glass-tier='a'] .lg-surface[data-layer='base'], [data-glass-tier='a'] .lg-surface[data-layer='elevated']": {
         "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
@@ -357,6 +377,24 @@
       "[data-glass-tier='a'] .lg-surface[data-layer='indicator']": {
         "backdrop-filter": "brightness(1.06) saturate(1.22)"
       },
+      "[data-glass-tier='a'] .lg-surface[data-punched='true'], [data-glass-tier='b'] .lg-surface[data-punched='true']": {
+        "backdrop-filter": "none",
+        "-webkit-backdrop-filter": "none"
+      },
+      ".lg-punch-layer": {
+        "position": "absolute",
+        "inset": "0",
+        "border-radius": "inherit",
+        "pointer-events": "none",
+        "z-index": "0"
+      },
+      "[data-glass-tier='a'] .lg-surface[data-punched='true'] > .lg-punch-layer, [data-glass-tier='b'] .lg-surface[data-punched='true'] > .lg-punch-layer": {
+        "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
+        "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"
+      },
+      "[data-glass-tier='c'] .lg-punch-layer": {
+        "display": "none"
+      },
       "[data-glass-tier='b'] .lg-surface[data-layer='base'], [data-glass-tier='b'] .lg-surface[data-layer='elevated']": {
         "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
         "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"
@@ -364,12 +402,12 @@
       "[data-glass-tier='b'] .lg-surface[data-layer='indicator']": {
         "backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
         "-webkit-backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
-        "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\r\n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),\r\n    \r\n    inset 0 0 2px 1px rgb(255 255 255 / 0.16),\r\n    inset 0 0 8px 3px rgb(255 255 255 / 0.08),\r\n    0 3px 10px rgb(0 0 0 / 0.26)"
+        "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),\n    \n    inset 0 0 2px 1px rgb(255 255 255 / 0.16),\n    inset 0 0 8px 3px rgb(255 255 255 / 0.08),\n    0 3px 10px rgb(0 0 0 / 0.26)"
       },
       ".lg-surface[data-layer='indicator'][data-refraction='off']": {
         "backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
         "-webkit-backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
-        "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\r\n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),\r\n    inset 0 0 2px 1px rgb(255 255 255 / 0.16),\r\n    inset 0 0 8px 3px rgb(255 255 255 / 0.08),\r\n    0 3px 10px rgb(0 0 0 / 0.26)"
+        "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),\n    inset 0 0 2px 1px rgb(255 255 255 / 0.16),\n    inset 0 0 8px 3px rgb(255 255 255 / 0.08),\n    0 3px 10px rgb(0 0 0 / 0.26)"
       },
       "[data-glass-tier='b'] .lg-surface[data-layer='indicator']::before, .lg-surface[data-layer='indicator'][data-refraction='off']::before": {
         "content": "''",
@@ -377,10 +415,10 @@
         "inset": "0",
         "border-radius": "inherit",
         "padding": "1.5px",
-        "background": "linear-gradient(\r\n    135deg,\r\n    rgb(255 110 180 / 0.55) 0%,\r\n    rgb(120 200 255 / 0.15) 35%,\r\n    rgb(140 255 220 / 0.12) 60%,\r\n    rgb(180 130 255 / 0.5) 100%\r\n  )",
-        "mask": "linear-gradient(#000 0 0) content-box,\r\n    linear-gradient(#000 0 0)",
+        "background": "linear-gradient(\n    135deg,\n    rgb(255 110 180 / 0.55) 0%,\n    rgb(120 200 255 / 0.15) 35%,\n    rgb(140 255 220 / 0.12) 60%,\n    rgb(180 130 255 / 0.5) 100%\n  )",
+        "mask": "linear-gradient(#000 0 0) content-box,\n    linear-gradient(#000 0 0)",
         "mask-composite": "exclude",
-        "-webkit-mask": "linear-gradient(#000 0 0) content-box,\r\n    linear-gradient(#000 0 0)",
+        "-webkit-mask": "linear-gradient(#000 0 0) content-box,\n    linear-gradient(#000 0 0)",
         "-webkit-mask-composite": "xor",
         "pointer-events": "none"
       },
@@ -388,14 +426,14 @@
         "background-color": "rgb(var(--lg-base-color) / min(1, calc(var(--lg-base-alpha) + 0.26)))"
       },
       "[data-glass-tier='c'] .lg-surface[data-layer='indicator']": {
-        "background": "linear-gradient(\r\n    180deg,\r\n    rgb(255 255 255 / 0.32) 0%,\r\n    rgb(255 255 255 / 0.16) 46%,\r\n    rgb(255 255 255 / 0.22) 100%\r\n  )",
-        "box-shadow": "inset 0 1px 0 0 rgb(255 255 255 / 0.75),\r\n    inset 0 -1px 0 0 rgb(0 0 0 / 0.2),\r\n    0 2px 8px rgb(0 0 0 / 0.22)"
+        "background": "linear-gradient(\n    180deg,\n    rgb(255 255 255 / 0.32) 0%,\n    rgb(255 255 255 / 0.16) 46%,\n    rgb(255 255 255 / 0.22) 100%\n  )",
+        "box-shadow": "inset 0 1px 0 0 rgb(255 255 255 / 0.75),\n    inset 0 -1px 0 0 rgb(0 0 0 / 0.2),\n    0 2px 8px rgb(0 0 0 / 0.22)"
       },
       "[data-glass-tier='c'][data-glass-theme='dark'] .lg-surface[data-layer='indicator']": {
-        "background": "linear-gradient(\r\n    180deg,\r\n    rgb(255 255 255 / 0.2) 0%,\r\n    rgb(255 255 255 / 0.08) 46%,\r\n    rgb(255 255 255 / 0.13) 100%\r\n  )"
+        "background": "linear-gradient(\n    180deg,\n    rgb(255 255 255 / 0.2) 0%,\n    rgb(255 255 255 / 0.08) 46%,\n    rgb(255 255 255 / 0.13) 100%\n  )"
       },
       ".lg-surface[data-layer='indicator'][data-pressed='true']": {
-        "box-shadow": "inset 0 2px 1.5px -0.5px rgb(255 255 255 / var(--lg-specular-opacity)),\r\n    inset 0 -1.5px 1.5px -0.5px rgb(0 0 0 / 0.34),\r\n    inset 1px 0 1.5px -0.5px var(--lg-stroke-side),\r\n    inset -1px 0 1.5px -0.5px var(--lg-stroke-side),\r\n    0 5px 16px rgb(0 0 0 / 0.32)"
+        "box-shadow": "inset 0 2px 1.5px -0.5px rgb(255 255 255 / var(--lg-specular-opacity)),\n    inset 0 -1.5px 1.5px -0.5px rgb(0 0 0 / 0.34),\n    inset 1px 0 1.5px -0.5px var(--lg-stroke-side),\n    inset -1px 0 1.5px -0.5px var(--lg-stroke-side),\n    0 5px 16px rgb(0 0 0 / 0.32)"
       },
       "[data-glass-tier='a'] .lg-surface[data-layer='indicator'][data-pressed='true']": {
         "backdrop-filter": "brightness(1.12) saturate(1.4)"

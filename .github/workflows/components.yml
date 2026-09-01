@@ -1,0 +1,50 @@
+name: 组件行为回归
+
+# 只跑 behavior project。visual project **刻意不跑** ——
+# 截图快照是平台相关的（已实测 Windows 与 Linux CI 的 blur 渲染不一致，
+# 见 docs/research/STATUS.md §0.5），本机生成的基线在 CI 上必然全红。
+# 要让视觉回归在 CI 生效，需要先在 Linux 环境录一次基线，那之前不接。
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  behavior:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 刻意不写 version —— package.json 的 packageManager 是唯一事实来源
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # 与 contrast.yml 对齐；脚本里有直接 import .ts 的地方
+          node-version: 24
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 安装 Chromium
+        run: npx playwright install --with-deps chromium
+
+      # 验证台是 esbuild + Tailwind 产物，不入库，CI 里现构建
+      - name: 构建验证台
+        run: |
+          pnpm --filter www dev:css
+          pnpm --filter www dev:build
+
+      - name: 行为与几何回归
+        run: npx playwright test --project=behavior
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

@@ -2,7 +2,9 @@
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "glass",
   "homepage": "https://liquid-glass-ui.dev",
-  "include": ["./registry/glass/registry.json"],
+  "include": [
+    "./registry/glass/registry.json"
+  ],
   "items": [
     {
       "$schema": "https://ui.shadcn.com/schema/registry-item.json",
@@ -11,7 +13,10 @@
       "title": "cn()",
       "description": "class 合并工具。与 shadcn 生态完全一致的实现，组件源码统一从 @/lib/utils 引入。",
       "author": "Liquid Glass UI",
-      "dependencies": ["clsx", "tailwind-merge"],
+      "dependencies": [
+        "clsx",
+        "tailwind-merge"
+      ],
       "files": [
         {
           "path": "registry/glass/lib/utils.ts",
@@ -26,8 +31,12 @@
       "title": "Glass Providers",
       "description": "应用级 GlassProvider 封装：主题、材质档位、tier 覆写与无障碍偏好订阅。挂在应用根部。",
       "author": "Liquid Glass UI",
-      "dependencies": ["@glass/core"],
-      "registryDependencies": ["@glass/theme"],
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/theme"
+      ],
       "files": [
         {
           "path": "registry/glass/lib/glass-providers.tsx",
@@ -35,6 +44,30 @@
         }
       ],
       "docs": "别忘了在 <head> 里注入 glassSsrScript()，否则首屏会有暗色 / 材质闪烁。用法见文件顶部注释。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "tabs",
+      "type": "registry:ui",
+      "title": "Tabs / Segmented",
+      "description": "分段控件。Layer B 磨砂底座 + Layer I 强玻璃指示器，底座按指示器位置挖洞，让指示器看到未被模糊过的背景。尺寸取自 iOS 27 官方设计资源。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-tabs",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/tabs.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。指示器的折射只在 Tier A 生效，B/C 会自动降级为各自完整的设计。"
     }
   ]
 }

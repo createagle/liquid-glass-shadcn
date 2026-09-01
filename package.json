@@ -13,9 +13,12 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
-    "contrast:audit": "node scripts/contrast-audit.mjs"
+    "contrast:audit": "node scripts/contrast-audit.mjs",
+    "test:behavior": "playwright test --project=behavior",
+    "test:visual": "playwright test --project=visual"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "playwright": "^1.50.0"
   }
 }

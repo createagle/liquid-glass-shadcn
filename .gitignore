@@ -20,3 +20,5 @@ packages/glass-core/debug/glass-optics.js
 packages/glass-core/debug/react/*.js
 apps/www/dev/tabs-demo.js
 apps/www/dev/tailwind.css
+apps/www/dev/sweep.js
+apps/www/dev/ab.js

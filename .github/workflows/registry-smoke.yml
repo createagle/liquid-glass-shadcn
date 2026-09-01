@@ -103,6 +103,13 @@ jobs:
           cd "$RUNNER_TEMP/smoke"
           npx --yes shadcn@latest add @glass/glass-providers --yes --overwrite
 
+      # 组件 item：验证 registryDependencies 能把 utils/theme 一并带进来，
+      # 且组件源码里的 @/lib/utils 引用在目标工程里能解析
+      - name: 方式三 · 安装 UI 组件（tabs）
+        run: |
+          cd "$RUNNER_TEMP/smoke"
+          npx --yes shadcn@latest add @glass/tabs --yes --overwrite
+
       - name: 断言 token 真的被注入（不需要手动补 CSS）
         run: |
           cd "$RUNNER_TEMP/smoke"
@@ -112,7 +119,9 @@ jobs:
           done
           grep -q "lg-surface" "$css" || { echo "::error::缺少 .lg-surface 渲染路径"; exit 1; }
           test -f src/components/glass-providers.tsx || { echo "::error::组件文件未落地"; exit 1; }
-          echo "✓ token 与渲染路径均已注入"
+          test -f src/components/ui/tabs.tsx || { echo "::error::tabs 组件未落地"; exit 1; }
+          test -f src/lib/utils.ts || { echo "::error::registryDependencies 没把 utils 带进来"; exit 1; }
+          echo "✓ token、渲染路径与组件文件均已就位"
 
       - name: 目标工程构建通过
         run: cd "$RUNNER_TEMP/smoke" && npm run build

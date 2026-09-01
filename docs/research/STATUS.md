@@ -509,6 +509,157 @@ Fidelity 对照图的裁剪偏移也是**量出来的**：在参考图里找蓝�
 
 ---
 
+## 0.45 Phase 3 · Dialog + Toggle —— §14 逐条自查（2026-09-01）
+
+第四批 P0 组件。**Dialog 12 项过 10、Toggle 12 项过 9。**
+
+### Dialog：几何全部量到了
+
+节点 `12740:24495`，参考图 `screenshots/ios27-alert.png`（450×920，1px = 1pt）。
+
+| 项 | 值 | 来源 |
+|---|---|---|
+| 面板宽 | 300 | 元数据 |
+| **圆角** | **34** | **拟合** —— 见下 |
+| 内边距 | 14 | 元数据 |
+| 正文块再内缩 | 8 | 元数据 |
+| 标题 → 正文 | 10 | 元数据 |
+| 正文块 → 按钮区 | 24 | 元数据 |
+| 按钮 | 132×48，间距 8 | 元数据（132+8+132 = 272 = 300−28 ✅ 自洽） |
+| 标题 / 正文 | 均 17pt，行高 22 | 像素实测 |
+
+**圆角是拟合出来的，不是目测。** 元数据里没有圆角。做法：沿面板左缘逐行找
+「第一个亮度 ≥ 225 的像素」得到内缩曲线，再用 `inset(dy) = r − √(r²−(r−dy)²)`
+最小二乘拟合 —— **34 个采样点，均方误差 0.35**，同时拟合出的左边界 x=85
+与元数据预测分毫不差（这条顺带印证了之前推的帧偏移 24）。
+
+> ✅ 拟合值 34 与 `primitive.css` 里既有的 `--lg-radius-xl` / `--lg-radius-continuous`
+> （34px）撞上了 —— 那个值是 Phase 1 定的，这次是完全独立的来源。
+
+**标题与正文的字号是量墨迹高度确定的**：两者都是 13px 高，也就是**同一个字号**。
+看参考图会觉得正文更小，那是字重与颜色造成的错觉。行高 22 由两行正文的
+基线间距（27−4）读出。
+
+**一处与经典 iOS Alert 的明显差别：文字左对齐，不是居中。** 按参考图走。
+
+### 禁用 asChild 带来的两处 API 差异
+
+`asChild` 在本库是禁用的（shadcn 会在 base-* style 的工程里把它改写成 Base UI 的
+`render` prop，见 §0.3）。这在 Dialog 上第一次产生了**面向用户的 API 后果**：
+
+- `<DialogClose asChild><Button/></DialogClose>` 这个 shadcn 生态的惯用写法用不了。
+  改成 **`DialogClose` 直接渲染本库的 Button**，接受全部 Button props：
+  `<DialogClose variant="glass">Cancel</DialogClose>`。
+  于是 Dialog 多了一条 `registryDependencies: @glass/button`。
+- `DialogTrigger` 保持 Radix 原生 button，没法把任意元素提升成触发器。
+  已在 registry 的 docs 字段里写明。
+
+### 退场动画：Radix 会立刻卸载，必须自己接管开关态
+
+Radix 关闭时同步卸载 Content，退场动画根本来不及播。解法是
+`forceMount` + `AnimatePresence`，而这要求知道当前开关状态 —— Radix 不对外暴露。
+所以 `Dialog` 自己维护了一份（受控 / 非受控两条路径都覆盖），
+用它驱动 `AnimatePresence`。测试里有一条专门盯这个：
+**关闭指令发出后元素必须还在**，跑完动画才消失。
+
+### Toggle：没有 Apple 参考图，如实说
+
+在 iOS 27 资源里找过 —— Edit Menu（`12740:24157`）是 Cut/Copy/Paste，
+不是格式化开关；文件里没有单独的 Toggle 组件页。
+
+**所以不编造尺寸**：几何**全部继承自 Button**（那边是两处独立节点实测的），
+选中态的材质沿用 **Tabs 指示器**（Layer I）。
+测试里因此有一组「与 Button 逐项相同」的断言 —— 高度、内边距、圆角、字号
+挨个比对**同一页面上的 Button**，将来 Button 的实测值改了而 Toggle 没跟上，立刻会红。
+
+**Toggle 是本库唯一不走 Radix 的交互组件。** 按下要做 spring 缩放就得让 motion
+拥有那个 button 元素，而把 Radix 的 Root 换成 motion 元素只能靠 asChild。
+Radix Toggle 提供的恰好是可以照抄的一小段（`aria-pressed`、`data-state`、
+点击翻转、受控/非受控），props 名与输出属性都保持一致，迁移不用改调用处。
+**这个理由不适用于焦点管理或弹层定位那类东西，别推广。**
+
+### 又一次撞上 Layer I 的 α=0 陷阱
+
+Toggle 的**选中态**用 Layer I，而它是带标签的 —— 与 Button 的按下态是同一个坑
+（`background-color: transparent` 让材质不透明度归零，可读性地板随之消失）。
+组件里补了材质层，并把它加进了 `press-legibility.mjs` 的测点。
+
+顺带把 Dialog 的标题与正文也纳入该脚本。现在 24 个测点：
+
+| 测点 | 渐变 | 条纹 |
+|---|---|---|
+| Toggle 选中态 | 17.73 | **11.67** ✅ |
+| Dialog 标题 | 17.93 | 16.52 ✅ |
+| Dialog 正文（次级标签色） | 8.72 | 8.38 ✅ |
+
+### 测试抓到的两个真问题
+
+**1. `data-slot` 被顶掉。** `DialogClose` 原本写了 `data-slot="dialog-close"`，
+而 Button 在展开 props **之前**设 `data-slot="button"` —— 后写的把它顶掉了，
+样式与测试赖以定位的结构钩子直接断掉（选择器一个都匹配不到）。
+改成用 `data-dialog-close` 标记，不碰 `data-slot`。
+
+**2. `flex-1` 与 Button 自带的 `shrink-0` 打架。** 按钮区原本用
+`flex [&>*]:flex-1`，实测按钮宽 74 而不是 132 —— 两个工具类都在 utilities 层，
+谁赢取决于生成顺序。改用 **grid 等分**（`grid-flow-col auto-cols-fr`），
+轨道尺寸不受 flex-shrink 影响。
+
+**顺带又踩了一次 `dev:css` 没重跑。** 新加的 grid 工具类没被生成，
+量出来仍是旧值 —— 与当初指示器量出 40×0 是同一个坑。
+（`pnpm dev` 现在会先跑 `dev:css` + `dev:build`，见 §0.6。）
+
+### Fidelity
+
+新增 `scripts/fidelity-sheets.mjs`，把之前一次性的临时脚本固化成构建步骤，
+四张对照图一起出。Dialog 那张要**分两趟**：弹窗是 portal + fixed 的，塞不进
+对照页的栏里，所以先把**真实运行的组件**单独截一张再引进去 ——
+不是照着尺寸另画一遍（那样会和组件悄悄漂移）。
+
+对照图里 Dialog 的高度对不上，原因是**参考图那一版带一个 Text Field**
+（307 高里有 123 是输入框），本库还没有 Input 组件。已在图注里写明，
+可比的是宽度、圆角、内边距、排版与按钮。
+
+### §14 逐条
+
+| 验收项 | Dialog | Toggle |
+|---|---|---|
+| light / dark 各自独立调过 | ✅ | ✅ |
+| 材质档位 0/1/2/3 正常可读 | ✅ 四档各录快照 | ✅ 材质走 Tabs 指示器那套 |
+| Tier A/B/C 三条路径完整 | ✅ | ✅ 只有 A 走 SVG 折射，有测试 |
+| Layer B / Layer I 分层正确 | ✅ 只有面板，无 Layer I（§2 如此规定），有测试断言 | ✅ 选中 = Layer I + 材质补偿 |
+| 交互态齐全，用 spring 预设 | ✅ 入场/退场/遮罩全走 `transitionFor()` | ✅ hover / active / focus / disabled |
+| 移动端下拉类改 Drawer | 🟡 **未做** —— Dialog 属于下拉/浮层类，SPEC §9 要求移动端切 Drawer，那是 Phase 4 | ➖ 不适用 |
+| 三种无障碍偏好正确降级 | ✅ reduced-motion 有测试（150ms 内消失） | ✅ 沿用既有分支 |
+| WCAG AA 对比度检查通过 | ✅ 标题 / 正文都进了交互态可读性脚本 | ✅ 选中态进了同一脚本 |
+| registry item + 干净工程冒烟 | ✅ 已加进冒烟工作流 | ✅ 已加进冒烟工作流 |
+| 文档页 Preview/Code/Fidelity/API | ❌ Phase 6 | ❌ Phase 6 |
+| `// APPLE REFERENCE:` + 可信度标注 | ✅ 含拟合方法与自洽校验 | ✅ **明确写了「本组件没有独立参考图」** |
+| Playwright 视觉回归快照 | ⚠️ 12 张，只有 win32 基线 | ⚠️ 2 张，只有 win32 基线 |
+
+### 未过的项
+
+- 🔴 **文档页未做** —— Phase 6（两个组件都是）
+- 🟡 **视觉快照只有 win32 基线** —— 与前几批同因
+- 🟡 **Dialog 的移动端 Drawer 路径未做** —— SPEC §9 要求下拉/浮层类组件在移动端
+  切成底部 Drawer，那是 **Phase 4 ResponsiveOverlay** 的任务。现在的 Dialog
+  在移动 viewport 下仍然是居中浮层，**这是一处已知的未完成**，不是设计选择。
+- 🟡 **Toggle 没有 Apple 参考图** —— 几何有来源（继承 Button）但来源不是 Apple
+  的 Toggle 本身；ToggleGroup 未交付。
+
+### 测试增量
+
+| 文件 | 数量 | 进 CI |
+|---|---|---|
+| `tests/dialog.behavior.spec.ts` | 16 | ✅ |
+| `tests/toggle.behavior.spec.ts` | 12 | ✅ |
+| `scripts/press-legibility.mjs` | 18 → **24** 个测点 | ✅ |
+| `tests/dialog.visual.spec.ts` + Toggle 快照 | 14 张 | ❌ 平台相关 |
+
+本机全绿：typecheck ×2 · registry 静态检查 · 派生色漂移 · 探针契约 ·
+对比度审计 1512 采样 · 交互态可读性 24 测点 · 行为回归 **89** 项 · 视觉 **78** 项。
+
+---
+
 ## 0.5 CI 第一次真跑（2026-09-01）—— 抓出 4 个真实故障
 
 仓库此前**没有远程**，两个 workflow 从建好起一次都没执行过。
@@ -592,6 +743,32 @@ inset 描边高光与平台 blur 差异。**改动模型 / 描边 / 档位表之
 
 暂时可以把审计当闸门用，但**再红一次就要先看夹具计算值**，
 不要默认它是偶发。
+---
+
+## 0.6 `pnpm dev` 从写下起就是坏的（2026-09-01）
+
+根 `dev` 脚本是 `pnpm --filter www dev`，而 **apps/www 没有 `dev` 脚本** ——
+文档站是 Phase 6，还没开始建。所以这条命令一直报
+`ERR_PNPM_RECURSIVE_RUN_NO_SCRIPT`，只是此前没人跑过，也就没暴露。
+
+**没有去补一个 Next.js dev server**（那是 Phase 6 的活）。现在能看的东西是
+`apps/www/dev/` 下的几个验证台，于是让 `dev` 伺服它们：
+新增 `scripts/serve-dev.mjs`，`/` 给一个带说明的入口列表。
+
+两个要点：
+
+- **服务根必须是仓库根**而不是 `apps/www` —— 验证台引用了
+  `../../../packages/glass-core/src/tokens/theme.css`。
+- `dev` 先跑 `dev:css` + `dev:build` 再起服务。**这一步不是可选的**：
+  验证台的 `.js` 与 `tailwind.css` 都是产物且不入库，忘了重跑就会对着上一次的
+  结果做判断（这个坑在 §0.2 和 §0.45 各踩过一次）。
+
+写这个文件时还把一个未定义的变量留在请求处理器里，**整个进程直接退出** ——
+表现成 `preview_start` 报成功、浏览器却还显示着上个进程的缓存页面。
+现在处理器包了 `try/catch`，这类错误报 500，服务继续活着。
+
+Phase 6 真正建起文档站之后，`dev` 应当改回指向 Next.js，`serve-dev.mjs` 可以删掉。
+
 ---
 
 ## 1. 补做：WCAG AA 对比度自动检查（PROJECT_SPEC §13）

@@ -12,6 +12,7 @@ import { createRoot } from 'react-dom/client';
 import { GlassProvider } from '@glass/core';
 import { Slider } from '../registry/glass/ui/slider';
 import { Switch } from '../registry/glass/ui/switch';
+import { Button } from '../registry/glass/ui/button';
 
 /** iOS 列表行：白底、行高 52pt、左右 16pt 边距 */
 function Row({ children }: { children: React.ReactNode }) {
@@ -59,9 +60,32 @@ function SliderScene() {
   );
 }
 
+/**
+ * iPhone 底部工具栏，节点 12740:24071（402×84）。
+ * 里面正好并排放着两种按钮：左边玻璃、右边实心强调色。
+ *
+ * 位置全部来自节点元数据，不是目测：
+ *   leading  x=28  y=4  79×48
+ *   trailing x=206 y=4  168×48
+ */
+function ButtonScene() {
+  return (
+    <div style={{ width: 402, height: 84, background: '#fff', position: 'relative' }}>
+      <div style={{ position: 'absolute', left: 28, top: 4 }}>
+        <Button variant="glass">Button</Button>
+      </div>
+      <div style={{ position: 'absolute', left: 206, top: 4 }}>
+        {/* 参考图里这个按钮没有可见标签，就是一块实心胶囊 */}
+        <Button variant="prominent" style={{ width: 168 }} aria-label="强调按钮" />
+      </div>
+    </div>
+  );
+}
+
 for (const [id, node] of [
   ['switch-scene', <SwitchScene key="s" />],
   ['slider-scene', <SliderScene key="l" />],
+  ['button-scene', <ButtonScene key="b" />],
 ] as const) {
   const el = document.getElementById(id);
   if (el) {

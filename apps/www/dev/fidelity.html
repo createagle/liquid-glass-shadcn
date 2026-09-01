@@ -13,6 +13,14 @@
   .cap span{font-weight:400;color:#8e8e93}
   .frame{border:1px solid #d1d1d6;border-radius:10px;overflow:hidden;background:#fff}
   .frame img{display:block;width:370px}
+  /* 按原始画布宽度显示 → 1px = 1pt，再裁到工具栏区。
+     偏移是**量出来的**：在参考图里找蓝色按钮的包围盒，反推帧在画布中的位置
+     （水平 24、垂直 22），工具栏在帧内 y=790 → 画布 y=812。
+     宽高各 +2 是给 border 让位（box-sizing: border-box）。
+     max-width:none 不能省 —— Tailwind preflight 的 img{max-width:100%}
+     会把图压回容器宽度，裁出来就是一片空白（踩过）。 */
+  .frame.crop{width:404px;height:86px;overflow:hidden;position:relative}
+  .frame.crop img{width:450px;max-width:none;position:absolute;left:-24px;top:-812px}
   .note{margin-top:14px;font-size:11.5px;line-height:1.65;color:#3c3c43;
         border-left:3px solid #c7c7cc;padding-left:10px}
   .note b{color:#1c1c1e}
@@ -65,6 +73,32 @@
     ③ 左边 knob 是纯白实心，右边保留了中等强度的玻璃感（<code>--lg-knob-fill</code> = 白 86%，
     按下时淡出让折射显形），所以已填充段的蓝色会透出一点 —— 这个程度是<b>推定值，未经真机校准</b>；
     ④ 左边未填充段是 <code>rgb(228 228 228)</code> 实色，右边是磨砂玻璃 —— 压在白底上会更浅。
+  </div>
+</div>
+
+<div class="sheet" id="sheet-button">
+  <h2>Button —— Apple iOS 27 参考图 vs 本库组件</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="cap">Apple <span>· 底部工具栏（节点 12740:24071），裁到 402×84 的工具栏区</span></div>
+      <div class="frame crop"><img src="../../../docs/research/screenshots/ios27-toolbar-buttons.png" alt=""></div>
+    </div>
+    <div class="col">
+      <div class="cap">本库 <span>· &lt;Button&gt; glass + prominent，Tier A / 默认档位</span></div>
+      <div class="frame"><div id="button-scene"></div></div>
+    </div>
+  </div>
+  <div class="note">
+    左图按原始画布 450pt 宽显示，故 1px = 1pt；再裁到工具栏所在的 402×84。
+    右侧两个按钮的位置直接取自节点元数据（leading x=28、trailing x=206、均 y=4、高 48），不是目测对齐。<br>
+    已对齐：高 48、胶囊、水平内边距 12、标签 17、两个按钮的横向位置。<br>
+    <b>已知差异：</b>
+    ① <b>实心按钮的蓝色不是真实 systemBlue。</b>白字压在 <code>#007AFF</code> 上只有
+    4.02:1，不过 WCAG AA；本库用解出来的 <code>#0071eb</code>（4.60:1）。
+    这是<b>刻意偏离</b> —— PROJECT_SPEC §13 写明可读性不可协商。肉眼几乎看不出色差；
+    ② 字体不同（SF Pro vs 系统回退字体），玻璃按钮的宽度因此差约 3px；
+    ③ 左图是 Figma 静态稿，画不出折射 —— 本库的玻璃按钮在**按下时**才升级为
+    Layer I 真玻璃，静态对照图里看不到那一态。
   </div>
 </div>
 

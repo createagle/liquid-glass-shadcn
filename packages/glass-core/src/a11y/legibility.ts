@@ -371,3 +371,78 @@ export function deriveOnGlassLabel(
   }
   return at(hi);
 }
+
+/**
+ * 有色**实心**填充（Apple 的 "prominent" 按钮 / `.tint(_:)`）的目标对比度。
+ *
+ * 与 `AA_TARGET_WITH_MARGIN`（5.6）不同，这里只留 0.1 的余量，因为两者的
+ * 不确定性来源完全不同：
+ *
+ *   - 玻璃底座：颜色是 `a·F + (1-a)·B` 合成出来的，`blur()` 的平台差异会让
+ *     实际渲染偏离模型，所以要留大余量（标定过程见上面那条常量的注释）。
+ *   - 实心填充：**背景就是这个色本身，没有合成、没有 blur、没有平台差异**，
+ *     模型即实际。0.1 只用来吸收抗锯齿边缘像素的测量误差。
+ */
+export const AA_TARGET_FILL = 4.6;
+
+/**
+ * 把一个有色**实心**填充压到「白字（或指定标签色）过 AA」为止。
+ *
+ * 与 `deriveOnGlassLabel()` 的方向相反：那边背景固定、调文字；这里文字固定、调背景。
+ *
+ * ⚠️ **标签色是入参，不是算出来的。** 这一条是踩过才写下的：
+ * 如果让函数自己「挑对比度更高的那一极」，systemBlue `#007AFF` 会被判成
+ * **黑字**（5.23:1，白字只有 4.02:1）—— 数学上确实更优，但 iOS 的蓝色
+ * prominent 按钮明明是白字（见 `screenshots/ios27-prominent-button.png`
+ * 的 "Create Note"，以及 `ios27-toolbar-buttons.png` 的蓝色按钮）。
+ *
+ * 极性属于设计语言，由**有参考图的调用方**决定；这里只负责在给定极性下求解。
+ *
+ * 为什么必须解：白字压在真实 systemBlue 上只有 **4.02:1**，不过 AA 正文标准。
+ * Apple 自己就是这么发货的，但 PROJECT_SPEC §13 写明可读性「不可协商」。
+ *
+ * @param color   真实系统色
+ * @param onColor 标签色（默认白）—— 由调用方按参考图决定
+ * @returns 满足 `target` 的最小调整量对应的填充色；原色已达标时**原样返回**
+ */
+export function deriveProminentFill(
+  color: readonly [number, number, number],
+  onColor: readonly [number, number, number] = [255, 255, 255],
+  target: number = AA_TARGET_FILL,
+): [number, number, number] {
+  if (contrastRatio(onColor, color) >= target) {
+    return [color[0], color[1], color[2]];
+  }
+
+  // 白字（亮标签）→ 把底色压暗；黑字（暗标签）→ 把底色提亮
+  const toward = srgbLuminance(onColor) > 0.5 ? 0 : 255;
+  const at = (t: number): [number, number, number] => [
+    color[0] + (toward - color[0]) * t,
+    color[1] + (toward - color[1]) * t,
+    color[2] + (toward - color[2]) * t,
+  ];
+
+  /**
+   * 在**取整后**的颜色上判定，不是在浮点上。
+   *
+   * token 最终以 8 位十六进制落到 CSS 里，取整会掉一点对比度 ——
+   * 在浮点上恰好解到 4.60 的值，写成 #0071ec 之后实测是 4.59。
+   * 直接按取整结果搜索，报出来的数就是用户真正拿到的数。
+   */
+  const rounded = (t: number): [number, number, number] => {
+    const c = at(t);
+    return [Math.round(c[0]), Math.round(c[1]), Math.round(c[2])];
+  };
+
+  // 推到极端仍不达标 → 该配色本身无解，返回极端值让调用方看得出来
+  if (contrastRatio(onColor, rounded(1)) < target) return rounded(1);
+
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (contrastRatio(onColor, rounded(mid)) >= target) hi = mid;
+    else lo = mid;
+  }
+  return rounded(hi);
+}

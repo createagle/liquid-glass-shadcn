@@ -149,6 +149,10 @@
           "lg-on-glass-purple": "#58296f",
           "lg-on-glass-indigo": "#353481",
           "lg-on-glass-teal": "#13444d",
+          "lg-accent-fill": "#0071eb",
+          "lg-on-accent": "#ffffff",
+          "lg-destructive-fill": "#dc332a",
+          "lg-on-destructive": "#ffffff",
           "lg-gray-1": "var(--lg-gray-1-light)",
           "lg-gray-2": "var(--lg-gray-2-light)",
           "lg-gray-3": "var(--lg-gray-3-light)",
@@ -191,6 +195,7 @@
           "lg-glow": "none",
           "lg-refract-scale": "0.85",
           "lg-disperse-scale": "0.9",
+          "lg-press-dim": "rgb(0 0 0 / 0.18)",
           "lg-ring": "var(--lg-blue)",
           "radius": "var(--lg-radius-md)",
           "background": "#ffffff",
@@ -245,6 +250,10 @@
           "lg-on-glass-purple": "#f5e5fd",
           "lg-on-glass-indigo": "#e9e9fc",
           "lg-on-glass-teal": "#cdf1f7",
+          "lg-accent-fill": "#0973df",
+          "lg-on-accent": "#ffffff",
+          "lg-destructive-fill": "#d73a31",
+          "lg-on-destructive": "#ffffff",
           "lg-gray-1": "var(--lg-gray-1-dark)",
           "lg-gray-2": "var(--lg-gray-2-dark)",
           "lg-gray-3": "var(--lg-gray-3-dark)",
@@ -605,6 +614,29 @@
         }
       ],
       "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。⚠️ 尺寸与 PROJECT_SPEC 里旧的 UIKit 度量（51×31、圆形 knob）不同，取的是 iOS 27 实测值，理由见组件顶部的 APPLE REFERENCE 注释。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "button",
+      "title": "Button",
+      "author": "Liquid Glass UI",
+      "description": "按钮。静止是 Layer B 磨砂胶囊，按下升级为 Layer I 真玻璃（PROJECT_SPEC §2 对 Button 的专门规定）。尺寸取自 iOS 27 官方设计资源（高 48、内边距 12、胶囊）。实心变体的底色是 AA 安全解，不是真实系统色。",
+      "dependencies": [
+        "@glass/core",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/button.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 Button 的变体名不同 —— 这里用 Apple 的说法：\n  glass（默认，对应 shadcn 的 secondary/outline）\n  prominent（对应 default，SwiftUI 的 .glassProminent）\n  destructive\n  plain（对应 ghost，iOS 的 borderless）\n\n⚠️ plain 按定义没有材质，不提供可读性地板 —— 放在对比度可控的背景上是调用方的责任。\n⚠️ 不支持 asChild：shadcn 会在 base-* style 的工程里把它改写成 Base UI 的 render prop。",
       "type": "registry:ui"
     }
   ]

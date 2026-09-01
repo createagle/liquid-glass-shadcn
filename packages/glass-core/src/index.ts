@@ -110,6 +110,8 @@ export {
   APPLE_SECONDARY_ALPHA,
   worstBaseUnderFloor,
   deriveOnGlassLabel,
+  deriveProminentFill,
+  AA_TARGET_FILL,
   type LegibilityMode,
   type LegibilityQuery,
 } from './a11y/legibility.js';

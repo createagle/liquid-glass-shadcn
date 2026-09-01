@@ -31,7 +31,7 @@
 
   /* ── 玻璃上的着色文字 ────────────────────────────────────────────────
      由 a11y/legibility.ts 的 deriveOnGlassLabel() 解出，
-     校验脚本 scripts/on-glass-colors.mjs（CI 跑，漂移即 fail）。
+     校验脚本 scripts/derived-colors.mjs（CI 跑，漂移即 fail）。
 
      为什么需要单独一套：**iOS 系统色本身就不是 AA 级正文色。**
      实测压在纯白上：蓝 4.02、红 3.55、绿 2.22、黄 1.51 —— 全部不过 4.5。
@@ -54,6 +54,26 @@
   --lg-on-glass-purple: #58296f;
   --lg-on-glass-indigo: #353481;
   --lg-on-glass-teal: #13444d;
+
+
+  /* ── 实心填充按钮（Apple 的 prominent / `.tint()`） ──────────────────
+     由 a11y/legibility.ts 的 deriveProminentFill() 解出，
+     校验脚本 scripts/derived-colors.mjs（CI 跑，漂移即 fail）。
+
+     为什么不能直接用 --lg-blue：**白字压在真实 systemBlue 上只有 4.02:1**，
+     不过 AA 正文标准（红色更低，3.55）。Apple 自己就是这么发货的，
+     但 PROJECT_SPEC §13 写明可读性「不可协商」。
+
+     标签固定用白 —— 依据是 iOS 的参考图（screenshots/ios27-prominent-button.png
+     的 "Create Note"）。让算法自己挑极性会得到黑字（对比度确实更高），
+     那不是 iOS 的样子，理由写在 deriveProminentFill() 的注释里。
+
+     调整量很小（#007aff → #0071ec），原色特征基本保住。
+     ────────────────────────────────────────────────────────────────── */
+  --lg-accent-fill: #0071eb;
+  --lg-on-accent: #ffffff;
+  --lg-destructive-fill: #dc332a;
+  --lg-on-destructive: #ffffff;
 
   --lg-gray-1: var(--lg-gray-1-light);
   --lg-gray-2: var(--lg-gray-2-light);
@@ -154,6 +174,17 @@
   --lg-refract-scale: 0.85; /* light 下折射略低：浅背景上畸变太显脏 */
   --lg-disperse-scale: 0.9; /* light 下色散偏冷 */
 
+  /**
+   * 按下时压在**实心填充**控件上的压暗层。
+   *
+   * 明暗两套用同一个值，且刻意都是「黑」：实心按钮的标签是白的，
+   * 压暗只会让对比度**升高**，任何主题下都不会掉出 AA。
+   * 如果这里改成暗色主题提亮，白标签的对比度会下降 —— 别改。
+   *
+   * ⚠️ 不透明度是 `[推定]`。
+   */
+  --lg-press-dim: rgb(0 0 0 / 0.18);
+
   /* ── 焦点环：在玻璃上必须清晰可见 ──────────────────────────────────── */
   --lg-ring: var(--lg-blue);
 }
@@ -186,6 +217,26 @@
   --lg-on-glass-purple: #f5e5fd;
   --lg-on-glass-indigo: #e9e9fc;
   --lg-on-glass-teal: #cdf1f7;
+
+
+  /* ── 实心填充按钮（Apple 的 prominent / `.tint()`） ──────────────────
+     由 a11y/legibility.ts 的 deriveProminentFill() 解出，
+     校验脚本 scripts/derived-colors.mjs（CI 跑，漂移即 fail）。
+
+     为什么不能直接用 --lg-blue：**白字压在真实 systemBlue 上只有 4.02:1**，
+     不过 AA 正文标准（红色更低，3.55）。Apple 自己就是这么发货的，
+     但 PROJECT_SPEC §13 写明可读性「不可协商」。
+
+     标签固定用白 —— 依据是 iOS 的参考图（screenshots/ios27-prominent-button.png
+     的 "Create Note"）。让算法自己挑极性会得到黑字（对比度确实更高），
+     那不是 iOS 的样子，理由写在 deriveProminentFill() 的注释里。
+
+     调整量很小（#007aff → #0071ec），原色特征基本保住。
+     ────────────────────────────────────────────────────────────────── */
+  --lg-accent-fill: #0973df;
+  --lg-on-accent: #ffffff;
+  --lg-destructive-fill: #d73a31;
+  --lg-on-destructive: #ffffff;
 
   --lg-gray-1: var(--lg-gray-1-dark);
   --lg-gray-2: var(--lg-gray-2-dark);

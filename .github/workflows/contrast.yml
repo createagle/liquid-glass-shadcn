@@ -27,7 +27,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # Node 24：contrast-audit.mjs / on-glass-colors.mjs 直接 import .ts 源
+          # Node 24：contrast-audit.mjs / derived-colors.mjs 直接 import .ts 源
           # （靠原生类型剥离），backdrop-probe-test.mjs 用 stripTypeScriptTypes。
           # 22.x 要靠 backport 才有，别退。
           node-version: 24
@@ -42,7 +42,7 @@ jobs:
       # 派生 token 必须与推导逻辑一致 —— 字面值漂了不会有任何报错，
       # 所以单独钉一道。
       - name: 校验 --lg-on-glass-* 未漂移
-        run: node scripts/on-glass-colors.mjs
+        run: node scripts/derived-colors.mjs
 
       # 探针的两条契约：该省时省、测不出时回落。
       # 后者尤其要盯 —— 探针若在测不出时给乐观结果，AA 保证会被静默破坏。
@@ -51,6 +51,17 @@ jobs:
 
       - name: 跑对比度审计（棘轮基线：只许变好）
         run: node scripts/contrast-audit.mjs --verbose
+
+      # 静止态的审计查不出「某个交互态把材质不透明度变成 0」——
+      # Button 的按下升级为 Layer I 就踩过这个坑（条纹背景上 15.46 → 1.92）。
+      # 这一步专门量交互态，且必须在高频背景上量：平滑背景上完全看不出问题。
+      - name: 构建验证台
+        run: |
+          pnpm --filter www dev:css
+          pnpm --filter www dev:build
+
+      - name: 交互态可读性
+        run: node scripts/press-legibility.mjs
 
       # 基线是「不许更糟」，不是豁免。若哪次改动把某个测点修到达标了，
       # 这一步会提示需要收紧棘轮 —— 收紧动作要人工做（跑 --update-baseline 并提交），

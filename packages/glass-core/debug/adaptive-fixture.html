@@ -6,6 +6,17 @@
 <link rel="stylesheet" href="../src/tokens/theme.css">
 <style>
   *{box-sizing:border-box}
+
+  /* ── 测量必须在**静止态**下做 ──────────────────────────────────────
+     .lg-surface 上有 `transition: background-color 240ms`。夹具是用 JS
+     在首屏之后设 --lg-base-alpha 的，于是背景色会动画过渡到目标值。
+     审计只等两帧就截图，会截到**过渡中间态** —— 实测在 CI 上表现为
+     同一个提交时绿时红（有效 alpha 只有 0.25，目标是 0.696）。
+     测量关心的是静止态，这里直接把过渡与动画全部关掉。 */
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
   body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
 
   /* 与 contrast-fixture.html 用同一套最不利背景，结论才可比 */

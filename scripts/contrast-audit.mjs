@@ -137,6 +137,21 @@ async function main() {
           await page.goto(url, { waitUntil: 'load' });
           await page.waitForFunction(() => window.__ready === true);
 
+          /**
+           * 先确认页面进入静止态再截图。
+           * 曾因 240ms 的 background-color 过渡而截到中间态，
+           * 导致 CI 上同一提交时绿时红。这类错误不会自己报错，
+           * 只会安静地给出错的数 —— 所以宁可直接 fail。
+           */
+          const settledCheck = await page.evaluate(() => window.__settled());
+          if (!settledCheck.stable) {
+            throw new Error(
+              `夹具未进入稳定态（${theme}/tint${tint}/tier${tier}/${bg}）：` +
+                `连续两帧底座颜色不同（${settledCheck.first} → ${settledCheck.second}）。` +
+                `检查是否有 transition / animation 未关。`,
+            );
+          }
+
           const points = await page.evaluate(() => window.__collect());
 
           const settle = () =>

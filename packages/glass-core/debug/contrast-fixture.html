@@ -6,6 +6,17 @@
 <link rel="stylesheet" href="../src/tokens/theme.css">
 <style>
   *{box-sizing:border-box}
+
+  /* ── 测量必须在**静止态**下做 ──────────────────────────────────────
+     .lg-surface 上有 `transition: background-color 240ms`。夹具是用 JS
+     在首屏之后设 --lg-base-alpha 的，于是背景色会动画过渡到目标值。
+     审计只等两帧就截图，会截到**过渡中间态** —— 实测在 CI 上表现为
+     同一个提交时绿时红（有效 alpha 只有 0.25，目标是 0.696）。
+     测量关心的是静止态，这里直接把过渡与动画全部关掉。 */
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
   body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
 
   /* ── 最不利背景 ───────────────────────────────────────────────────
@@ -135,6 +146,26 @@ document.getElementById('contentRow').innerHTML =
       <span data-contrast-check data-where="content-${m}/primary" data-size="body"
             style="color:var(--lg-label-primary)">${m}</span>
     </span>`).join('');
+
+/**
+ * 供审计脚本调用：确认页面已进入**静止态**。
+ *
+ * 存在的理由：曾经因为 `.lg-surface` 上的 `transition: background-color 240ms`
+ * 而截到过渡中间态 —— 有效 alpha 只有 0.25、目标是 0.696，
+ * 于是 CI 上同一个提交时绿时红。那种错误不会报错，只会安静地给出错的数。
+ *
+ * 检的是**稳定性**而不是具体数值：隔一帧取两次合成后的颜色，一致才算静止。
+ * 不比对 --lg-base-alpha，因为各 tier 对它的用法不同
+ * （Tier C 会故意在其上再加 0.26），比对具体值会误报。
+ */
+window.__settled = async () => {
+  const el = document.querySelector('.lg-surface[data-layer="base"]');
+  const read = () => getComputedStyle(el).backgroundColor;
+  const a = read();
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  const b = read();
+  return { stable: a === b, first: a, second: b };
+};
 
 /** 供审计脚本调用：隐藏/显示全部待测文字 */
 window.__setTextHidden = (hidden) => {

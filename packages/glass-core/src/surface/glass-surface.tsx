@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { useGlassFilter } from '../filter/use-glass-filter.js';
 import { useGlassOptional } from '../provider/glass-provider.js';
+import { useAdaptiveAlpha } from '../a11y/use-adaptive-alpha.js';
 import type { RefractionOptions } from '../filter/filter-factory.js';
 
 /**
@@ -82,6 +83,25 @@ export function GlassSurface({
   });
 
   /**
+   * 逐元素可读性 alpha（PROJECT_SPEC §13）。
+   *
+   * 只有 `legibility: 'adaptive'` 时才真的去探测。探测得出结果就用它
+   * **局部覆盖** `--lg-base-alpha`；探测不出来（背景是图片/渐变/视频等）
+   * 就返回 null，自然沿用根节点上 `guaranteed` 的最不利地板 ——
+   * 也就是说**探测失败只会更保守，不会更冒险**。
+   *
+   * indicator 层不参与：它是折射指示器，不承载正文，
+   * 且它的可读性由其下方的 base 层负责。
+   */
+  const { alpha: adaptiveAlpha } = useAdaptiveAlpha<HTMLElement>({
+    ref,
+    mode: glass?.legibility ?? 'guaranteed',
+    scheme: glass?.resolvedTheme ?? 'light',
+    rawAlpha: glass?.rawBaseAlpha ?? 0.34,
+    disabled: layer === 'indicator',
+  });
+
+  /**
    * 完整的 backdrop-filter 以**内联样式**注入，覆盖 CSS 里的兜底规则。
    * 不走 CSS 变量：变量缺省时会展开成 `none brightness(...)` 这种无效值，
    * 整条声明会被浏览器丢弃。
@@ -117,6 +137,8 @@ export function GlassSurface({
   const mergedStyle = {
     ...style,
     '--lg-surface-radius': `${radius}px`,
+    // 探测成功时局部覆盖底座不透明度；null 时不写，沿用根节点的地板
+    ...(adaptiveAlpha !== null ? { '--lg-base-alpha': adaptiveAlpha.toFixed(4) } : {}),
     ...(inlineBackdrop
       ? { backdropFilter: inlineBackdrop, WebkitBackdropFilter: inlineBackdrop }
       : {}),
@@ -132,6 +154,7 @@ export function GlassSurface({
       data-continuous={continuous ? 'true' : undefined}
       data-pressed={isPressed ? 'true' : undefined}
       data-refraction={refractionOff ? 'off' : undefined}
+      data-legibility={adaptiveAlpha !== null ? 'adaptive' : undefined}
       style={mergedStyle}
       onPointerDown={interactive ? onPointerDown : undefined}
     >

@@ -107,6 +107,15 @@ export {
   AA_TARGET_WITH_MARGIN,
   SECONDARY_ALPHA_AT_FLOOR,
   APPLE_SECONDARY_ALPHA,
+  worstBaseUnderFloor,
+  deriveOnGlassLabel,
   type LegibilityMode,
   type LegibilityQuery,
 } from './a11y/legibility.js';
+
+/* ── 元素级自适应（探针） ──────────────────────────────────────────── */
+export { probeBackdrop, type BackdropSamples } from './a11y/backdrop-probe.js';
+export {
+  useAdaptiveAlpha,
+  type UseAdaptiveAlphaOptions,
+} from './a11y/use-adaptive-alpha.js';

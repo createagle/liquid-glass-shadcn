@@ -36,6 +36,16 @@ jobs:
       - name: 安装 Chromium
         run: npx playwright install --with-deps chromium
 
+      # 派生 token 必须与推导逻辑一致 —— 字面值漂了不会有任何报错，
+      # 所以单独钉一道。
+      - name: 校验 --lg-on-glass-* 未漂移
+        run: node scripts/on-glass-colors.mjs
+
+      # 探针的两条契约：该省时省、测不出时回落。
+      # 后者尤其要盯 —— 探针若在测不出时给乐观结果，AA 保证会被静默破坏。
+      - name: 背景探针行为测试
+        run: node scripts/backdrop-probe-test.mjs
+
       - name: 跑对比度审计（棘轮基线：只许变好）
         run: node scripts/contrast-audit.mjs --verbose
 

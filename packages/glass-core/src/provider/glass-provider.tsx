@@ -54,6 +54,10 @@ export interface GlassContextValue {
   preferences: GlassPreferences;
   /** 综合无障碍偏好后，折射是否应当启用 */
   refractionEnabled: boolean;
+  /** 可读性策略。`GlassSurface` 据此决定要不要做逐元素背景探测。 */
+  legibility: LegibilityMode;
+  /** 当前档位插值出的**原始**底座 alpha（未加可读性地板） */
+  rawBaseAlpha: number;
 }
 
 const GlassContext = createContext<GlassContextValue | null>(null);
@@ -315,6 +319,11 @@ export function GlassProvider({
       tierOverride,
       preferences,
       refractionEnabled,
+      legibility,
+      rawBaseAlpha: resolveMaterial(
+        preferences.reducedTransparency ? 1 : tint,
+        resolvedTheme,
+      ).alpha,
     }),
     [
       theme,
@@ -327,6 +336,7 @@ export function GlassProvider({
       tierOverride,
       preferences,
       refractionEnabled,
+      legibility,
     ],
   );
 

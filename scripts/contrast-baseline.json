@@ -32,15 +32,15 @@
       "worstCombo": "dark/tint0/tiera/white"
     },
     "base/tint-blue": {
-      "ratio": 1.5,
+      "ratio": 4.67,
       "threshold": 4.5,
-      "meetsAA": false,
-      "worstCombo": "dark/tint0/tiera/white"
+      "meetsAA": true,
+      "worstCombo": "light/tint0/tiera/black"
     },
     "base/tint-red": {
-      "ratio": 1.51,
+      "ratio": 4.68,
       "threshold": 4.5,
-      "meetsAA": false,
+      "meetsAA": true,
       "worstCombo": "light/tint0/tiera/black"
     },
     "content-regular/primary": {

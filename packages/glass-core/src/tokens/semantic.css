@@ -29,6 +29,32 @@
   --lg-indigo: var(--lg-ios-indigo-light);
   --lg-teal: var(--lg-ios-teal-light);
 
+  /* ── 玻璃上的着色文字 ────────────────────────────────────────────────
+     由 a11y/legibility.ts 的 deriveOnGlassLabel() 解出，
+     校验脚本 scripts/on-glass-colors.mjs（CI 跑，漂移即 fail）。
+
+     为什么需要单独一套：**iOS 系统色本身就不是 AA 级正文色。**
+     实测压在纯白上：蓝 4.02、红 3.55、绿 2.22、黄 1.51 —— 全部不过 4.5。
+     这跟玻璃无关，换任何浅色底都一样。
+
+     所以 --lg-blue 等保持**真实系统色**，只用于填充/背景；
+     压在玻璃上当**文字**时改用下面这套。褪色很明显，但这正是
+     「AA 合规的 iOS 蓝文字」的真实样子，不是玻璃造成的。
+
+     这也正是 Apple 自己的指引：
+     > "To emphasize primary actions, apply color to the **background**
+     >  rather than to symbols or text."
+     ────────────────────────────────────────────────────────────────── */
+  --lg-on-glass-blue: #003b7b;
+  --lg-on-glass-green: #12451f;
+  --lg-on-glass-red: #741b16;
+  --lg-on-glass-orange: #593400;
+  --lg-on-glass-yellow: #4a3b00;
+  --lg-on-glass-pink: #761527;
+  --lg-on-glass-purple: #55286c;
+  --lg-on-glass-indigo: #34337e;
+  --lg-on-glass-teal: #12424b;
+
   --lg-gray-1: var(--lg-gray-1-light);
   --lg-gray-2: var(--lg-gray-2-light);
   --lg-gray-3: var(--lg-gray-3-light);
@@ -117,6 +143,19 @@
   --lg-purple: var(--lg-ios-purple-dark);
   --lg-indigo: var(--lg-ios-indigo-dark);
   --lg-teal: var(--lg-ios-teal-dark);
+
+  /* 玻璃上的着色文字（暗色）。同样由 deriveOnGlassLabel() 解出。
+     ⚠️ 必须在 .dark 块里重新声明一整套 —— CSS 自定义属性的 var() 在
+     **声明处**求值，只在 :root 声明会让暗色沿用亮色的值。 */
+  --lg-on-glass-blue: #dfefff;
+  --lg-on-glass-green: #d3f5dc;
+  --lg-on-glass-red: #ffe8e6;
+  --lg-on-glass-orange: #ffeaca;
+  --lg-on-glass-yellow: #ffee98;
+  --lg-on-glass-pink: #ffe7ec;
+  --lg-on-glass-purple: #f6e8fd;
+  --lg-on-glass-indigo: #ececfc;
+  --lg-on-glass-teal: #d4f3f8;
 
   --lg-gray-1: var(--lg-gray-1-dark);
   --lg-gray-2: var(--lg-gray-2-dark);

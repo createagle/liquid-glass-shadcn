@@ -68,13 +68,21 @@ export interface LegibilityQuery {
   /** 目标对比度，默认 WCAG AA 正文 4.5 */
   target?: number | undefined;
   /**
-   * 背后内容的亮度范围（0–255 的 sRGB 编码值）。
+   * 背后内容的亮度范围（0–255 的 sRGB 编码值，按灰阶处理）。
    * 不传则按**最不利**处理，即 [0, 255]（纯黑到纯白都可能出现）。
    * 传入实测范围可以让地板降下来 —— 这就是「元素级自适应」省下的透明度。
    *
    * 显式带 `| undefined` 是因为本包开了 `exactOptionalPropertyTypes`。
    */
   backdropRange?: readonly [number, number] | undefined;
+  /**
+   * 实测到的背景**原色**样本。给了它就忽略 `backdropRange`。
+   *
+   * 比 `backdropRange` 更准：WCAG 对比度虽然只取决于相对亮度，但**合成**
+   * 是逐通道在 sRGB 域做的 —— 把彩色背景先折成等亮度灰再合成，
+   * 结果与真实合成有偏差。有原色就直接用原色算。
+   */
+  backdropSamples?: readonly (readonly [number, number, number])[] | undefined;
 }
 
 /**
@@ -85,13 +93,22 @@ export interface LegibilityQuery {
  */
 export function minBaseAlphaFor(q: LegibilityQuery): number | null {
   const target = q.target ?? 4.5;
-  const [lo, hi] = q.backdropRange ?? [0, 255];
 
-  // 只需检查值域两端：C 关于 B 单调，最差对比度必然出现在端点之一
-  const extremes: Array<[number, number, number]> = [
-    [lo, lo, lo],
-    [hi, hi, hi],
-  ];
+  /**
+   * 有原色样本就用原色；否则退回灰阶值域的两个端点。
+   * 用端点是因为合成结果 C 关于背景 B 单调，最差对比度必然出现在端点。
+   * 给了样本集时则逐个样本检查（样本本身可能不共线，取不到「端点」）。
+   */
+  let extremes: Array<readonly [number, number, number]>;
+  if (q.backdropSamples && q.backdropSamples.length > 0) {
+    extremes = [...q.backdropSamples];
+  } else {
+    const [lo, hi] = q.backdropRange ?? [0, 255];
+    extremes = [
+      [lo, lo, lo],
+      [hi, hi, hi],
+    ];
+  }
 
   const worstAt = (alpha: number) => {
     let worst = Infinity;
@@ -202,12 +219,6 @@ export const AA_FLOOR_SECONDARY: Record<'light' | 'dark', number> = {
 export type LegibilityMode = 'guaranteed' | 'adaptive' | 'off';
 
 /**
- * 给定策略与实测背景范围，求实际应当使用的材质 alpha。
- *
- * @param rawAlpha  档位表插值出来的原始 alpha（美学意图）
- * @param backdropRange 实测的背景亮度范围；`null` 表示探测失败
- */
-/**
  * 计算地板时用的目标对比度 —— 比 AA 的 4.5 略高。
  *
  * 留这个余量是因为**理论值与渲染值之间有取整误差**：地板按连续数学解出来
@@ -220,12 +231,24 @@ export function resolveLegibleAlpha(
   rawAlpha: number,
   scheme: 'light' | 'dark',
   mode: LegibilityMode,
-  backdropRange: readonly [number, number] | null,
+  /**
+   * 实测到的背景。`null` = 没探测到（或未启用探测），此时按最不利背景求地板。
+   * 传两元组 = 灰阶值域；传颜色数组 = 原色样本（更准）。
+   */
+  backdrop: readonly [number, number] | readonly (readonly [number, number, number])[] | null,
 ): number {
   if (mode === 'off') return rawAlpha;
 
-  // adaptive 且探测成功 → 按实测范围求地板；否则按最不利背景求
-  const range = mode === 'adaptive' && backdropRange ? backdropRange : undefined;
+  // adaptive 且探测成功 → 按实测背景求地板；否则按最不利背景求
+  let range: readonly [number, number] | undefined;
+  let samples: readonly (readonly [number, number, number])[] | undefined;
+  if (mode === 'adaptive' && backdrop) {
+    if (Array.isArray(backdrop[0])) {
+      samples = backdrop as readonly (readonly [number, number, number])[];
+    } else {
+      range = backdrop as readonly [number, number];
+    }
+  }
   const t = TOKEN_COLORS[scheme];
 
   /**
@@ -239,6 +262,7 @@ export function resolveLegibleAlpha(
     labelAlpha: 1,
     target: AA_TARGET_WITH_MARGIN,
     backdropRange: range,
+    backdropSamples: samples,
   });
   const needSecondary = minBaseAlphaFor({
     baseColor: t.base,
@@ -246,9 +270,82 @@ export function resolveLegibleAlpha(
     labelAlpha: SECONDARY_ALPHA_AT_FLOOR,
     target: AA_TARGET_WITH_MARGIN,
     backdropRange: range,
+    backdropSamples: samples,
   });
 
   // 理论上 alpha=1 必定可达，need 不会是 null；
   // 真出现 null 说明 token 被改成了不可达的颜色，此时退回最保守值。
   return Math.max(rawAlpha, needPrimary ?? 1, needSecondary ?? 1);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   着色标签（系统色当文字用）
+   ══════════════════════════════════════════════════════════════════════
+
+   系统色是**固定值**，既压不亮也压不暗 —— 材质地板对它无效。
+   实测 `--lg-blue` / `--lg-red` 当标签色时只有 1.50 / 1.51:1。
+
+   Apple 自己的指引是把颜色加在**背景**上而不是文字上：
+
+   > "To emphasize primary actions, apply color to the **background** rather
+   >  than to symbols or text."
+   > —— https://developer.apple.com/design/human-interface-guidelines/color
+
+   但链接、破坏性操作这类**彩色文字**在 iOS 里确实存在，库不能不给答案。
+   所以这里保留 `--lg-blue` 等作为**真实系统色（用于填充）**，
+   另外派生一套 `--lg-on-glass-*` **仅用于压在玻璃上的文字**。
+
+   派生方式刻意保守：
+     亮色主题 → 整体乘以 k（**精确保持色相与饱和度比例**）压暗
+     暗色主题 → 向白色插值提亮（色相保持，饱和度会降）
+   ────────────────────────────────────────────────────────────────────── */
+
+/**
+ * `guaranteed` 地板下，对该主题**最不利**的那个合成底座色。
+ *
+ * 亮色主题文字是暗的 → 最不利是底座最暗时（压在纯黑上）
+ * 暗色主题文字是亮的 → 最不利是底座最亮时（压在纯白上）
+ */
+export function worstBaseUnderFloor(scheme: 'light' | 'dark'): [number, number, number] {
+  const t = TOKEN_COLORS[scheme];
+  const floor = Math.max(AA_FLOOR_PRIMARY[scheme], AA_FLOOR_SECONDARY[scheme]);
+  const extreme: readonly [number, number, number] =
+    scheme === 'light' ? [0, 0, 0] : [255, 255, 255];
+  return compositeOver(t.base, extreme, floor);
+}
+
+/**
+ * 把一个系统色派生成「压在玻璃上仍达标」的标签色。
+ *
+ * @returns 达标的颜色；若连纯黑/纯白都不够（理论上不会发生）则返回该极值
+ */
+export function deriveOnGlassLabel(
+  color: readonly [number, number, number],
+  scheme: 'light' | 'dark',
+  target: number = AA_TARGET_WITH_MARGIN,
+): [number, number, number] {
+  const base = worstBaseUnderFloor(scheme);
+
+  // t=0 → 原色；t=1 → 完全变成黑（亮色主题）或白（暗色主题）
+  const at = (t: number): [number, number, number] =>
+    scheme === 'light'
+      ? [color[0] * (1 - t), color[1] * (1 - t), color[2] * (1 - t)]
+      : [
+          color[0] + (255 - color[0]) * t,
+          color[1] + (255 - color[1]) * t,
+          color[2] + (255 - color[2]) * t,
+        ];
+
+  if (contrastRatio(color, base) >= target) return [...color] as [number, number, number];
+
+  // 二分求最小的调整量 —— 保留尽可能多的原色特征
+  let lo = 0;
+  let hi = 1;
+  if (contrastRatio(at(1), base) < target) return at(1);
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (contrastRatio(at(mid), base) >= target) hi = mid;
+    else lo = mid;
+  }
+  return at(hi);
 }

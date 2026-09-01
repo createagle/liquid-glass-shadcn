@@ -19,12 +19,11 @@
  * **取最差的那个像素**作为该测点的成绩 —— 这就是「最不利背景」的落地。
  *
  * ── 关于基线（棘轮） ─────────────────────────────────────────────────
- * 目前有一类测点达不到 AA：**暗色主题 + 亮背景**。根因是元素级明暗自适应
- * 尚未实现（Apple 的玻璃会按背后内容自动切换亮/暗外观，我们只有全局主题）。
- * 见 docs/research/apple-liquid-glass.md §5、optics-web.md §6。
+ * 2026-08-31 起 **14 个测点全部达标**。做法见 docs/research/STATUS.md §0：
+ * 材质 alpha 加可读性地板（a11y/legibility.ts），着色标签改用派生的
+ * --lg-on-glass-*。此前一度有 11 个测点不达标。
  *
- * 为了让这个检查**今天就能在 CI 里发挥作用**而不是永远红着被忽略，
- * 采用棘轮基线：
+ * 棘轮基线仍然保留，它的作用变成「守住已达标的成绩」：
  *   - 已达 AA 的测点 → 按 AA 卡死，之后再也不许掉下去
  *   - 未达 AA 的测点 → 按当前实测值卡死，只许变好，变差就 fail
  * 基线不是豁免，是「不许更糟」。已知缺口在 STATUS.md 里单独追踪。
@@ -74,11 +73,6 @@ const THEMES = ['light', 'dark'];
 const TINTS = [0, 0.34, 1];
 const TIERS = ['a', 'b', 'c'];
 /**
- * 最不利背景集合。
- * 亮色主题文字是黑的 → 暗背景最不利；暗色主题文字是白的 → 亮背景最不利。
- * 两个极端都要覆盖，另加高频棋盘（模糊也抹不平）与高饱和渐变。
- */
-/**
  * 档位表里的 alpha 一列 —— 与 `provider/glass-provider.tsx` 的 STOPS 对齐。
  * 只取 alpha 是因为对比度只跟它有关；blur/saturate 由夹具自己插值。
  */
@@ -94,6 +88,11 @@ function lerpStops(stops, t) {
   return stops[i] + (stops[i + 1] - stops[i]) * f;
 }
 
+/**
+ * 最不利背景集合。
+ * 亮色主题文字是黑的 → 暗背景最不利；暗色主题文字是白的 → 亮背景最不利。
+ * 两个极端都要覆盖，另加高频棋盘（模糊也抹不平）与高饱和渐变。
+ */
 const BACKGROUNDS = ['black', 'white', 'mid', 'checker', 'saturated', 'photo'];
 
 /** sRGB 相对亮度（WCAG 定义） */
@@ -308,12 +307,8 @@ async function main() {
       console.log(`    ${f.where.padEnd(26)} ${f.ratio}:1 < ${f.threshold}:1  (${f.theme}/${f.bg})`);
     }
     console.log('');
-    console.log('  剩余项的根因是**着色标签**（tint-blue / tint-red）：');
-    console.log('  系统色是固定值，既压不亮也压不暗，材质地板对它无效。');
-    console.log('  Apple 自己的指引是「把颜色加在背景上，不要加在文字/符号上」');
-    console.log('  （docs/research/apple-liquid-glass.md §5 第 3 条）。');
-    console.log('  处理方案未定，见 docs/research/STATUS.md。');
-    console.log('  这些不是「可以接受」，是「已知且被盯住」。');
+    console.log('  这些不是「可以接受」，是「已知且被盯住」——');
+    console.log('  基线只保证不再变差，不等于豁免。根因见 docs/research/STATUS.md。');
     return 0;
   }
 

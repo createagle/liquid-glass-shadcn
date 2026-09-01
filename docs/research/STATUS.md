@@ -138,7 +138,9 @@ Phase 0（研究，部分）· Phase 1（光学引擎）· Phase 2（Token 体�
 
 ## 0.2 Phase 3 · Tabs / Segmented —— §14 逐条自查
 
-第一个 P0 组件。**12 项过 8**，未过的 4 项如实列在下面，不算完成。
+第一个 P0 组件。当时 **12 项过 8**；其中 hover/active 与 `contrast: more` 两项
+已在下一批（Slider + Switch）随手补齐，现为 **12 项过 10**。
+下面的表格已就地更新，未过的两项保留原样。
 
 ### 技术前置：底座挖洞（optics-web §3.8 的「未解决 🔴」）
 
@@ -175,20 +177,17 @@ Phase 0（研究，部分）· Phase 1（光学引擎）· Phase 2（Token 体�
 | 材质档位 0/1/2/3 正常可读 | ✅ 三档已渲染 + 对比度审计覆盖 |
 | Tier A/B/C 三条路径完整 | ✅ B/C 各自是完整设计，不是坏掉的版本 |
 | Layer B / Layer I 分层正确 | ✅ 底座不折射；指示器有可见色散（挖洞后成立） |
-| 交互态齐全，用 spring 预设 | ⚠️ **部分** —— focus-visible / disabled 有，**hover / active 未做** |
+| 交互态齐全，用 spring 预设 | ✅ **已补齐**（见 §0.3）—— hover 高亮 + 按下时指示器上扬，全走 spring |
 | 移动端下拉类改 Drawer | ➖ 不适用（Tabs 不是下拉类） |
-| 三种无障碍偏好正确降级 | ⚠️ **部分** —— reduced-motion 有测试；`contrast: more` **未验证** |
+| 三种无障碍偏好正确降级 | ✅ **已补齐**（见 §0.3）—— `contrast: more` 现有 5 条测试，且抓出一个真 bug |
 | WCAG AA 对比度检查通过 | ✅ CI 全绿（组件测点尚未接入夹具，见下） |
 | registry item + 干净工程冒烟 | ✅ `shadcn add @glass/tabs` 在 CI 的干净 Next 工程里通过 |
 | 文档页 Preview/Code/Fidelity/API | ❌ **未做** —— 文档站是 Phase 6 |
 | `// APPLE REFERENCE:` + 可信度标注 | ✅ 含尺寸表与 [实测] 标注及其两条限制 |
 | Playwright 视觉回归快照 | ⚠️ **部分** —— 19 张已录，但**只有 win32 基线**，CI 不跑 |
 
-### 未过的 4 项，原因
+### 未过的项，原因
 
-- 🟡 **hover / active 态未做。** 需要先确定 iOS 上按压时材质如何变化，
-  目前只有 `pressed` 的折射上扬（原语层已支持），组件层没接。
-- 🟡 **`contrast: more` 未验证。** token 里有对应分支，但没有测试覆盖。
 - 🟡 **视觉快照只有 win32 基线。** 平台相关，Linux 基线需在 Linux 环境录一次。
 - 🔴 **文档页未做** —— 属 Phase 6，不在本阶段范围。
 
@@ -197,6 +196,152 @@ Phase 0（研究，部分）· Phase 1（光学引擎）· Phase 2（Token 体�
 折射改成径向场后变温和了，**Tier A 与 Tier B 在常规尺寸下不易区分**，
 而 SPEC §2 要求指示器「必须有可见色散」。强度档位可能要上调，
 但**在拿到 iOS 真机截图之前不调** —— 没有基准的调参就是来回瞎试。
+
+---
+
+## 0.3 Phase 3 · Slider + Switch —— §14 逐条自查（2026-09-01）
+
+第二批 P0 组件。**Slider 12 项过 10、Switch 12 项过 10**，未过项在末尾列出。
+
+这一批最有价值的产出不是组件本身，而是**第一次真正做出了 Fidelity 并排对照图** ——
+它当场抓出两个我自己看渲染结果时没意识到的缺陷。
+
+### 🔴 与 PROJECT_SPEC 的冲突：Switch 的尺寸（需要你裁决）
+
+PROJECT_SPEC §10 把「UISwitch **51×31pt**，knob 直径 **27pt**」列在
+「**已核实**可直接使用的 Apple 度量」里。
+
+Phase 0 在 iOS 27 官方设计资源上实测到的是：
+
+| 项 | SPEC 原值 | iOS 27 实测 |
+|---|---|---|
+| 轨道 | 51 × 31 pt | **64 × 28 pt** |
+| Knob | 直径 27 pt 圆形 | **38 × 24 pt 胶囊** |
+
+两者不可能同时成立：**直径 27pt 的圆塞不进 28pt 高的轨道**。
+51×31 是 Liquid Glass 之前的 UIKit 旧版度量。
+
+**处置：组件按实测值实现，并在源码顶部用 ⚠️⚠️ 显式标注这是一处偏离。**
+我没有擅自改 PROJECT_SPEC —— 它是唯一规格来源，改它是你的决定。
+需要的话我可以提一个只改这一行的补丁。
+
+### Fidelity 对照图（`apps/www/public/fidelity/compare-*.png`）
+
+参考图是 Apple Design Resources 的 **Figma 渲染图，1× 导出，不是真机截图**。
+Switch 那张是这次新取的（节点 `12740:33924`）。
+
+⚠️ 顺带发现：**Tabs 那批放进 `public/fidelity/` 的其实只有我们自己的渲染图，
+没有 Apple 那一侧** —— 任务卡要的「并排对照」当时并没有真正做到。这次补上了格式。
+
+**对照图抓到的两个真实缺陷：**
+
+1. **knob 是透明的，轨道颜色直接透出来。** Slider 上表现为一条蓝杠横穿 knob 中间，
+   Switch 上表现为整个 knob 发绿。Apple 两处都是**白色实体**。
+2. 因此新增 token `--lg-knob-fill`（白 86% / 暗色 90% / 高对比 96%）。
+   **它与 `--lg-material-indicator`（Tabs 指示器，纯透明）刻意不同** ——
+   Tab 指示器是浮在磨砂板上的透镜，slider/switch 的 knob 是一个白色实体。
+
+保留半透明而不是做成纯白，依据是 Apple 原文
+*"the knob transforms into Liquid Glass during interaction."* 与 SPEC §2
+「静止态弱、交互态强」：静止态白 86% 读起来是白的，按下 / 拖动时这层白降到 45%，
+折射与色散显形。**「静止态该白到什么程度」是推定值**，需要真机截图才能定。
+
+### 修掉的两个真 bug
+
+**1. 🔴 高对比下的描边加强是死代码。**
+
+`:root[data-glass-contrast='more'] { --lg-stroke-strength: 1.8 }` 从来没生效过 ——
+GlassProvider 会按材质档位把同一个变量以**内联样式**写到 `<html>` 上（档位 0.34 时是
+1.006），内联样式优先级高于任何选择器。
+一个变量两个所有者，CSS 那个永远输。
+
+改法：拆成两个变量，`--lg-stroke-strength`（档位，JS 拥有）×
+`--lg-stroke-boost`（无障碍偏好，CSS 拥有）。
+**是新写的 `contrast: more` 测试把它测出来的** —— 只查 `data-glass-contrast` 属性
+不会发现，必须一路查到 `box-shadow` 的计算值。
+
+**2. 🟡 `defaultChecked` 的 Switch 首屏会自己滑一段。**
+
+选中态初值原本从 `false` 起步、再由 MutationObserver 纠正，于是挂载后
+knob 从关闭位弹到开启位。改为直接从 props 推初值（`checked ?? defaultChecked ?? false`）。
+测试量到的是加载 150ms 后 knob 停在 x=18 而不是 24。
+
+### 一个会坑到使用者的陷阱
+
+`.lg-surface` 自己声明了 `position: relative`。Tailwind 的 `absolute` 能不能盖住它，
+**取决于 CSS 的 @layer 顺序**：
+
+- registry 安装时，optics 在 `@layer components` 里 → 工具类赢 ✅
+- 直接 `<link>` 引 `theme.css` 时，它是无层的 → 工具类输 ❌
+
+验证台走的是后一条路径，所以第一版 Slider 的轨道量出来是 **250×0**。
+组件里改成内联样式定位，两种情况下都对。这条已写进两个组件的注释。
+
+### 挖洞：Switch 挖，Slider 不挖
+
+条纹背景下的实测证据：`screenshots/controls-zoom-light-stripes.png`
+（knob 内条纹清晰、洞外糊成一片，且边缘有可见彩边），
+以及 Tier A / Tier B 的同位对照
+`controls-zoom-switch-off.png` vs `controls-zoom-switch-off-tierb.png`。
+
+
+| | knob | 轨道 | 重叠 | 处置 |
+|---|---|---|---|---|
+| Switch | 24 高 | 28 高 | 几乎完全 | **挖** —— 不挖就是「两层磨砂叠加」，§2 明确反对 |
+| Slider | 24 高 | 6 高 | 约 25% 面积，且在中心 | **不挖** —— 径向位移场在中心近乎为零，买不到可见收益，却要在拖动的每一帧重算 clip-path |
+
+Switch 的洞用 motion 的 `onUpdate` **逐帧**跟着 knob 走，而不是按 checked 跳到终点 ——
+后者会让洞在 knob 还在路上时就已经到位，中途露出一块不该清晰的背景。
+洞比 knob 每边多挖 1.5px，避免按下放大时四周露出模糊环。
+
+### §14 逐条
+
+| 验收项 | Slider | Switch |
+|---|---|---|
+| light / dark 各自独立调过 | ✅ | ✅ |
+| 材质档位 0/1/2/3 正常可读 | ✅ 四档各录了快照 | ✅ 四档各录了快照 |
+| Tier A/B/C 三条路径完整 | ✅ | ✅ |
+| Layer B / Layer I 分层正确 | ✅ 轨道不折射，测试断言 backdrop 无 `url(` | ✅ 同左，且挖洞 |
+| 交互态齐全，用 spring 预设 | ✅ hover / active / focus / disabled，全走 `transitionFor()` | ✅ 同左 |
+| 移动端下拉类改 Drawer | ➖ 不适用 | ➖ 不适用 |
+| 三种无障碍偏好正确降级 | ✅ reduced-motion + `contrast: more` 有测试；reduced-transparency 走 tier c 路径 | ✅ 同左 |
+| WCAG AA 对比度检查通过 | ✅ CI 全绿（组件测点仍未接入夹具） | ✅ 同左 |
+| registry item + 干净工程冒烟 | ✅ 已加进冒烟工作流 | ✅ 已加进冒烟工作流 |
+| 文档页 Preview/Code/Fidelity/API | ❌ Phase 6 | ❌ Phase 6 |
+| `// APPLE REFERENCE:` + 可信度标注 | ✅ 含尺寸表、两条可信度限制、包围盒不可信告警 | ✅ 且含与 SPEC 冲突的显式标注 |
+| Playwright 视觉回归快照 | ⚠️ 13 张已录，只有 win32 基线 | ⚠️ 13 张已录，只有 win32 基线 |
+
+### 未过的项
+
+- 🟡 **视觉快照只有 win32 基线**（与 Tabs 同因，平台相关）
+- 🔴 **文档页未做** —— Phase 6
+- 🟡 **Slider 的刻度点（ticks）未实现** —— 实测 218×4，对照图里能看到 Apple 有、我们没有
+- 🟡 **knob 白度未经真机校准**（`--lg-knob-fill` 是推定值）
+
+### 顺带做的
+
+- **补齐 Tabs 的 hover / active**：未选中项 hover 出高亮（`--lg-fill-quaternary`，
+  motion + spring）；按下选中项时指示器 `pressed` 上扬。
+  原本还写了「未选中项按下加深」的分支，测试发现它是**死代码** ——
+  Radix 在 `pointerdown` 就完成选中，不存在「按下但仍未选中」的阶段，遂删掉。
+- **给 `apps/www` 补了 tsconfig**：registry 里的组件源码此前**从未被类型检查过**
+  （不在 glass-core 的 tsconfig 范围内，而 apps/www 没有自己的）。补上后立刻查出
+  两个 `exactOptionalPropertyTypes` 错误。
+- **本地 `shadcn` CLI 修复**：工作区把 `zod` 解析成 3.24.1，而
+  `@modelcontextprotocol/sdk` 要求 `^3.25.28`，CLI 一启动就
+  `ERR_PACKAGE_PATH_NOT_EXPORTED: './v3'`。加了 `overrides: zod: ^3.25.76`。
+  CI 用的是 `npx shadcn@latest`（独立解析），**不受影响，也没被这个问题掩盖过**。
+
+### 测试增量
+
+| 文件 | 数量 | 进 CI |
+|---|---|---|
+| `tests/controls.behavior.spec.ts` | 23 | ✅ |
+| `tests/contrast-pref.behavior.spec.ts` | 5 | ✅ |
+| `tests/tabs.behavior.spec.ts`（新增交互态） | +4 | ✅ |
+| `tests/controls.visual.spec.ts` | 26 张快照 | ❌ 平台相关 |
+
+本机全绿：typecheck ×2 · on-glass 漂移 · 探针契约 · 对比度审计（1512 次采样）· 行为回归 45 项 · 视觉 45 项。
 
 ---
 

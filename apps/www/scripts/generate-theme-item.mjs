@@ -180,7 +180,17 @@ function mergeInto(target, selector, obj) {
 const FILES = ['primitive.css', 'semantic.css', 'shadcn.css', 'optics.css', 'theme.css'];
 
 for (const file of FILES) {
-  const raw = stripComments(readFileSync(join(TOKENS, file), 'utf8'));
+  /**
+   * 读进来先把 CRLF 归一成 LF。
+   *
+   * **不能指望 .gitattributes 解决这个。** 多行 CSS 值（渐变、box-shadow）
+   * 会被原样塞进 JSON 的**字符串值内部**。git 只归一化文件的行尾，
+   * 管不了字符串内容里的回车符 —— 于是 Windows 上生成的 JSON 里是 CRLF、
+   * Linux 上是 LF，同一份源产出两种 registry.json。
+   * CI 那道「生成物与源同步」的断言第一次真跑就是挂在这里。
+   */
+  const source = readFileSync(join(TOKENS, file), 'utf8').split('\r\n').join('\n');
+  const raw = stripComments(source);
   for (const { selector, body } of topLevelRules(raw)) {
     if (ROOT_SELECTOR.test(selector)) {
       Object.assign(cssVars.light, parseDecls(body));

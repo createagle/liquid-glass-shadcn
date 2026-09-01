@@ -13,6 +13,7 @@ import { GlassProvider } from '@glass/core';
 import { Slider } from '../registry/glass/ui/slider';
 import { Switch } from '../registry/glass/ui/switch';
 import { Button } from '../registry/glass/ui/button';
+import { Card, CardRow } from '../registry/glass/ui/card';
 
 /** iOS 列表行：白底、行高 52pt、左右 16pt 边距 */
 function Row({ children }: { children: React.ReactNode }) {
@@ -82,10 +83,35 @@ function ButtonScene() {
   );
 }
 
+/**
+ * 分组列表区块，节点 12740:33923（370×104，两行开关）。
+ *
+ * 这一张和其他三张不同：**左右两边的"场景"是同一个东西**。
+ * 前三张里的白底行是对照台自己画的（`Row`），只是给被测组件一个 iOS 的落脚点；
+ * 这里那块白底**就是被测组件本身**，所以圆角、行高、分隔线、内缩全部可比。
+ */
+function CardScene() {
+  return (
+    <div style={{ width: 370, background: 'var(--lg-grouped-bg)' }}>
+      <Card>
+        <CardRow>
+          <span style={{ flex: 1 }}>Switch is on</span>
+          <Switch defaultChecked aria-label="Switch is on" />
+        </CardRow>
+        <CardRow>
+          <span style={{ flex: 1 }}>Switch is off</span>
+          <Switch aria-label="Switch is off" />
+        </CardRow>
+      </Card>
+    </div>
+  );
+}
+
 for (const [id, node] of [
   ['switch-scene', <SwitchScene key="s" />],
   ['slider-scene', <SliderScene key="l" />],
   ['button-scene', <ButtonScene key="b" />],
+  ['card-scene', <CardScene key="c" />],
 ] as const) {
   const el = document.getElementById(id);
   if (el) {

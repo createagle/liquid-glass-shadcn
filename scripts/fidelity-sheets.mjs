@@ -56,7 +56,7 @@ const browser = await chromium.launch();
   await page.goto(dev('fidelity.html'));
   await page.waitForFunction(() => window.__ready === true);
   await page.waitForTimeout(700);
-  for (const id of ['sheet-switch', 'sheet-slider', 'sheet-button', 'sheet-dialog']) {
+  for (const id of ['sheet-switch', 'sheet-slider', 'sheet-button', 'sheet-dialog', 'sheet-card']) {
     const name = id.replace('sheet-', '');
     await page.locator(`#${id}`).screenshot({ path: `${OUT}/compare-${name}.png` });
     console.log(`✓ ${OUT}/compare-${name}.png`);

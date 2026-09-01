@@ -42,6 +42,8 @@ const HARNESSES = [
   ['tabs-demo.html', 'Tabs / Segmented —— Layer B 底座 + Layer I 指示器 + 挖洞'],
   ['controls-demo.html', 'Slider / Switch —— knob 的折射与开关的挖洞'],
   ['button-demo.html', 'Button —— 四个变体；按住能看到升级为 Layer I'],
+  ['dialog-demo.html', 'Dialog / Alert —— 面板层（没有 Layer I）；?open=1 直接打开'],
+  ['card-demo.html', 'Card —— 分组列表区块；内容层，没有玻璃。?bg=grouped 是它真正的场景'],
   ['fidelity.html', 'Fidelity 对照 —— Apple 参考图 vs 本库组件，1:1 并排'],
   ['sweep.html', '（调试）折射参数扫描'],
   ['ab.html', '（调试）A/B 对照'],

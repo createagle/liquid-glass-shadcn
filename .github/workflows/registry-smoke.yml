@@ -57,6 +57,19 @@ jobs:
       - name: 构建 registry
         run: cd apps/www && npx --yes shadcn@latest build
 
+      # public/r/*.json 里装的是**组件源码的副本** —— 用户 shadcn add 拿到的就是它。
+      # 上面那道闸只看 registry/glass/registry.json，漏掉了这一层：
+      # 改了 .tsx 但忘了重新 build，仓库里挂着的就是旧源码，而且不会有任何报错。
+      # （已经发生过一次：dialog.tsx 改了注释，public/r/dialog.json 停在旧版。）
+      - name: 确认 public/r 与组件源同步
+        run: |
+          if [ -n "$(git status --porcelain apps/www/public/r)" ]; then
+            echo "::error::public/r/*.json 与组件源码不同步。"
+            echo "请在本地跑 'pnpm --filter www registry:build' 并提交结果。"
+            git --no-pager diff --stat -- apps/www/public/r
+            exit 1
+          fi
+
       - name: 起 registry 静态服务（:4180）
         run: |
           cd apps/www && node scripts/serve-registry.mjs 4180 &
@@ -105,21 +118,21 @@ jobs:
 
       # 组件 item：验证 registryDependencies 能把 utils/theme 一并带进来，
       # 且组件源码里的 @/lib/utils 引用在目标工程里能解析
-      - name: 方式三 · 安装 UI 组件（tabs / slider / switch / button / dialog / toggle）
+      - name: 方式三 · 安装 UI 组件（tabs / slider / switch / button / dialog / toggle / card）
         run: |
           cd "$RUNNER_TEMP/smoke"
-          npx --yes shadcn@latest add @glass/tabs @glass/slider @glass/switch @glass/button @glass/dialog @glass/toggle --yes --overwrite
+          npx --yes shadcn@latest add @glass/tabs @glass/slider @glass/switch @glass/button @glass/dialog @glass/toggle @glass/card --yes --overwrite
 
       - name: 断言 token 真的被注入（不需要手动补 CSS）
         run: |
           cd "$RUNNER_TEMP/smoke"
           css=src/app/globals.css
-          for token in lg-refract-2 lg-label-primary lg-material-base lg-content-thick; do
+          for token in lg-refract-2 lg-label-primary lg-material-base lg-content-thick lg-card-fill lg-list-separator lg-radius-card; do
             grep -q -- "--$token:" "$css" || { echo "::error::缺少 --$token"; exit 1; }
           done
           grep -q "lg-surface" "$css" || { echo "::error::缺少 .lg-surface 渲染路径"; exit 1; }
           test -f src/components/glass-providers.tsx || { echo "::error::组件文件未落地"; exit 1; }
-          for c in tabs slider switch button dialog toggle; do
+          for c in tabs slider switch button dialog toggle card; do
             test -f "src/components/ui/$c.tsx" || { echo "::error::$c 组件未落地"; exit 1; }
           done
           test -f src/lib/utils.ts || { echo "::error::registryDependencies 没把 utils 带进来"; exit 1; }

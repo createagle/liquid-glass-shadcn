@@ -23,6 +23,11 @@
   /* Alert 面板：画布 450 宽下位于 (85,244)，尺寸 300×307（元数据 + 像素复核） */
   .frame.crop-alert{width:302px;height:309px;overflow:hidden;position:relative}
   .frame.crop-alert img{width:450px;max-width:none;position:absolute;left:-85px;top:-244px}
+  /* 分组列表区块：整屏 402 宽的渲染图里位于 (16,126)，尺寸 370×104（像素扫描得到）。
+     底色要给 systemGroupedBackground，否则圆角处会露出白框，看起来像圆角不对。 */
+  .frame.crop-card{width:372px;height:106px;overflow:hidden;position:relative;background:#f2f2f7}
+  .frame.crop-card img{width:402px;max-width:none;position:absolute;left:-16px;top:-126px}
+  .frame.on-grouped{background:#f2f2f7}
   .frame.crop img{width:450px;max-width:none;position:absolute;left:-24px;top:-812px}
   .note{margin-top:14px;font-size:11.5px;line-height:1.65;color:#3c3c43;
         border-left:3px solid #c7c7cc;padding-left:10px}
@@ -128,6 +133,37 @@
     本库还没有 Input 组件，演示里没放 —— 可比的是宽度、圆角、内边距、排版与按钮，不是总高；
     ② 参考图是 Figma 静态稿，面板材质是位图近似；本库是真的 backdrop-filter；
     ③ 实心按钮的蓝色是 AA 解出来的 <code>#0071eb</code>，不是真实 systemBlue（见 Button 那张的说明）。
+  </div>
+</div>
+
+<div class="sheet" id="sheet-card">
+  <h2>Card / 分组列表区块 —— Apple iOS 27 参考图 vs 本库组件</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="cap">Apple <span>· Grouped List（节点 12740:33923），裁到区块的 370×104</span></div>
+      <div class="frame crop-card"><img src="../../../docs/research/screenshots/ios27-grouped-list-rows.png" alt=""></div>
+    </div>
+    <div class="col">
+      <div class="cap">本库 <span>· &lt;Card&gt; + &lt;CardRow&gt;（行内是本库的 Switch）</span></div>
+      <div class="frame on-grouped" style="width:372px"><div id="card-scene"></div></div>
+    </div>
+  </div>
+  <div class="note">
+    <b>这一张比前三张更值得看。</b>前三张里左边的白底行是对照台自己画的，只是给被测组件
+    一个 iOS 的落脚点；<b>这里那块白底就是被测组件本身</b> —— 圆角、行高、分隔线、内缩
+    全都是 Card 画的，全都可比。<br>
+    已对齐：区块 370×104、<b>圆角 26</b>（沿区块左缘按覆盖率求亚像素边界后做圆弧最小二乘，
+    两块互不相关的列表分别得到 26.27 与 26.33，RMSE 0.12 / 0.69）、行高 52、
+    行内左右内缩 16、分隔线 1pt 且两侧各内缩 16、底色 <code>#ffffff</code> 完全不透明、
+    页面底色 <code>#f2f2f7</code>。<br>
+    <b>已知差异：</b>
+    ① 字体不同（SF Pro vs 系统回退字体）。<b>量化过：</b>同一串 "Switch is on" 的墨迹
+    <b>高度两边都是 13px</b>（说明 17pt 这个字号取对了），宽度 89 vs 86 —— 差 3px，
+    即 3.4%，全部来自字形本身；起始位置两边都是区块内 17px；
+    ② knob 的差异与 Switch 那张同源（右边保留中等强度的玻璃感，见上）；
+    ③ <b>Card 本身没有任何玻璃</b> —— 这是 PROJECT_SPEC §2 的规定，不是没做完：
+    Apple 明确说 Liquid Glass 属于控件与导航层，内容层不用。所以这一张里
+    <b>唯一有玻璃的东西是行里的 Switch</b>。
   </div>
 </div>
 

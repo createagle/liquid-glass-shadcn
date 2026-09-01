@@ -81,6 +81,7 @@
       "lg-radius-lg": "22px",
       "lg-radius-xl": "34px",
       "lg-radius-continuous": "34px",
+      "lg-radius-card": "26px",
       "lg-ios-blue-light": "#007aff",
       "lg-ios-green-light": "#34c759",
       "lg-ios-red-light": "#ff3b30",
@@ -165,6 +166,9 @@
       "lg-fill-secondary": "rgb(var(--lg-fill-base-light) / 0.16)",
       "lg-fill-tertiary": "rgb(var(--lg-fill-base-light) / 0.12)",
       "lg-fill-quaternary": "rgb(var(--lg-fill-base-light) / 0.08)",
+      "lg-grouped-bg": "var(--lg-gray-6-light)",
+      "lg-card-fill": "#ffffff",
+      "lg-list-separator": "rgb(0 0 0 / 0.1)",
       "lg-tint": "0.34",
       "lg-base-alpha": "0.62",
       "lg-base-blur": "14px",
@@ -196,7 +200,7 @@
       "radius": "var(--lg-radius-md)",
       "background": "#ffffff",
       "foreground": "var(--lg-label-primary)",
-      "card": "#ffffff",
+      "card": "var(--lg-card-fill)",
       "card-foreground": "var(--lg-label-primary)",
       "popover": "#ffffff",
       "popover-foreground": "var(--lg-label-primary)",
@@ -267,6 +271,9 @@
       "lg-fill-secondary": "rgb(var(--lg-fill-base-dark) / 0.32)",
       "lg-fill-tertiary": "rgb(var(--lg-fill-base-dark) / 0.24)",
       "lg-fill-quaternary": "rgb(var(--lg-fill-base-dark) / 0.18)",
+      "lg-grouped-bg": "#000000",
+      "lg-card-fill": "var(--lg-gray-6-dark)",
+      "lg-list-separator": "rgb(255 255 255 / 0.12)",
       "lg-base-alpha": "0.44",
       "lg-base-color": "20 20 24",
       "lg-elevated-color": "32 32 38",
@@ -288,7 +295,7 @@
       "lg-ring": "var(--lg-blue)",
       "background": "#000000",
       "foreground": "var(--lg-label-primary)",
-      "card": "var(--lg-gray-6)",
+      "card": "var(--lg-card-fill)",
       "card-foreground": "var(--lg-label-primary)",
       "popover": "var(--lg-gray-5)",
       "popover-foreground": "var(--lg-label-primary)",
@@ -330,6 +337,7 @@
         "--lg-label-quaternary": "rgb(var(--lg-label-tint-light) / 0.4)",
         "--lg-separator": "rgb(var(--lg-separator-tint-light) / 0.6)",
         "--lg-separator-opaque": "#8e8e93",
+        "--lg-list-separator": "rgb(0 0 0 / 0.3)",
         "--lg-refract-scale": "0.5",
         "--lg-disperse-scale": "0.4",
         "--muted-foreground": "var(--lg-label-secondary)",
@@ -342,6 +350,7 @@
         "--lg-label-quaternary": "rgb(var(--lg-label-tint-dark) / 0.5)",
         "--lg-separator": "rgb(200 200 210 / 0.7)",
         "--lg-separator-opaque": "#6e6e73",
+        "--lg-list-separator": "rgb(255 255 255 / 0.36)",
         "--muted-foreground": "var(--lg-label-secondary)",
         "--border": "var(--lg-separator)",
         "--input": "var(--lg-separator)"
@@ -482,6 +491,9 @@
         ".lg-surface, .lg-content": {
           "backdrop-filter": "none !important",
           "-webkit-backdrop-filter": "none !important"
+        },
+        ".lg-content": {
+          "background-color": "var(--lg-card-fill) !important"
         },
         ".lg-surface[data-layer='indicator']": {
           "background-color": "rgb(var(--lg-base-color) / 0.98)"

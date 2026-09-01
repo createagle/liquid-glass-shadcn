@@ -660,6 +660,163 @@ Toggle 的**选中态**用 Layer I，而它是带标签的 —— 与 Button 的
 
 ---
 
+## 0.47 Phase 3 · Card —— §14 逐条自查（2026-09-01）
+
+第五批 P0 组件，只有一个。**12 项过 9，另有 2 项按规格不适用。**
+
+### 先说清楚这个组件是什么
+
+PROJECT_SPEC §10 把 Card 的 Apple 对应物写死为 **grouped list section**，
+不是「一个圆角盒子」。所以本组件的基准是 iOS 设置页里那种
+「白区块压在灰底上、里面若干行、行间一条内缩的细线」。
+
+**它没有玻璃，将来也不该加。** §2 的分层速查表里 Card 那一行是
+「两者都不用」，§15 第 9 条明令禁止在内容型组件上堆玻璃，
+依据是 Apple 的 "This material forms a distinct functional layer for
+controls and navigation elements."
+
+### 几何：从三块列表量出来，圆角这次做到了亚像素
+
+在 iOS 27 资源里找到三块名字就叫 **Grouped List** 的 frame：
+
+| 节点 | 内容 | 用途 |
+|---|---|---|
+| `12740:33850` | 4 行 Text Field | 渲染整屏，量圆角与底色 |
+| `12740:33923` | 2 行 Switch | 渲染整屏，独立复核 + Fidelity 对照 |
+| `12740:33898` | 3 行 Slider | 只取元数据，交叉验证行高 |
+
+| 项 | 值 | 三块是否一致 |
+|---|---|---|
+| 区块宽 | 370（= 402 − 2×16） | ✅ |
+| 行高 | **52** | ✅ 三种行类型全是 52 |
+| 行内左右内缩 | 16（内容框 338，两侧对称） | ✅ |
+| 分隔线 | 1pt，两侧各内缩 16，#e6e6e6 | ✅ |
+| 区块底色 | #ffffff，**alpha 通道 255** | ✅ |
+| 页面底色 | #f2f2f7 | ✅ |
+
+**圆角 = 26。** 方法比 Dialog 那次更细：背景 #f2f2f7 与前景 #ffffff 的蓝通道
+只差 8，于是每个像素的覆盖率 `α = (B − 247)/8`，逐行求和得到**亚像素**内缩量，
+再对 `inset(dy) = r − √(r²−(r−dy)²)` 做最小二乘，并丢掉最靠边的 1–2 行
+（那两行是纯抗锯齿，系统性偏大）。
+
+| 来源 | 拟合半径 | RMSE |
+|---|---|---|
+| `ios27-list-screen.png` | **26.27** | **0.12 px**（19 个采样点） |
+| `ios27-grouped-list-rows.png` | 26.33 | 0.69 px（受行内文字干扰） |
+
+固定半径复算：26 → 0.215，27 → 0.384，25 → 0.716。两参数拟合（半径 + 常数偏移）
+给出偏移 0.03，说明测量没有系统性平移。**取 26。**
+
+26 不在既有阶梯（8/14/22/34）上，所以单开了 `--lg-radius-card`，
+没有硬塞进阶梯把阶梯搞脏。
+
+### 两次「对上了」
+
+1. **页面底色实测 #f2f2f7，与 Phase 1 就定好的 `--lg-gray-6-light` 逐位相同。**
+   两条互不相关的来源撞在一起，算是对那个 token 的一次独立印证。
+2. **`shadcn.css` 里 `--card` 原本硬写着 `#ffffff`**（dark 是 `var(--lg-gray-6)`），
+   恰好就是这次量到的值。已改成指向 `--lg-card-fill` —— 别名层不该自己持有值，
+   现在两边不可能再漂开。
+
+### 一处不能合并的地方
+
+分组列表的分隔线实测 **#e6e6e6（压白底 = 黑 9.8%）**，而既有的 `--lg-separator`
+是 0.29，压白底算出来是 #c6c6c7 —— **淡得多**。同一份资源里两者就是不同的粗细，
+合并成一个 token 会把量到的事实抹掉。所以新开 `--lg-list-separator`。
+
+### 顺手修掉一个 reduced-transparency 的真缺陷
+
+`theme.css` 的 `@media (prefers-reduced-transparency: reduce)` 里，
+`.lg-content` 原来只被摘掉了 `backdrop-filter`，**底色仍然是半透明的**
+（regular 档亮色是白 78%）。结果是最糟的组合：**既没有模糊把背景压平，
+又还能看见背景。** 现在落到 `--lg-card-fill`（实测的不透明分组底色）。
+
+这条以前没被发现，是因为 `.lg-content` 在本次之前**没有任何组件用**。
+
+### 顺手补上一道 CI 闸：`public/r` 也会漂
+
+重新 build registry 时发现 `public/r/dialog.json` 与 `registry/glass/ui/dialog.tsx`
+**不一致**（一处注释里的章节号）。原因是那批交付里改了 .tsx 之后没重新 build。
+
+已有的漂移闸只盯 `registry/glass/registry.json`（从 CSS 生成的 theme item），
+**漏掉了 `public/r/*.json`** —— 而那一层装的正是**组件源码的副本**，
+用户 `shadcn add` 拿到的就是它。改了源码忘了 build，仓库里挂着的就是旧源码，
+不会有任何报错。CI 每次都现 build，所以冒烟测试一直是绿的，掩盖了这个问题。
+
+已加第二道闸：`shadcn build` 之后检查 `git status --porcelain apps/www/public/r`。
+
+### 新的测试能力：Playwright 测不了的偏好，CDP 能测
+
+`prefers-reduced-transparency` Playwright 没有开关，此前 Tabs 的测试是
+「改 tier=c 去走同一条路径」——**近似，不是真的**。这次发现
+`Emulation.setEmulatedMedia` 能塞任意 media feature：
+
+```js
+const cdp = await ctx.newCDPSession(page);
+await cdp.send('Emulation.setEmulatedMedia', {
+  features: [{ name: 'prefers-reduced-transparency', value: 'reduce' }],
+});
+```
+
+实测 `matchMedia()` 真的翻转，Provider 自己读媒体查询的那条链路也一起被测到。
+Card 的降级测试用的就是这条。
+
+> 🟡 **其余组件还没迁过去。** Tabs 那条近似测试仍在原地 ——
+> 这是一条**已知的、可以补的**债，不是做不到。
+
+### 与 Apple 参考图的差异（Fidelity）
+
+`public/fidelity/compare-card.png`。**这张比前四张更值得看**：前四张里左边的
+白底行是对照台自己画的，只是给被测组件一个 iOS 的落脚点；这一张里
+**那块白底就是被测组件本身**，圆角、行高、分隔线、内缩全部可比。
+
+量化过的唯一差异是字体：同一串 "Switch is on" 的墨迹
+**高度两边都是 13px**（说明 17pt 取对了），宽度 89 vs 86 —— 差 3px（3.4%），
+起始位置两边都是区块内 17px。
+
+### §14 逐条
+
+| 验收项 | Card |
+|---|---|
+| light / dark 各自独立调过 | ✅ 暗色是 #000 底 + #1c1c1e 区块，有测试断言不是反色 |
+| 材质档位 0/1/2/3 正常可读 | ➖ **不适用** —— 档位滑杆调的是玻璃材质，内容层不吃那组变量 |
+| Tier A/B/C 三条路径完整 | ✅ 只有 `material` 变体有区别（A/B 模糊、C 转厚实色），三档各录快照 |
+| Layer B / Layer I 分层正确 | ➖ **不适用** —— §2 规定 Card 两者都不用。有测试断言卡片内**一个 `.lg-surface` 都没有** |
+| 交互态齐全，用 spring 预设 | ✅ 可点的行 hover / press / focus / disabled，走 `transitionFor()` |
+| 移动端下拉类改 Drawer | ➖ 不适用（不是浮层类） |
+| 三种无障碍偏好正确降级 | ✅ 三条全有测试，其中 reduced-transparency 是**真模拟**（CDP） |
+| WCAG AA 对比度检查通过 | ✅ grouped 21.00 / material 15.08（条纹 16.36）；`plain` 不判定，理由同 Button |
+| registry item + 干净工程冒烟 | ✅ 已加进冒烟工作流，并额外断言三个新 token 落地 |
+| 文档页 Preview/Code/Fidelity/API | ❌ Phase 6 |
+| `// APPLE REFERENCE:` + 可信度标注 | ✅ 含拟合方法、三块列表的交叉验证、暗色未实测的明确标注 |
+| Playwright 视觉回归快照 | ⚠️ 15 张，只有 win32 基线 |
+
+### 未过的项
+
+- 🔴 **文档页未做** —— Phase 6
+- 🟡 **视觉快照只有 win32 基线** —— 与前几批同因
+- 🟡 **暗色三个颜色 token 没有实测。** iOS 27 资源里这三块 Grouped List 只有亮色版，
+  没找到暗色。`--lg-grouped-bg` / `--lg-card-fill` 是 `[待核实 · 社区通行值]`，
+  `--lg-list-separator` 的暗色是 `[推定]` —— 已在 semantic.css 就地标注，
+  **没有伪装成实测**。
+- 🟡 **Section header / footer 没量到。** 三块列表都没有 header，
+  所以 `CardDescription` 的字号标的是 `[待核实]`（社区通行的 subheadline 15pt）。
+- 🟡 **`plain` 变体不提供可读性地板** —— 按定义就没有底，与 Button 的 `plain` 同因。
+  实测渐变背景上 4.23:1（脚本照常量出来并打印，但不判定）。
+
+### 测试增量
+
+| 文件 | 数量 | 进 CI |
+|---|---|---|
+| `tests/card.behavior.spec.ts` | 19 | ✅ |
+| `scripts/press-legibility.mjs` | 24 → **30** 个测点 | ✅ |
+| `tests/card.visual.spec.ts` | 15 张 | ❌ 平台相关 |
+
+本机全绿：typecheck ×2 · registry 静态检查 · 派生色漂移 · 探针契约 ·
+对比度审计 1512 采样 · 交互态可读性 **30** 测点 · 行为回归 **108** 项 · 视觉 **93** 项。
+
+---
+
 ## 0.5 CI 第一次真跑（2026-09-01）—— 抓出 4 个真实故障
 
 仓库此前**没有远程**，两个 workflow 从建好起一次都没执行过。
@@ -1420,26 +1577,40 @@ docs/research/
 
 ---
 
-## 10. 下一步
+## 10. 下一步（2026-09-01 更新）
 
-**Phase 0 / 1 / 2 / 5 已完成。分发管线已经打通，等组件往里填。**
+**Phase 0 / 1 / 2 / 5 已完成；Phase 3 进行中 —— 11 个 P0 已交付 7 个。**
 
-下一步应当是 **Phase 3（P0 组件，14 个）**，但它有两件事要先解决：
+| 已交付 | §14 成绩 |
+|---|---|
+| Tabs / Segmented | 12 项过 10 |
+| Slider | 12 项过 10 |
+| Switch | 12 项过 10 |
+| Button | 12 项过 10 |
+| Dialog | 12 项过 10 |
+| Toggle | 12 项过 9 |
+| Card | 12 项过 9（另 2 项按规格不适用） |
 
-1. 🔴 **阻塞项 #1：没有 iOS 26 参考截图。** P0 验收要求「像素级对齐」+ 每个组件一张
-   Fidelity 并排对照图，没有参考图就交付不了。需要你提供，或者授权改口径
-   （明示本库是「风格还原」而非「尺寸还原」）。
-2. 🔴 **`optics-web.md` §3.8 的嵌套指示器问题。** Tabs / Segmented 是 P0 的第一个组件，
-   也正是这个问题最严重的场景 —— 指示器嵌在磨砂底座里，折射被底座的模糊吃掉。
-   建议做 Tabs 时一并实现「底座挖洞」。
+**剩下 4 个：Sheet/Drawer · Select · DropdownMenu · Popover —— 全是浮层类。**
 
-**对比度审计已补做**（§1），并且查出了一类真实违规：暗色主题 + 亮背景下
-11/14 个测点达不到 AA。根因是元素级明暗自适应未实现 —— 这条以前只是文字描述，
-现在有了硬数字，已用棘轮基线盯住，只许变好。
+### 建议：先做 Phase 4，再回头一次做完这四个
 
-另外两件不阻塞但迟早要做的：
+这四个都被 SPEC §9 要求「移动端切成底部 Drawer」，而 ResponsiveOverlay、
+snap points、拖拽把手、甩动关闭全在 **Phase 4** 的任务卡上。现在硬做，
+移动端那条路径只有两个选择：**不做**（像 Dialog 现在这样留个已知的洞），
+或者等 Phase 4 返工。**先把 ResponsiveOverlay 搭起来，浮层类就只用做一遍**，
+顺带把 Dialog 的移动端路径一起补上。
 
-- **配好远程并推上去**（本地仓库与初始提交已完成），否则 Phase 5 写好的 CI job 永远不会跑
-  —— 「CI job 存在并通过」这条验收目前只做到了「存在」。
-- **发布 `@glass/core` 到 npm**，否则真实用户装不了 registry item
+### 长期挂着的两件事（不阻塞，但迟早要做）
+
+- **发布 `@glass/core` 到 npm** —— 否则真实用户装不了 registry item
   （现在靠本地 npm shim 才能跑通冒烟测试）。
+- **在 Linux 环境录一次视觉基线** —— 视觉回归目前只有 win32 基线，
+  CI 里刻意不跑，等于这条验收只做到了「本地可用」。
+
+### 仍然没有的东西
+
+🔴 **iOS 真机截图。** Figma 资源解决了**几何**，但解决不了**光学** ——
+折射强度、色散偏移、镜面高光、knob 静止态该白到什么程度，
+这些至今全是 `[推定]`，也是 Tier A 与 Tier B 至今无法真正区分开的原因。
+Fidelity 对照图里每一处相关差异都已逐条写明，没有含糊过去。

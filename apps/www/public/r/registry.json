@@ -86,6 +86,7 @@
           "lg-radius-lg": "22px",
           "lg-radius-xl": "34px",
           "lg-radius-continuous": "34px",
+          "lg-radius-card": "26px",
           "lg-ios-blue-light": "#007aff",
           "lg-ios-green-light": "#34c759",
           "lg-ios-red-light": "#ff3b30",
@@ -170,6 +171,9 @@
           "lg-fill-secondary": "rgb(var(--lg-fill-base-light) / 0.16)",
           "lg-fill-tertiary": "rgb(var(--lg-fill-base-light) / 0.12)",
           "lg-fill-quaternary": "rgb(var(--lg-fill-base-light) / 0.08)",
+          "lg-grouped-bg": "var(--lg-gray-6-light)",
+          "lg-card-fill": "#ffffff",
+          "lg-list-separator": "rgb(0 0 0 / 0.1)",
           "lg-tint": "0.34",
           "lg-base-alpha": "0.62",
           "lg-base-blur": "14px",
@@ -201,7 +205,7 @@
           "radius": "var(--lg-radius-md)",
           "background": "#ffffff",
           "foreground": "var(--lg-label-primary)",
-          "card": "#ffffff",
+          "card": "var(--lg-card-fill)",
           "card-foreground": "var(--lg-label-primary)",
           "popover": "#ffffff",
           "popover-foreground": "var(--lg-label-primary)",
@@ -272,6 +276,9 @@
           "lg-fill-secondary": "rgb(var(--lg-fill-base-dark) / 0.32)",
           "lg-fill-tertiary": "rgb(var(--lg-fill-base-dark) / 0.24)",
           "lg-fill-quaternary": "rgb(var(--lg-fill-base-dark) / 0.18)",
+          "lg-grouped-bg": "#000000",
+          "lg-card-fill": "var(--lg-gray-6-dark)",
+          "lg-list-separator": "rgb(255 255 255 / 0.12)",
           "lg-base-alpha": "0.44",
           "lg-base-color": "20 20 24",
           "lg-elevated-color": "32 32 38",
@@ -293,7 +300,7 @@
           "lg-ring": "var(--lg-blue)",
           "background": "#000000",
           "foreground": "var(--lg-label-primary)",
-          "card": "var(--lg-gray-6)",
+          "card": "var(--lg-card-fill)",
           "card-foreground": "var(--lg-label-primary)",
           "popover": "var(--lg-gray-5)",
           "popover-foreground": "var(--lg-label-primary)",
@@ -335,6 +342,7 @@
             "--lg-label-quaternary": "rgb(var(--lg-label-tint-light) / 0.4)",
             "--lg-separator": "rgb(var(--lg-separator-tint-light) / 0.6)",
             "--lg-separator-opaque": "#8e8e93",
+            "--lg-list-separator": "rgb(0 0 0 / 0.3)",
             "--lg-refract-scale": "0.5",
             "--lg-disperse-scale": "0.4",
             "--muted-foreground": "var(--lg-label-secondary)",
@@ -347,6 +355,7 @@
             "--lg-label-quaternary": "rgb(var(--lg-label-tint-dark) / 0.5)",
             "--lg-separator": "rgb(200 200 210 / 0.7)",
             "--lg-separator-opaque": "#6e6e73",
+            "--lg-list-separator": "rgb(255 255 255 / 0.36)",
             "--muted-foreground": "var(--lg-label-secondary)",
             "--border": "var(--lg-separator)",
             "--input": "var(--lg-separator)"
@@ -487,6 +496,9 @@
             ".lg-surface, .lg-content": {
               "backdrop-filter": "none !important",
               "-webkit-backdrop-filter": "none !important"
+            },
+            ".lg-content": {
+              "background-color": "var(--lg-card-fill) !important"
             },
             ".lg-surface[data-layer='indicator']": {
               "background-color": "rgb(var(--lg-base-color) / 0.98)"
@@ -686,6 +698,29 @@
         }
       ],
       "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n⚠️ 这是本库唯一不走 Radix 的交互组件：按下要做 spring 缩放就得让 motion 拥有 button 元素，\n而把 Radix 的 Root 换成 motion 元素只能靠 asChild（本库禁用）。\nprops 名与 @radix-ui/react-toggle 完全一致（pressed / defaultPressed / onPressedChange），\n输出的 aria-pressed 与 data-state 也一致，迁移不用改调用处。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "card",
+      "title": "Card / 分组列表区块",
+      "author": "Liquid Glass UI",
+      "description": "内容层组件，**不用玻璃**（PROJECT_SPEC §2/§15）。几何取自 iOS 27 官方设计资源里的 Grouped List：区块圆角 26（亚像素拟合，两块列表独立得到 26.27 / 26.33）、行高 52、行内左右内缩 16、分隔线 1pt 且两侧各内缩 16。",
+      "dependencies": [
+        "@glass/core",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/card.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 Card 的差别：\n  1) 多一个 CardRow —— 这才是 Apple 对 Card 的定义（grouped list section）。\n     CardRow 必须是 Card 的**直接子元素**：区块的竖直内边距靠 :has(> [data-slot=card-row]) 去掉，套一层 CardContent 会让选择器落空。\n  2) variant 是 grouped / material / plain，**没有 glass** —— Apple 明令内容层不用 Liquid Glass，material 走的是 ultraThin/thin/regular/thick 四档标准材质，只有模糊与不透明度，没有折射与色散。\n  3) 内边距 16 而不是 24，来自 iOS 27 实测。\n\n页面底色请用 var(--lg-grouped-bg)：iOS 的分组列表是「白区块压在灰底上」，区块与页面同色会看不出边界。",
       "type": "registry:ui"
     }
   ]

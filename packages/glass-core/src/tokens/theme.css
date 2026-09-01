@@ -86,6 +86,20 @@
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
+  /**
+   * 内容层材质必须**真的变不透明**，只摘掉模糊是不够的。
+   *
+   * 之前这里只写了 backdrop-filter: none，`.lg-content` 的底色仍然是
+   * 半透明（regular 档亮色是白 78%），结果 reduce-transparency 下背景照样
+   * 透进来，只是不糊了 —— 那恰恰是最糟的组合：既没有模糊把背景压平，
+   * 又还能看见背景。做 Card 时发现的。
+   *
+   * 落到 --lg-card-fill 而不是随便一个白：那是 iOS 分组区块的实测底色，
+   * 也正是「不透明版的内容层」应该长的样子。
+   */
+  .lg-content {
+    background-color: var(--lg-card-fill) !important;
+  }
   .lg-surface[data-layer='indicator'] {
     background-color: rgb(var(--lg-base-color) / 0.98);
   }

@@ -102,6 +102,25 @@
   --lg-fill-tertiary: rgb(var(--lg-fill-base-light) / 0.12);
   --lg-fill-quaternary: rgb(var(--lg-fill-base-light) / 0.08);
 
+  /* ── 分组列表（Card = grouped list section，PROJECT_SPEC §10）──────
+     内容层，**不是玻璃**。数值来自 iOS 27 资源里两块 Grouped List 的渲染图
+     （screenshots/ios27-list-screen.png、ios27-grouped-list-rows.png）。 */
+
+  /* 页面底色。实测 #f2f2f7，与既有的 --lg-gray-6-light 逐位相同 ——
+     两条互不相关的来源对上了，算是对该 token 的一次独立印证。[实测] */
+  --lg-grouped-bg: var(--lg-gray-6-light);
+  /* 区块底色。实测纯白且**完全不透明**（alpha 通道 255）。[实测] */
+  --lg-card-fill: #ffffff;
+  /**
+   * 行间分隔线。实测压在白底上是 #e6e6e6，即黑色约 9.8% —— 取 0.1。[实测]
+   *
+   * ⚠️ 这**比 --lg-separator（0.29）淡得多**，不要合并成一个 token。
+   * --lg-separator 是 iOS 通用分隔线的社区通行值（`[待核实]`，见
+   * apple-metrics §9）；这一条是从 iOS 27 分组列表的渲染图上量出来的，
+   * 两者在同一份资源里就是不同的粗细，合并会把量到的事实抹掉。
+   */
+  --lg-list-separator: rgb(0 0 0 / 0.1);
+
   /* ── 玻璃材质（控件与导航层） ──────────────────────────────────────
      --lg-base-* 由 GlassProvider 按材质档位连续插值写入；
      这里给出 default 档的兜底值，保证无 JS 时也能看。 */
@@ -281,6 +300,17 @@
   --lg-fill-tertiary: rgb(var(--lg-fill-base-dark) / 0.24);
   --lg-fill-quaternary: rgb(var(--lg-fill-base-dark) / 0.18);
 
+  /* ── 分组列表 · dark ───────────────────────────────────────────────
+     ⚠️ **这三条都没有实测。** iOS 27 资源里我只找到亮色的 Grouped List
+     渲染图，暗色版没找到。下面是 iOS 长期通行的暗色分组配色
+     （systemGroupedBackground = 纯黑，secondary = #1C1C1E），
+     按 apple-metrics 的口径属于 `[待核实 · 社区通行值]`，不许当实测用。 */
+  --lg-grouped-bg: #000000;
+  --lg-card-fill: var(--lg-gray-6-dark); /* #1c1c1e */
+  /* 亮色实测是黑 10%；暗色这条是**按同一观感反推的 `[推定]` 值**，
+     不是量出来的 —— 暗背景上等观感的白线需要更高的 alpha。 */
+  --lg-list-separator: rgb(255 255 255 / 0.12);
+
   --lg-base-alpha: 0.44;
   --lg-base-color: 20 20 24;
   --lg-elevated-color: 32 32 38;
@@ -329,6 +359,8 @@
   --lg-label-quaternary: rgb(var(--lg-label-tint-light) / 0.4);
   --lg-separator: rgb(var(--lg-separator-tint-light) / 0.6);
   --lg-separator-opaque: #8e8e93;
+  /* 分组列表的分隔线同样要加强 —— 黑 10% 在高对比下几乎看不见 */
+  --lg-list-separator: rgb(0 0 0 / 0.3);
   /* 高对比下折射与色散都要收敛 —— 畸变本身会降低可读性 */
   --lg-refract-scale: 0.5;
   --lg-disperse-scale: 0.4;
@@ -344,5 +376,6 @@
   --lg-label-quaternary: rgb(var(--lg-label-tint-dark) / 0.5);
   --lg-separator: rgb(200 200 210 / 0.7);
   --lg-separator-opaque: #6e6e73;
+  --lg-list-separator: rgb(255 255 255 / 0.36);
   /* 描边同上，由 --lg-stroke-boost 统一放大，不重复写 */
 }

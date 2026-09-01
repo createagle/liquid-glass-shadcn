@@ -34,7 +34,10 @@
   --background: #ffffff;
   --foreground: var(--lg-label-primary);
 
-  --card: #ffffff;
+  /* 别名层不该自己持有值。这两处原来硬写着 #ffffff / var(--lg-gray-6)，
+     恰好与 iOS 27 分组区块的实测底色一致 —— 现在改成指向语义层的
+     --lg-card-fill，两边就不可能再漂开了。 */
+  --card: var(--lg-card-fill);
   --card-foreground: var(--lg-label-primary);
 
   --popover: #ffffff;
@@ -97,7 +100,7 @@
   --background: #000000;
   --foreground: var(--lg-label-primary);
 
-  --card: var(--lg-gray-6);
+  --card: var(--lg-card-fill);
   --card-foreground: var(--lg-label-primary);
 
   --popover: var(--lg-gray-5);

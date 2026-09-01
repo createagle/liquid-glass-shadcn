@@ -187,6 +187,29 @@
         }
       ],
       "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n⚠️ 这是本库唯一不走 Radix 的交互组件：按下要做 spring 缩放就得让 motion 拥有 button 元素，\n而把 Radix 的 Root 换成 motion 元素只能靠 asChild（本库禁用）。\nprops 名与 @radix-ui/react-toggle 完全一致（pressed / defaultPressed / onPressedChange），\n输出的 aria-pressed 与 data-state 也一致，迁移不用改调用处。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "card",
+      "type": "registry:ui",
+      "title": "Card / 分组列表区块",
+      "description": "内容层组件，**不用玻璃**（PROJECT_SPEC §2/§15）。几何取自 iOS 27 官方设计资源里的 Grouped List：区块圆角 26（亚像素拟合，两块列表独立得到 26.27 / 26.33）、行高 52、行内左右内缩 16、分隔线 1pt 且两侧各内缩 16。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/card.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 Card 的差别：\n  1) 多一个 CardRow —— 这才是 Apple 对 Card 的定义（grouped list section）。\n     CardRow 必须是 Card 的**直接子元素**：区块的竖直内边距靠 :has(> [data-slot=card-row]) 去掉，套一层 CardContent 会让选择器落空。\n  2) variant 是 grouped / material / plain，**没有 glass** —— Apple 明令内容层不用 Liquid Glass，material 走的是 ultraThin/thin/regular/thick 四档标准材质，只有模糊与不透明度，没有折射与色散。\n  3) 内边距 16 而不是 24，来自 iOS 27 实测。\n\n页面底色请用 var(--lg-grouped-bg)：iOS 的分组列表是「白区块压在灰底上」，区块与页面同色会看不出边界。"
     }
   ]
 }

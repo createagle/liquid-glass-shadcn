@@ -38,6 +38,7 @@ const HARNESS = {
   button: pathToFileURL(resolve('apps/www/dev/button-demo.html')).href,
   tabs: pathToFileURL(resolve('apps/www/dev/tabs-demo.html')).href,
   dialog: pathToFileURL(resolve('apps/www/dev/dialog-demo.html')).href,
+  card: pathToFileURL(resolve('apps/www/dev/card-demo.html')).href,
 };
 
 /**
@@ -125,6 +126,46 @@ const CASES = [
     label: '[data-slot="dialog-description"]',
     press: false,
     gated: true,
+  },
+  {
+    /**
+     * Card 是内容层组件，没有玻璃 —— 但它照样有「标签压在半透明底上」的问题，
+     * 只不过底换成了 Apple 的四档标准材质。`.lg-content` 的 alpha 也是从
+     * a11y/legibility.ts 的地板推出来的（regular 亮色 0.78），这几条就是那组
+     * 推导在真实渲染上的回归。
+     */
+    name: 'Card · grouped（不透明）',
+    harness: 'card',
+    query: 'only=grouped',
+    target: '[data-slot="card-title"]',
+    nth: 0,
+    label: '[data-slot="card-title"]',
+    press: false,
+    gated: true,
+  },
+  {
+    name: 'Card · material（内容层材质）',
+    harness: 'card',
+    query: 'only=material',
+    target: '[data-slot="card-title"]',
+    nth: 0,
+    label: '[data-slot="card-title"]',
+    press: false,
+    gated: true,
+  },
+  {
+    /**
+     * `plain` 与 Button 的 `plain` 是同一个道理：**按定义就没有底**，
+     * 给不了地板。照样量出来，只是为了让这个事实可见，不判定。
+     */
+    name: 'Card · plain（无底，不判定）',
+    harness: 'card',
+    query: 'only=plain',
+    target: '[data-slot="card-title"]',
+    nth: 0,
+    label: '[data-slot="card-title"]',
+    press: false,
+    gated: false,
   },
   {
     /**

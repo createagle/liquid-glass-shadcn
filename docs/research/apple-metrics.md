@@ -259,11 +259,67 @@ PROJECT_SPEC §10 把这组值列为「已核实可直接使用」。
 
 ## 8. 列表 / 表单
 
+### 8.1 HIG 的定性结论（无数值）
+
 | 项 | 值 | 可信度 | 出处 |
 |---|---|---|---|
 | 行高与内边距 | **比 iOS 18 更大**（无数值） | `[官方]`（定性） | > "organizational components like lists, tables, and forms have a larger row height and padding" |
 | Section 圆角 | **增大，与全系控件曲率匹配**（无数值） | `[官方]`（定性） | > "Sections have an increased corner radius to match the curvature of controls across the system." |
 | Section header 大小写 | **title-style，不再全大写** | `[官方]` | > "section headers no longer render entirely in capital letters" |
+
+### 8.2 Grouped List —— 数值（2026-09-01 补测）
+
+> HIG 只说「圆角增大了」，没给数。下面这组是从 iOS 27 资源里量出来的，
+> 是本库 Card 的基准（PROJECT_SPEC §10 把 Card 的 Apple 对应物定为 grouped list section）。
+
+数据来自**三块互不相关**的 Grouped List：
+
+| 节点 | 内容 | 渲染图 |
+|---|---|---|
+| `12740:33850` | 4 行 Text Field | `screenshots/ios27-list-screen.png`（整屏 402×874） |
+| `12740:33923` | 2 行 Switch | `screenshots/ios27-grouped-list-rows.png`（整屏 402×874） |
+| `12740:33898` | 3 行 Slider | 仅取元数据 |
+
+| 项 | 值 | 可信度 | 测量方法 |
+|---|---|---|---|
+| 区块宽 | **370 pt** | `[实测]` | 402 的屏减两侧各 16；三块一致 |
+| **区块圆角** | **26 pt** | `[实测]` | 见下方「圆角怎么量的」 |
+| 行高 | **52 pt** | `[实测]` | 三块、三种行类型（文本框 / 开关 / 滑杆）全是 52 |
+| 行内左右内缩 | **16 pt** | `[实测]` | 行内容框 x=16 width=338；370−16−338=16，两侧对称 |
+| 分隔线 | **1 pt，两侧各内缩 16**（宽 338） | `[实测]` | 像素扫描，位于每行的下边缘 |
+| 分隔线颜色 | **#e6e6e6**（压白底 = 黑 9.8%） | `[实测]` | 逐像素读取 |
+| 区块底色 | **#ffffff，alpha 通道 255** | `[实测]` | 完全不透明，不是半透明材质 |
+| 页面底色 | **#f2f2f7** | `[实测]` | 与 PROJECT_SPEC 既有的 `--lg-gray-6-light` **逐位相同** |
+| 区块与内容区顶端的间距 | **10 pt** | `[实测]` | Grouped List 在 Content Area 内 y=10 |
+| 行标签字号 | **17 pt** | `[实测]` | 墨迹高 13px，与 Alert 的标题/正文（§7.6）同一字号 |
+
+> ⚠️ **分隔线不要和 `--lg-separator` 合并。** 后者是 iOS 通用分隔线的社区通行值
+> （light 0.29，`[待核实]`），压在白底上算出来是 #c6c6c7；而分组列表实测是 #e6e6e6，
+> **淡得多**。同一份资源里两者就是不同的粗细，合并会把量到的事实抹掉。
+>
+> ⚠️ **暗色版没找到。** 这三块列表在资源里只有亮色。`--lg-grouped-bg` /
+> `--lg-card-fill` / `--lg-list-separator` 的暗色取值全部是
+> `[待核实 · 社区通行值]` 或 `[推定]`，已在 semantic.css 就地标注。
+
+**圆角怎么量的**（与 Alert 的 34 同一套方法，但这次做到了亚像素）：
+
+1. 背景 #f2f2f7、前景 #ffffff，蓝通道差 8 —— 于是每个像素的覆盖率
+   `α = (B − 247) / 8`，逐行求和即得该行的**亚像素**内缩量；
+2. 对 `inset(dy) = r − √(r² − (r−dy)²)` 做最小二乘；
+3. 丢掉最靠边的 1–2 行（纯抗锯齿，系统性偏大）。
+
+| 来源 | 拟合半径 | RMSE |
+|---|---|---|
+| `ios27-list-screen.png` | 26.27 | **0.12 px**（19 个采样点） |
+| `ios27-grouped-list-rows.png` | 26.33 | 0.69 px（受行内文字干扰） |
+
+固定半径复算：r=26 的 RMSE 0.215，r=27 是 0.384，r=25 是 0.716 —— **取 26**。
+两参数拟合（半径 + 常数偏移）给出偏移 0.03，说明测量没有系统性平移。
+
+26 不在既有圆角阶梯（8/14/22/34）上，故单开 `--lg-radius-card`，没有硬塞进阶梯。
+
+**仍然缺的**：Section header / footer 的字号与间距 —— 资源里这三块都没有 header，
+没量到就是没量到，Card 组件里对应的 `CardDescription` 字号标的是 `[待核实]`。
 
 ## 9. 颜色
 
@@ -290,7 +346,7 @@ PROJECT_SPEC §6 列出的 iOS 系统色与标签色表（`#007AFF` / `#0A84FF` 
 
 | PROJECT_SPEC §1.5 要求 | 状态 |
 |---|---|
-| 组件尺寸 / 圆角 / 间距表 | 🟡 **部分完成**。Tab Bar / Switch / Slider / Sheet / Alert / Menu 已有 `[实测]`（§7）；Button / Popover / Stepper / Toolbar 变体**仍缺** |
+| 组件尺寸 / 圆角 / 间距表 | 🟡 **部分完成**。Tab Bar / Switch / Slider / Sheet / Alert / Menu 已有 `[实测]`（§7），Button 亦有（工具栏节点与 Alert 两处互相印证），Grouped List 已有（§8.2）；Popover / Stepper / Toolbar 变体、以及 Section header / footer **仍缺** |
 | 字号表（Dynamic Type） | ❌ **仍全部 `[待核实]`**，本次未取得来源 |
 | 每个数值标注可信度 | ✅ 已做，且新增了 `[待核实]` 一档以免把社区值伪装成官方值 |
 | 严禁把推定值伪装成官方值 | ✅ 遵守。本次进一步**没有**把 iOS 27 Figma 的值升格为 `[官方]`，理由见 §7 开头两条前提 |

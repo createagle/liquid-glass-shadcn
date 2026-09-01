@@ -12,10 +12,17 @@
 > - `[待核实]` —— 社区广泛流传但我在本次研究中**没有找到 Apple 出处**的值。
 >   **这一类不许当成 `[官方]` 使用。**
 >
-> ⚠️ **本文件目前没有任何一条 `[实测]`。**
-> 原因：本次 Phase 0 没有 iOS 真机截图，也没有下载 Apple Design Resources。
-> PROJECT_SPEC §10 要求「其余尺寸由你在 Phase 0 中测量确定」—— **这一项没有完成**，
-> 见 `STATUS.md` 的缺口清单。
+> **2026-08-31 更新：`[实测]` 一档已有数据。**
+> 来源是 Figma 文件 *iOS and iPadOS 27 (Community)*（fileKey `ojEQo0rKaQ5ioARo0CO0pf`），
+> 覆盖 Tab Bar / Switch / Slider / Sheet / Alert / Menu 的尺寸，见 §7。
+>
+> ⚠️ 但**两项限制仍在**，§7 开头详述：
+> (a) 该文件是 **iOS 27**，PROJECT_SPEC 的基准是 **iOS 26**；
+> (b) 标题带 "(Community)"，**发布者是否为 Apple 未经验证**。
+> 在澄清前，§7 的值一律标 `[实测]` 而非 `[官方]`。
+>
+> ⚠️ **光学参数仍然全部缺失。** Figma 里的玻璃是静态近似，
+> 拿不到折射 / 色散数据 —— 那部分只能靠 iOS 真机截图，见 `STATUS.md` 阻塞项。
 
 ---
 
@@ -102,24 +109,152 @@ PROJECT_SPEC §10 把这组值列为「已核实可直接使用」。
 
 ## 7. 控件尺寸
 
-| 项 | PROJECT_SPEC 的值 | 可信度 | 说明 |
+**数据来源**：Figma 文件 *iOS and iPadOS 27 (Community)*，fileKey `ojEQo0rKaQ5ioARo0CO0pf`，
+2026-08-31 经 Figma MCP 读取。渲染图存于 `docs/research/screenshots/`。
+
+**测量方法**：该文件的 iPhone 示例帧为 **402 × 874**，正好是 iPhone 16 Pro 的**逻辑点尺寸**，
+故 Figma 中的坐标与尺寸**即 pt，无需换算**。下表数值直接取自节点的 x/y/width/height；
+标「像素实测」的另经 `scripts/lib/png.mjs` 解码渲染 PNG、逐像素扫描求边界得到。
+
+> ⚠️ **两条必须先说清楚的前提，未澄清前不得升级本节可信度：**
+>
+> 1. **这是 iOS 27，不是 iOS 26。** PROJECT_SPEC 的基准是 iOS 26。Liquid Glass 在 26 引入、
+>    27 继续演进，控件尺寸**可能已与 26 不同**。本节数值只能声称「iOS 27 实测」，
+>    **不得当作 iOS 26 的官方值使用**。
+> 2. **文件标题带 "(Community)"。** Apple 确实官方向 Figma Community 发布设计资源，
+>    但仅凭 MCP 读到的数据**无法验证作者是不是 Apple**。需在 Figma 中确认发布者；
+>    若非 Apple 官方发布，本节全部降级为 `[待核实]`。
+>
+> 因此本节一律标 `[实测]`（我确实量到了），**一律不标 `[官方]`**。
+
+### 7.1 屏幕与全局
+
+| 项 | 值 | 可信度 |
+|---|---|---|
+| 示例帧（iPhone 16 Pro 逻辑尺寸） | **402 × 874 pt** | `[实测]` |
+| 状态栏高 | **62 pt** | `[实测]` |
+| Home Indicator 区 | **402 × 34 pt**（y = 840） | `[实测]` |
+| 内容区左右边距 | **16 pt** | `[实测]` |
+| 导航栏控件行高 | **44 pt**（与 `[官方]` 最小命中区域一致） | `[实测]` |
+| 顶部工具栏（含大标题+副标题） | **125 pt**；仅控件行 **54 pt** | `[实测]` |
+| Scroll Edge Effect（顶部渐隐区） | **402 × 116 pt** | `[实测]` |
+
+### 7.2 Tab Bar（iOS 26+ 浮动式）—— 本库 Tabs 的基准
+
+节点 `12740:24081`，渲染图 `screenshots/ios27-tabbar.png`。
+
+| 项 | 值 | 可信度 |
+|---|---|---|
+| Tab Bar 容器 | 402 × 95 pt | `[实测]` |
+| **玻璃底座 BG（Layer B）** | **244 × 62 pt** | `[实测]` |
+| 按钮组（BG 内） | 236 × 54 pt | `[实测]` |
+| **底座 → 按钮组内缩** | **4 pt（四周）** | `[实测]` |
+| 单个 Tab（Layer I 指示器） | **120 × 54 pt** | `[实测]` |
+| Search 独立胶囊 | **62 × 62 pt**（内含 54 × 54 按钮，同样 4 pt 内缩） | `[实测]` |
+| 左右边距 | **21 pt**（对称） | `[实测]` |
+| 形状 | 胶囊 → 外半径 **31**、内半径 **27** | `[实测]`（由高度推得，胶囊经渲染图确认） |
+
+> ✅ **这条独立验证了同心圆角公式。**
+> 外半径 31 − 内缩 4 = 内半径 27，与 `packages/glass-core/src/shape/concentric.ts`
+> 的 `concentricRadius(31, 4)` 输出一致。此前该公式只有 Apple 的定性描述作依据。
+
+> 📌 **Search 是独立胶囊，不在主底座内。** 这与 PROJECT_SPEC 把 Tab Bar 当成单一容器的
+> 隐含假设不符，Phase 3 实现 Tabs 时需支持「主胶囊 + 分离尾随胶囊」的布局。
+
+### 7.3 Switch —— 推翻 PROJECT_SPEC 标注为「已核实」的值
+
+节点 `I12740:33924;550:50638;526:49260`。
+
+| 项 | iOS 27 实测 | PROJECT_SPEC 原值 | 结论 |
 |---|---|---|---|
-| UISwitch | 51 × 31 pt，knob 直径 27 pt | `[待核实]` | 这是长期流传的 **UIKit 旧版**度量。iOS 26 明确改过控件尺寸（见下），**很可能已经不准**。 |
-| 其他控件（Slider 轨道高、Segmented 高度、Tab bar 高度、指示器 inset…） | —— | **全部缺失** | PROJECT_SPEC 要求 Phase 0 测量确定，**未完成** |
+| 轨道 | **64 × 28 pt** | 51 × 31 pt | ❌ **原值错误** |
+| Knob | **38 × 24 pt（胶囊，非圆）** | 直径 27 pt 圆形 | ❌ **原值错误**（形状也错） |
+| Knob 内缩 | **2 pt**（上下左右） | —— | 新增 |
+| Knob 行程 | **22 pt**（x 从 2 到 24） | —— | 新增 |
 
-**iOS 26 明确说控件尺寸变了：**
+原值 51 × 31 是 **UIKit 旧版**度量，本文件此前已标 `[待核实]`；现有实测数据，
+**该行应从 PROJECT_SPEC 中移除或改写**，不能继续以「已核实」呈现。
 
-> "**Review updates to control appearance and dimensions.** If you use standard controls from system frameworks and **don't hard-code their layout metrics**, your app adopts changes to shapes and sizes automatically…"
-> "Controls also feature **an option for an extra-large size**, allowing more space for labels and accents."
-> "The shape of the hardware informs the curvature of controls, so many controls adopt **rounder forms**."
+### 7.4 Slider
 
-— <https://developer.apple.com/documentation/TechnologyOverviews/adopting-liquid-glass.md>
+节点 `12740:33899`，渲染图 `screenshots/ios27-sliders.png`。
 
-> ⚠️ **这是本文件最大的风险点。** PROJECT_SPEC 的 P0 验收要求「像素级对齐」，
-> 但我们现在**没有一个 iOS 26 控件的可信尺寸**。
-> 继续做下去只有两条路：(a) 你提供 iOS 26 真机截图 / Apple Design Resources 让我实测；
-> (b) 全部标 `[推定]` 并明确告知用户本库是「风格还原」而非「尺寸还原」。
-> 建议 (a)。见 `STATUS.md` 阻塞项 #1。
+| 项 | 值 | 可信度 |
+|---|---|---|
+| 列表行高 | **52 pt**（含 1 pt 分隔线） | `[实测]` |
+| 轨道 | **250 × 6 pt** | `[实测]`（高度经像素实测复核） |
+| **Knob** | **38 × 24 pt（胶囊）** | `[实测]`（**像素实测**） |
+| Ticks（刻度条） | 218 × 4 pt | `[实测]` |
+| 轨道未填充色 | `rgb(228 228 228)` | `[实测]`（像素采样，见下方色彩告警） |
+| 轨道已填充色 | `rgb(0 136 255)` | `[实测]`（像素采样，见下方色彩告警） |
+
+> ⚠️ **Figma 节点包围盒在此处不可信。** Knob 实例的 `width` 报为 **1.11pt**，
+> 但渲染图显示它是宽胶囊。包围盒塌缩了，视觉内容溢出盒外。
+> **凡涉及 Knob 一律以像素实测为准**，不要采信节点 width。
+>
+> ⚠️ **颜色告警：** `rgb(0 136 255)` ≠ 常引用的 systemBlue `#007AFF`。
+> 差异方向与 Display P3 → sRGB 转换一致，但我**没有验证**这是色彩管理造成的还是
+> Apple 真的改了色值。**本项不得据以修改 token**，需另行核实。
+
+> ✅ **交叉印证：Switch 与 Slider 的 knob 都是 38 × 24 pt。**
+> 两处独立节点得到同一尺寸，说明 iOS 27 存在**统一的 Knob 组件**。
+> 这是本次测量中可信度最高的一条。
+
+### 7.5 Sheet（浮动式）
+
+节点 `I12740:24130;10525:1635`。
+
+| 项 | 值 | 可信度 |
+|---|---|---|
+| 左右边距 | **6 pt**（宽 390 = 402 − 12） | `[实测]` |
+| 底部边距 | **6 pt** | `[实测]` |
+| **抓手（grabber）** | **58 × 4 pt**，水平居中 | `[实测]` |
+| 抓手占位区高 | **16 pt**（抓手在其中 y = 5） | `[实测]` |
+| Sheet 内工具栏高 | 54 pt | `[实测]` |
+| 圆角 | —— | **仍未取得**，需 `get_design_context` 或像素量测 |
+
+### 7.6 Alert（Dialog）
+
+节点 `12740:24495`。
+
+| 项 | 值 | 可信度 |
+|---|---|---|
+| 宽度 | **300 pt** | `[实测]` |
+| 内边距 | **14 pt**（四周） | `[实测]` |
+| 正文块内再内缩 | 8 pt | `[实测]` |
+| **按钮高** | **48 pt** | `[实测]` |
+| 并排按钮宽 / 间距 | 132 pt / **8 pt**（132 + 8 + 132 = 272） | `[实测]` |
+
+### 7.7 Menu（Select / DropdownMenu）
+
+节点 `12740:24185`。
+
+| 项 | 值 | 可信度 |
+|---|---|---|
+| 菜单宽 | **250 pt** | `[实测]` |
+| **菜单项高** | **40 pt**（带副标题的为 60 pt） | `[实测]` |
+| 菜单项左右内缩 | **16 pt**（内容宽 218） | `[实测]` |
+| 分隔区高 | 21 pt | `[实测]` |
+| 顶部内边距 | 10 pt | `[实测]` |
+| Quick Actions 行 | 56 pt 高；3 项各 72.67 pt，间距 6 pt | `[实测]` |
+
+### 7.8 材质组件命名法（重要）
+
+菜单底板在文件中的图层名是 **`Liquid Glass - Regular - Medium`**，其内部正好分解为两层：
+
+| 子层 | 推测职责 |
+|---|---|
+| `Fill + Shadow` | 底色 + 投影 |
+| `Glass Effect` | 玻璃光学层 |
+
+> ✅ 这与本库 Layer B / Layer I 之外的**层内分解**一致：底色与光学是两层，不是一层。
+>
+> ⚠️ `Regular` 与 SwiftUI 的 `Glass.regular` 对得上；`Medium` 的语义（尺寸？海拔？）
+> **未知**，不要臆测。PROJECT_SPEC §8 的「4 档材质滑杆」仍然**没有**得到本文件支持。
+
+> ❌ **本节不提供任何光学参数。** Figma 里的玻璃是静态近似（位图/模糊叠加），
+> 不含真实折射与色散数据。`--lg-refract-*` / `--lg-disperse-*` 的标定
+> **仍然只能靠 iOS 真机截图**，见 `STATUS.md` 阻塞项。
 
 ## 8. 列表 / 表单
 
@@ -154,7 +289,23 @@ PROJECT_SPEC §6 列出的 iOS 系统色与标签色表（`#007AFF` / `#0A84FF` 
 
 | PROJECT_SPEC §1.5 要求 | 状态 |
 |---|---|
-| 组件尺寸 / 圆角 / 间距 / 字号表 | ❌ **大面积缺失**，只有触控目标一项是 `[官方]` |
+| 组件尺寸 / 圆角 / 间距表 | 🟡 **部分完成**。Tab Bar / Switch / Slider / Sheet / Alert / Menu 已有 `[实测]`（§7）；Button / Popover / Stepper / Toolbar 变体**仍缺** |
+| 字号表（Dynamic Type） | ❌ **仍全部 `[待核实]`**，本次未取得来源 |
 | 每个数值标注可信度 | ✅ 已做，且新增了 `[待核实]` 一档以免把社区值伪装成官方值 |
-| 严禁把推定值伪装成官方值 | ✅ 遵守；并主动把 PROJECT_SPEC 声称「已核实」的两组值
-（Dynamic Type、UISwitch 尺寸）**降级**为 `[待核实]` |
+| 严禁把推定值伪装成官方值 | ✅ 遵守。本次进一步**没有**把 iOS 27 Figma 的值升格为 `[官方]`，理由见 §7 开头两条前提 |
+
+### 已确认的 PROJECT_SPEC 错误（需修订 SPEC）
+
+| 位置 | SPEC 原文 | 实测 | 处理 |
+|---|---|---|---|
+| §10 控件尺寸 | UISwitch **51 × 31 pt，knob 圆形直径 27 pt**，标注为「已核实」 | **64 × 28 pt，knob 胶囊 38 × 24 pt** | ❗**待修订**，见 §7.3 |
+
+### 本次新增的未决问题
+
+| # | 问题 | 影响 |
+|---|---|---|
+| 1 | iOS 27 Figma 文件的发布者是否为 Apple？ | 决定 §7 能否升级为 `[官方]` |
+| 2 | iOS 27 与 SPEC 基准 iOS 26 的尺寸差异有多大？ | 决定 §7 能否直接用作实现基准 |
+| 3 | Sheet 圆角具体数值仍未取得 | Phase 4 ResponsiveOverlay 需要 |
+| 4 | `rgb(0 136 255)` vs `#007AFF` 的差异是色彩管理还是真实改值？ | 决定是否动 `--lg-blue` token |
+| 5 | 材质命名 `Liquid Glass - Regular - **Medium**` 中 Medium 的语义 | 关系到 §8 材质档位模型 |

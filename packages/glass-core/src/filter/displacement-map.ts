@@ -61,7 +61,7 @@ export const DISPLACEMENT_DEFAULTS = {
   brightness: 50,
   opacity: 0.93,
   blur: 6,
-  mixBlendMode: 'difference',
+  mixBlendMode: 'screen',
 } as const;
 
 /** 缓存键：相同尺寸/圆角/边宽的实例共享同一份贴图与同一个 `<filter>` 定义。 */
@@ -97,27 +97,40 @@ export function createDisplacementMap(o: DisplacementMapOptions): ResolvedDispla
   const blur = o.blur ?? DISPLACEMENT_DEFAULTS.blur;
   const mixBlendMode = o.mixBlendMode ?? DISPLACEMENT_DEFAULTS.mixBlendMode;
 
-  // 边缘透镜带的实际厚度，取短边的比例
-  const edge = Math.min(w, h) * (borderWidth * 0.5);
-  const innerW = Math.max(0, w - edge * 2);
-  const innerH = Math.max(0, h - edge * 2);
+  /**
+   * 径向剖面的起始位置：从中心到这里完全不失真，再向外渐强到边缘满值。
+   * borderWidth 是「透镜带占短边的比例」，所以起点 = 1 − borderWidth。
+   */
+  const profileStart = Math.max(0, Math.min(0.95, 1 - borderWidth * 2));
 
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">` +
     `<defs>` +
-    `<linearGradient id="x" x1="100%" y1="0%" x2="0%" y2="0%">` +
-    `<stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="red"/>` +
+    // R 通道：水平方向的线性斜坡 → X 位移
+    `<linearGradient id="x" x1="0%" y1="0%" x2="100%" y2="0%">` +
+    `<stop offset="0%" stop-color="#000"/><stop offset="100%" stop-color="red"/>` +
     `</linearGradient>` +
+    // B 通道：垂直方向的线性斜坡 → Y 位移
     `<linearGradient id="y" x1="0%" y1="0%" x2="0%" y2="100%">` +
-    `<stop offset="0%" stop-color="#0000"/><stop offset="100%" stop-color="blue"/>` +
+    `<stop offset="0%" stop-color="#000"/><stop offset="100%" stop-color="blue"/>` +
     `</linearGradient>` +
+    // 径向剖面：中心 0（露出中性灰 → 零位移）、边缘 1（斜坡满值）
+    `<radialGradient id="p" cx="50%" cy="50%" r="50%">` +
+    `<stop offset="${profileStart}" stop-color="#000"/>` +
+    `<stop offset="100%" stop-color="#fff"/>` +
+    `</radialGradient>` +
+    `<mask id="m"><rect width="${w}" height="${h}" fill="url(#p)"` +
+    (blur > 0 ? ` style="filter:blur(${blur}px)"` : '') +
+    `/></mask>` +
     `</defs>` +
-    `<rect width="${w}" height="${h}" fill="black"/>` +
-    `<rect width="${w}" height="${h}" rx="${radius}" fill="url(#x)"/>` +
-    `<rect width="${w}" height="${h}" rx="${radius}" fill="url(#y)" ` +
-    `style="mix-blend-mode:${mixBlendMode}"/>` +
-    `<rect x="${edge}" y="${edge}" width="${innerW}" height="${innerH}" rx="${radius}" ` +
-    `fill="hsl(0 0% ${brightness}% / ${opacity})" style="filter:blur(${blur}px)"/>` +
+    // 中性灰基底 = 零位移。**不能用黑色** —— 黑色在 feDisplacementMap 里
+    // 等于最大负位移，会让未被斜坡覆盖的区域整片剧烈偏移。
+    `<rect width="${w}" height="${h}" fill="hsl(0 0% ${brightness}%)"/>` +
+    `<g mask="url(#m)" opacity="${opacity}">` +
+    `<rect width="${w}" height="${h}" fill="url(#x)"/>` +
+    // screen 合并两条斜坡：R 与 B 互不干扰（各自另一通道为 0）
+    `<rect width="${w}" height="${h}" fill="url(#y)" style="mix-blend-mode:${mixBlendMode}"/>` +
+    `</g>` +
     `</svg>`;
 
   return {

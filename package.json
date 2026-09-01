@@ -7,7 +7,7 @@
     "node": ">=20.11"
   },
   "scripts": {
-    "dev": "pnpm --filter www dev",
+    "dev": "pnpm --filter www dev:css && pnpm --filter www dev:build && node scripts/serve-dev.mjs",
     "build": "pnpm -r build",
     "registry:build": "pnpm --filter www registry:build",
     "typecheck": "pnpm -r typecheck",

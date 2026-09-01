@@ -2,11 +2,12 @@ packages:
   - 'apps/*'
   - 'packages/*'
 
+# pnpm 10+ 默认不跑依赖的构建脚本；不显式放行的话，
+# pnpm 11 的 `install` 会以 ERR_PNPM_IGNORED_BUILDS 直接失败（不是警告）。
+#
+# 这两个都需要构建脚本：
+#   esbuild          下载对应平台的原生二进制
+#   @parcel/watcher  编译原生文件监听（Next.js 开发服务器的传递依赖）
 allowBuilds:
-  '@parcel/watcher': set this to true or false
-  esbuild: set this to true or false
-
-# pnpm 10+ 默认不跑依赖的构建脚本，需要显式放行
-onlyBuiltDependencies:
-  - esbuild
-  - '@parcel/watcher'
+  esbuild: true
+  '@parcel/watcher': true

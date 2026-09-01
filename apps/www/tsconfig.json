@@ -1,0 +1,17 @@
+{
+  // registry 里的组件源码此前从未被类型检查过 —— 它不在 glass-core 的
+  // tsconfig 范围内，而 apps/www 之前没有自己的 tsconfig。
+  // 做 Slider / Switch 时补上：组件源码是要发给用户的，类型必须是对的。
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      // 与 dev:build 的 esbuild --alias 保持一致
+      "@glass/core": ["../../packages/glass-core/src/index.ts"],
+      "@/lib/utils": ["./registry/glass/lib/utils.ts"]
+    }
+  },
+  "include": ["registry/**/*.ts", "registry/**/*.tsx", "dev/**/*.tsx"],
+  "exclude": ["node_modules", "dev/**/*.js", "public"]
+}

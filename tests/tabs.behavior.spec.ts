@@ -196,3 +196,69 @@ test.describe('无障碍偏好降级（PROJECT_SPEC §13）', () => {
     await ctx.close();
   });
 });
+
+test.describe('交互态（PROJECT_SPEC §14）', () => {
+  const highlight = (p: Page) => p.locator('[data-slot="tabs-trigger-highlight"]').first();
+  const opacityOf = (p: Page) =>
+    p.evaluate(() => {
+      const el = document.querySelector('[data-slot="tabs-trigger-highlight"]') as HTMLElement;
+      return Number(getComputedStyle(el).opacity);
+    });
+
+  test('未选中项：静止无高亮，hover 后出现', async ({ page }) => {
+    await open(page);
+    expect(await opacityOf(page)).toBe(0);
+
+    await page.getByRole('tab', { name: '广播' }).hover();
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-slot="tabs-trigger-highlight"]') as HTMLElement;
+      return Number(getComputedStyle(el).opacity) > 0.5;
+    });
+  });
+
+  test('移开后高亮退回', async ({ page }) => {
+    await open(page);
+    await page.getByRole('tab', { name: '广播' }).hover();
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-slot="tabs-trigger-highlight"]') as HTMLElement;
+      return Number(getComputedStyle(el).opacity) > 0.5;
+    });
+    // 移到组件外
+    await page.mouse.move(600, 400);
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-slot="tabs-trigger-highlight"]') as HTMLElement;
+      return Number(getComputedStyle(el).opacity) < 0.05;
+    });
+  });
+
+  test('选中项没有高亮层 —— 它已经有指示器了', async ({ page }) => {
+    await open(page);
+    // 三个 tab，只有两个未选中 → 只应有两个高亮层
+    await expect(page.locator('[data-slot="tabs-trigger-highlight"]')).toHaveCount(2);
+  });
+
+  test('按下选中项时指示器上扬', async ({ page }) => {
+    await open(page);
+    const ind = indicator(page);
+    await expect(ind).not.toHaveAttribute('data-pressed', 'true');
+    const b = (await page.getByRole('tab', { name: '资料库' }).boundingBox())!;
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+    await page.mouse.down();
+    await expect(ind).toHaveAttribute('data-pressed', 'true');
+    await page.mouse.up();
+    await expect(ind).not.toHaveAttribute('data-pressed', 'true');
+  });
+
+  test('指针移出后按下态不会卡住', async ({ page }) => {
+    await open(page);
+    const ind = indicator(page);
+    const b = (await page.getByRole('tab', { name: '资料库' }).boundingBox())!;
+    await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+    await page.mouse.down();
+    await expect(ind).toHaveAttribute('data-pressed', 'true');
+    // 移到组件外再松手 —— 只听自己的 pointerup 会把状态卡住
+    await page.mouse.move(b.x + 400, b.y + 200);
+    await page.mouse.up();
+    await expect(ind).not.toHaveAttribute('data-pressed', 'true');
+  });
+});

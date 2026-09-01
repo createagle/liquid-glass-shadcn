@@ -90,6 +90,18 @@
   --lg-base-blur: 14px;
   --lg-base-saturate: 1.7;
   --lg-stroke-strength: 1;
+  /**
+   * 高对比下的描边加成。**必须与 --lg-stroke-strength 分开两个变量。**
+   *
+   * 起因：GlassProvider 会按材质档位把 --lg-stroke-strength 以**内联样式**
+   * 写到 <html> 上（档位 0.34 时是 1.006）。内联样式的优先级高于任何选择器，
+   * 所以 :root[data-glass-contrast='more'] 里对同一个变量的赋值**永远不生效** ——
+   * 高对比的描边加强是一条死代码，直到 tests/contrast-pref.behavior.spec.ts
+   * 把它测出来为止。
+   *
+   * 现在分工明确：档位由 JS 拥有，无障碍偏好由 CSS 拥有，两者相乘。
+   */
+  --lg-stroke-boost: 1;
 
   --lg-base-color: 255 255 255;
   --lg-elevated-color: 255 255 255;
@@ -98,6 +110,24 @@
   --lg-material-elevated: rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)));
   /* 指示器本身不带底色 —— 它是「浮在磨砂板上的玻璃透镜」，靠折射与高光成形 */
   --lg-material-indicator: transparent;
+
+  /**
+   * Knob（Slider / Switch 的把手）的底色。**与上面的指示器刻意不同。**
+   *
+   * 依据：Apple Design Resources 的 iOS 27 渲染图里，slider 与 switch 的 knob
+   * 是一块**白色实体**，不是透明玻璃（见 docs/research/screenshots/ios27-switch.png
+   * 与 ios27-sliders.png，以及 apps/www/public/fidelity/compare-*.png 的并排对照）。
+   * 不给底色的话，轨道的蓝色/绿色会直接从 knob 里透出来 —— 对照图上一眼可见。
+   *
+   * 为什么仍然半透明而不是纯白：PROJECT_SPEC §2「交互态才点亮」要求静止态
+   * **保持中等强度**的玻璃感，全不透明就退化成普通白色胶囊了。
+   * 组件在按下/拖动时会把这一层的不透明度调低，让 knob 真正「变成玻璃」——
+   * 对应 Apple 原文 "the knob transforms into Liquid Glass during interaction."
+   *
+   * ⚠️ 具体数值是 `[推定]`：我们只有静态设计稿，没有 iOS 真机截图，
+   *    无法标定「白到什么程度」。见 STATUS.md 的未决项。
+   */
+  --lg-knob-fill: rgb(255 255 255 / 0.86);
 
   /* ── 内容层标准材质（PROJECT_SPEC 未覆盖，由研究阶段补入） ──────────
      Apple 原文："iOS and iPadOS continue to provide four standard materials —
@@ -113,9 +143,9 @@
 
   /* ── 描边 ──────────────────────────────────────────────────────────
      light：上缘白色高光更强、下缘深色阴影弱 */
-  --lg-stroke-top: rgb(255 255 255 / calc(0.62 * var(--lg-stroke-strength)));
-  --lg-stroke-bottom: rgb(0 0 0 / calc(0.1 * var(--lg-stroke-strength)));
-  --lg-stroke-side: rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)));
+  --lg-stroke-top: rgb(255 255 255 / calc(0.62 * var(--lg-stroke-strength) * var(--lg-stroke-boost)));
+  --lg-stroke-bottom: rgb(0 0 0 / calc(0.1 * var(--lg-stroke-strength) * var(--lg-stroke-boost)));
+  --lg-stroke-side: rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength) * var(--lg-stroke-boost)));
 
   /* ── 光学表现的明暗差异（PROJECT_SPEC §7 差异表） ──────────────────── */
   --lg-specular-opacity: 0.72; /* light 下高光要克制，白底上易过曝 */
@@ -188,15 +218,19 @@
   --lg-base-color: 20 20 24;
   --lg-elevated-color: 32 32 38;
 
+  /* knob 在暗色下仍然是白的（iOS 亦然），但要更实一点：
+     半透明的白压在暗背景上会明显发灰，同样的 alpha 读起来不再是「白」。 */
+  --lg-knob-fill: rgb(255 255 255 / 0.9);
+
   --lg-content-ultrathin: rgb(28 28 30 / 0.67); /* AA 地板 0.6671，见 a11y/legibility.ts */
   --lg-content-thin: rgb(28 28 30 / 0.66);
   --lg-content-regular: rgb(28 28 30 / 0.8);
   --lg-content-thick: rgb(28 28 30 / 0.94);
 
   /* dark：上缘白色高光弱且更冷、整体描边偏亮 */
-  --lg-stroke-top: rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)));
-  --lg-stroke-bottom: rgb(0 0 0 / calc(0.34 * var(--lg-stroke-strength)));
-  --lg-stroke-side: rgb(255 255 255 / calc(0.16 * var(--lg-stroke-strength)));
+  --lg-stroke-top: rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength) * var(--lg-stroke-boost)));
+  --lg-stroke-bottom: rgb(0 0 0 / calc(0.34 * var(--lg-stroke-strength) * var(--lg-stroke-boost)));
+  --lg-stroke-side: rgb(255 255 255 / calc(0.16 * var(--lg-stroke-strength) * var(--lg-stroke-boost)));
 
   --lg-specular-opacity: 1; /* dark 下高光是主要的「玻璃」信号 */
   --lg-shadow: 0 1px 1px rgb(0 0 0 / 0.34); /* 落影极弱 */
@@ -220,7 +254,9 @@
    ══════════════════════════════════════════════════════════════════════ */
 
 :root[data-glass-contrast='more'] {
-  --lg-stroke-strength: 1.8;
+  --lg-stroke-boost: 1.8;
+  /* 高对比下折射已经收敛，knob 干脆做到接近实色，边界更清楚 */
+  --lg-knob-fill: rgb(255 255 255 / 0.96);
   --lg-label-secondary: rgb(var(--lg-label-tint-light) / 0.85);
   --lg-label-tertiary: rgb(var(--lg-label-tint-light) / 0.6);
   --lg-label-quaternary: rgb(var(--lg-label-tint-light) / 0.4);
@@ -230,10 +266,8 @@
   --lg-refract-scale: 0.5;
   --lg-disperse-scale: 0.4;
 
-  /* 同上：描边引用了 --lg-stroke-strength，不在这里重写就不会变强 */
-  --lg-stroke-top: rgb(255 255 255 / calc(0.62 * var(--lg-stroke-strength)));
-  --lg-stroke-bottom: rgb(0 0 0 / calc(0.1 * var(--lg-stroke-strength)));
-  --lg-stroke-side: rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)));
+  /* 描边不用在这里重写 —— --lg-stroke-boost 就在同一个元素（html）上，
+     :root 那三条声明求值时会拿到这里的 1.8。 */
 }
 
 :root[data-glass-contrast='more'][data-glass-theme='dark'],
@@ -243,7 +277,5 @@
   --lg-label-quaternary: rgb(var(--lg-label-tint-dark) / 0.5);
   --lg-separator: rgb(200 200 210 / 0.7);
   --lg-separator-opaque: #6e6e73;
-  --lg-stroke-top: rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)));
-  --lg-stroke-bottom: rgb(0 0 0 / calc(0.34 * var(--lg-stroke-strength)));
-  --lg-stroke-side: rgb(255 255 255 / calc(0.16 * var(--lg-stroke-strength)));
+  /* 描边同上，由 --lg-stroke-boost 统一放大，不重复写 */
 }

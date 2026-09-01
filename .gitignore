@@ -16,9 +16,9 @@ blob-report/
 .playwright/
 
 # 调试台的 esbuild 产物（源在同目录的 .tsx / debug-entry.ts）
+# 用通配而不是逐个列 —— 之前每加一个验证台就漏掉一次，ab.js / sweep.js
+# 就是在规则写好之前进的库。
 packages/glass-core/debug/glass-optics.js
 packages/glass-core/debug/react/*.js
-apps/www/dev/tabs-demo.js
+apps/www/dev/*.js
 apps/www/dev/tailwind.css
-apps/www/dev/sweep.js
-apps/www/dev/ab.js

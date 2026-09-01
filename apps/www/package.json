@@ -8,8 +8,9 @@
     "registry:build": "npm run registry:generate && shadcn build",
     "registry:validate": "shadcn registry validate registry.json",
     "registry:serve": "node scripts/serve-registry.mjs",
-    "dev:build": "esbuild dev/tabs-demo.tsx --bundle --format=iife --outfile=dev/tabs-demo.js --jsx=automatic --alias:@glass/core=../../packages/glass-core/src/index.ts --alias:@/lib/utils=./registry/glass/lib/utils.ts --log-level=warning",
-    "dev:css": "tailwindcss -i dev/input.css -o dev/tailwind.css"
+    "dev:build": "esbuild dev/tabs-demo.tsx dev/controls-demo.tsx dev/fidelity.tsx --bundle --format=iife --outdir=dev --jsx=automatic --alias:@glass/core=../../packages/glass-core/src/index.ts --alias:@/lib/utils=./registry/glass/lib/utils.ts --log-level=warning",
+    "dev:css": "tailwindcss -i dev/input.css -o dev/tailwind.css",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",
@@ -23,6 +24,8 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@radix-ui/react-slider": "^1.4.7",
+    "@radix-ui/react-switch": "^1.3.7",
     "@radix-ui/react-tabs": "^1.1.21",
     "clsx": "^2.1.1",
     "motion": "^13.1.1",

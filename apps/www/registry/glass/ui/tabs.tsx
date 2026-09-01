@@ -126,6 +126,8 @@ function TabsTrigger({ className, children, value, ...props }: GlassTabsTriggerP
   if (!ctx) throw new Error('<TabsTrigger> 必须放在 <Tabs> 里');
   const ref = React.useRef<HTMLButtonElement>(null);
   const [selected, setSelected] = React.useState(false);
+  const [hovered, setHovered] = React.useState(false);
+  const [pressed, setPressed] = React.useState(false);
 
   /**
    * 把选中项的几何同步给底座去挖洞。
@@ -165,6 +167,21 @@ function TabsTrigger({ className, children, value, ...props }: GlassTabsTriggerP
     };
   }, [ctx]);
 
+  /**
+   * 按下态在 window 上收尾：指针可能在别的元素上松开（快速滑动切换时常见），
+   * 只听自己的 pointerup 会把 pressed 卡住。
+   */
+  React.useEffect(() => {
+    if (!pressed) return;
+    const release = () => setPressed(false);
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+    return () => {
+      window.removeEventListener('pointerup', release);
+      window.removeEventListener('pointercancel', release);
+    };
+  }, [pressed]);
+
   const indicatorRadius = concentricRadius(ctx.baseRadius, ctx.inset);
 
   /**
@@ -192,8 +209,38 @@ function TabsTrigger({ className, children, value, ...props }: GlassTabsTriggerP
         // 未选中用次级标签色，选中转主要标签色 —— 走 token，不写裸色值
         color: selected ? 'var(--lg-label-primary)' : 'var(--lg-label-secondary)',
       }}
+      onPointerDown={() => setPressed(true)}
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => {
+        setHovered(false);
+        setPressed(false);
+      }}
       {...props}
     >
+      {/*
+        未选中项的 hover 反馈。
+
+        **只有 hover，没有单独的 active。** Radix 在 pointerdown 就完成选中，
+        未选中项因此不存在可见的「按下但仍未选中」阶段 —— 写一段按下加深的
+        分支只会是死代码。按下的反馈由选中后的指示器上扬承担（见下面的 pressed），
+        这与 iOS 上按一下分段控件的观感一致。
+
+        用 motion 的 opacity 而不是 CSS transition：PROJECT_SPEC §15.6 禁止
+        用贝塞尔曲线做状态过渡，一律走 spring 预设。
+        颜色走 fill 家族 token，不写裸色值（§15.4）。
+      */}
+      {!selected ? (
+        <motion.span
+          aria-hidden="true"
+          data-slot="tabs-trigger-highlight"
+          className="absolute inset-0 -z-10 rounded-[inherit]"
+          style={{ background: 'var(--lg-fill-quaternary)' }}
+          initial={false}
+          animate={{ opacity: hovered ? 1 : 0 }}
+          transition={transitionFor('smooth', reducedMotion)}
+        />
+      ) : null}
+
       {selected ? (
         <motion.span
           layoutId="lg-tabs-indicator"
@@ -201,9 +248,15 @@ function TabsTrigger({ className, children, value, ...props }: GlassTabsTriggerP
           className="absolute inset-0 -z-10"
           aria-hidden="true"
         >
+          {/*
+            按下选中项时，指示器的折射 / 高光 / 饱和同时上扬 ——
+            对应 Apple 的 "the knob transforms into Liquid Glass during interaction"
+            （PROJECT_SPEC §2「交互态才点亮」）。
+          */}
           <GlassSurface
             layer="indicator"
             radius={indicatorRadius}
+            pressed={pressed}
             className="h-full w-full"
           />
         </motion.span>

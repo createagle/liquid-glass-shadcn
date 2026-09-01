@@ -11,3 +11,10 @@ packages:
 allowBuilds:
   esbuild: true
   '@parcel/watcher': true
+
+# shadcn CLI 的传递依赖 @modelcontextprotocol/sdk 要求 zod ^3.25.28，
+# 但工作区里被解析成了 3.24.1（peer 冲突），CLI 一启动就报
+# ERR_PACKAGE_PATH_NOT_EXPORTED: './v3'。
+# CI 用的是 `npx shadcn@latest`（独立解析），不受影响；这条只为修本地。
+overrides:
+  zod: ^3.25.76

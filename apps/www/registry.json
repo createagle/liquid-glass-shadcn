@@ -68,6 +68,54 @@
         }
       ],
       "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。指示器的折射只在 Tier A 生效，B/C 会自动降级为各自完整的设计。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "slider",
+      "type": "registry:ui",
+      "title": "Slider",
+      "description": "滑杆。Layer B 磨砂轨道 + 已填充段，Layer I 强玻璃 knob；拖动时折射、色散、高光与缩放同时上扬。尺寸取自 iOS 27 官方设计资源（轨道 250×6、knob 38×24 胶囊）。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-slider",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/slider.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。knob 的折射只在 Tier A 生效，B/C 会自动降级为各自完整的设计。轨道 6pt 够不到 HIG 的 44pt 触控目标，组件已把命中高度撑到 44。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "switch",
+      "type": "registry:ui",
+      "title": "Switch",
+      "description": "开关。Layer B 磨砂轨道按 knob 位置挖洞，让 Layer I 的强玻璃 knob 看到未被模糊过的背景。尺寸取自 iOS 27 官方设计资源（轨道 64×28、knob 38×24 胶囊、行程 22）。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-switch",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/switch.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。⚠️ 尺寸与 PROJECT_SPEC 里旧的 UIKit 度量（51×31、圆形 knob）不同，取的是 iOS 27 实测值，理由见组件顶部的 APPLE REFERENCE 注释。"
     }
   ]
 }

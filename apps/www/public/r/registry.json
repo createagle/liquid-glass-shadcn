@@ -171,6 +171,7 @@
           "lg-base-blur": "14px",
           "lg-base-saturate": "1.7",
           "lg-stroke-strength": "1",
+          "lg-stroke-boost": "1",
           "lg-base-color": "255 255 255",
           "lg-elevated-color": "255 255 255",
           "lg-material-base": "rgb(var(--lg-base-color) / var(--lg-base-alpha))",
@@ -181,9 +182,9 @@
           "lg-content-regular": "rgb(255 255 255 / 0.78)",
           "lg-content-thick": "rgb(255 255 255 / 0.92)",
           "lg-content-blur": "20px",
-          "lg-stroke-top": "rgb(255 255 255 / calc(0.62 * var(--lg-stroke-strength)))",
-          "lg-stroke-bottom": "rgb(0 0 0 / calc(0.1 * var(--lg-stroke-strength)))",
-          "lg-stroke-side": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)))",
+          "lg-stroke-top": "rgb(255 255 255 / calc(0.62 * var(--lg-stroke-strength) * var(--lg-stroke-boost)))",
+          "lg-stroke-bottom": "rgb(0 0 0 / calc(0.1 * var(--lg-stroke-strength) * var(--lg-stroke-boost)))",
+          "lg-stroke-side": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength) * var(--lg-stroke-boost)))",
           "lg-specular-opacity": "0.72",
           "lg-shadow": "0 8px 26px rgb(16 22 40 / 0.18), 0 1px 2px rgb(16 22 40 / 0.1)",
           "lg-glow": "none",
@@ -267,9 +268,9 @@
           "lg-content-thin": "rgb(28 28 30 / 0.66)",
           "lg-content-regular": "rgb(28 28 30 / 0.8)",
           "lg-content-thick": "rgb(28 28 30 / 0.94)",
-          "lg-stroke-top": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)))",
-          "lg-stroke-bottom": "rgb(0 0 0 / calc(0.34 * var(--lg-stroke-strength)))",
-          "lg-stroke-side": "rgb(255 255 255 / calc(0.16 * var(--lg-stroke-strength)))",
+          "lg-stroke-top": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength) * var(--lg-stroke-boost)))",
+          "lg-stroke-bottom": "rgb(0 0 0 / calc(0.34 * var(--lg-stroke-strength) * var(--lg-stroke-boost)))",
+          "lg-stroke-side": "rgb(255 255 255 / calc(0.16 * var(--lg-stroke-strength) * var(--lg-stroke-boost)))",
           "lg-specular-opacity": "1",
           "lg-shadow": "0 1px 1px rgb(0 0 0 / 0.34)",
           "lg-glow": "0 0 24px rgb(255 255 255 / 0.06)",
@@ -315,7 +316,7 @@
       "css": {
         "@layer base": {
           ":root[data-glass-contrast='more']": {
-            "--lg-stroke-strength": "1.8",
+            "--lg-stroke-boost": "1.8",
             "--lg-label-secondary": "rgb(var(--lg-label-tint-light) / 0.85)",
             "--lg-label-tertiary": "rgb(var(--lg-label-tint-light) / 0.6)",
             "--lg-label-quaternary": "rgb(var(--lg-label-tint-light) / 0.4)",
@@ -323,9 +324,6 @@
             "--lg-separator-opaque": "#8e8e93",
             "--lg-refract-scale": "0.5",
             "--lg-disperse-scale": "0.4",
-            "--lg-stroke-top": "rgb(255 255 255 / calc(0.62 * var(--lg-stroke-strength)))",
-            "--lg-stroke-bottom": "rgb(0 0 0 / calc(0.1 * var(--lg-stroke-strength)))",
-            "--lg-stroke-side": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)))",
             "--muted-foreground": "var(--lg-label-secondary)",
             "--border": "var(--lg-separator)",
             "--input": "var(--lg-separator)"
@@ -336,9 +334,6 @@
             "--lg-label-quaternary": "rgb(var(--lg-label-tint-dark) / 0.5)",
             "--lg-separator": "rgb(200 200 210 / 0.7)",
             "--lg-separator-opaque": "#6e6e73",
-            "--lg-stroke-top": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength)))",
-            "--lg-stroke-bottom": "rgb(0 0 0 / calc(0.34 * var(--lg-stroke-strength)))",
-            "--lg-stroke-side": "rgb(255 255 255 / calc(0.16 * var(--lg-stroke-strength)))",
             "--muted-foreground": "var(--lg-label-secondary)",
             "--border": "var(--lg-separator)",
             "--input": "var(--lg-separator)"
@@ -559,6 +554,54 @@
         }
       ],
       "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。指示器的折射只在 Tier A 生效，B/C 会自动降级为各自完整的设计。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "slider",
+      "title": "Slider",
+      "author": "Liquid Glass UI",
+      "description": "滑杆。Layer B 磨砂轨道 + 已填充段，Layer I 强玻璃 knob；拖动时折射、色散、高光与缩放同时上扬。尺寸取自 iOS 27 官方设计资源（轨道 250×6、knob 38×24 胶囊）。",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-slider",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/slider.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。knob 的折射只在 Tier A 生效，B/C 会自动降级为各自完整的设计。轨道 6pt 够不到 HIG 的 44pt 触控目标，组件已把命中高度撑到 44。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "switch",
+      "title": "Switch",
+      "author": "Liquid Glass UI",
+      "description": "开关。Layer B 磨砂轨道按 knob 位置挖洞，让 Layer I 的强玻璃 knob 看到未被模糊过的背景。尺寸取自 iOS 27 官方设计资源（轨道 64×28、knob 38×24 胶囊、行程 22）。",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-switch",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/switch.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。⚠️ 尺寸与 PROJECT_SPEC 里旧的 UIKit 度量（51×31、圆形 knob）不同，取的是 iOS 27 实测值，理由见组件顶部的 APPLE REFERENCE 注释。",
       "type": "registry:ui"
     }
   ]

@@ -12,7 +12,7 @@ const VALUES: Record<string, number[]> = {
   borderWidth: [0.08, 0.14, 0.18, 0.3, 0.5],
   greenOffset: [0, 5, 9, 18],
 };
-const vals = VALUES[vary] ?? VALUES.distortionScale;
+const vals = VALUES[vary] ?? VALUES['distortionScale'] ?? [];
 
 createRoot(document.getElementById('root')!).render(
   <GlassProvider defaultTheme="light" defaultTint={0.34} tier="a">

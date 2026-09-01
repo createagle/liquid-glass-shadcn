@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>Fidelity 对照</title>
+<link rel="stylesheet" href="./tailwind.css">
+<link rel="stylesheet" href="../../../packages/glass-core/src/tokens/theme.css">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f2f2f7;
+       font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;color:#1c1c1e}
+  .sheet{width:840px;padding:20px;background:#f2f2f7}
+  .cols{display:flex;gap:24px;align-items:flex-start}
+  .col{flex:1}
+  .cap{font-size:12px;font-weight:600;letter-spacing:.02em;margin-bottom:8px;color:#3c3c43}
+  .cap span{font-weight:400;color:#8e8e93}
+  .frame{border:1px solid #d1d1d6;border-radius:10px;overflow:hidden;background:#fff}
+  .frame img{display:block;width:370px}
+  .note{margin-top:14px;font-size:11.5px;line-height:1.65;color:#3c3c43;
+        border-left:3px solid #c7c7cc;padding-left:10px}
+  .note b{color:#1c1c1e}
+  h2{font-size:14px;margin:0 0 12px}
+</style></head>
+<body>
+
+<div class="sheet" id="sheet-switch">
+  <h2>Switch —— Apple iOS 27 参考图 vs 本库组件</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="cap">Apple <span>· Design Resources “iOS and iPadOS 27” 渲染图（1×）</span></div>
+      <div class="frame"><img src="../../../docs/research/screenshots/ios27-switch.png" alt=""></div>
+    </div>
+    <div class="col">
+      <div class="cap">本库 <span>· &lt;Switch&gt; Tier A / 默认档位</span></div>
+      <div class="frame"><div id="switch-scene"></div></div>
+    </div>
+  </div>
+  <div class="note">
+    <b>可比的是几何，不是材质。</b>左边是 Figma 静态设计稿 —— Liquid Glass 的折射、色散、
+    镜面高光在 Figma 里画不出来。<b>这一点既是参考图的表现力上限，也意味着我们没有 iOS 真机截图
+    可以校准材质强度。</b><br>
+    已对齐：轨道 64×28、knob 38×24 胶囊、内缩 2、行程 22、开启态绿色轨道、行高 52。<br>
+    <b>已知差异：</b>右侧 knob 略带绿意，左边是纯白。这是<b>刻意的</b> ——
+    静止态保留中等强度的玻璃感（PROJECT_SPEC §2「交互态才点亮」），
+    按下 / 拖动时白色底会淡出、折射与色散拉满。
+    <b>但「静止态该白到什么程度」目前是推定值</b>（<code>--lg-knob-fill</code> = 白 86%），
+    需要真机截图才能定。落影强度同样未经校准。
+  </div>
+</div>
+
+<div class="sheet" id="sheet-slider">
+  <h2>Slider —— Apple iOS 27 参考图 vs 本库组件</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="cap">Apple <span>· Design Resources “iOS and iPadOS 27” 渲染图（1×）</span></div>
+      <div class="frame"><img src="../../../docs/research/screenshots/ios27-sliders.png" alt=""></div>
+    </div>
+    <div class="col">
+      <div class="cap">本库 <span>· &lt;Slider&gt; Tier A / 默认档位</span></div>
+      <div class="frame"><div id="slider-scene"></div></div>
+    </div>
+  </div>
+  <div class="note">
+    已对齐：轨道 250×6、knob 38×24 胶囊、行高 52、已填充段用系统蓝。<br>
+    <b>已知差异：</b>
+    ① 左边两端有 SF Symbols 图标（乌龟/兔子），本库不提供图标，故右边留空；
+    ② 左边轨道上有<b>刻度点（ticks，实测 218×4）</b>，本组件<b>尚未实现</b>；
+    ③ 左边 knob 是纯白实心，右边保留了中等强度的玻璃感（<code>--lg-knob-fill</code> = 白 86%，
+    按下时淡出让折射显形），所以已填充段的蓝色会透出一点 —— 这个程度是<b>推定值，未经真机校准</b>；
+    ④ 左边未填充段是 <code>rgb(228 228 228)</code> 实色，右边是磨砂玻璃 —— 压在白底上会更浅。
+  </div>
+</div>
+
+<script src="./fidelity.js"></script></body></html>

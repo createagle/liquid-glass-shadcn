@@ -37,6 +37,7 @@ const AA_BODY = 4.5;
 const HARNESS = {
   button: pathToFileURL(resolve('apps/www/dev/button-demo.html')).href,
   tabs: pathToFileURL(resolve('apps/www/dev/tabs-demo.html')).href,
+  dialog: pathToFileURL(resolve('apps/www/dev/dialog-demo.html')).href,
 };
 
 /**
@@ -87,6 +88,43 @@ const CASES = [
     label: '[data-slot="button"] > span:last-child',
     press: true,
     gated: false,
+  },
+  {
+    /**
+     * Toggle 的**选中态**用 Layer I，而它是带标签的 —— 与 Button 的按下态
+     * 是同一个陷阱，只不过这里是个持久状态而不是瞬时状态。
+     * 组件里补了材质层，这条就是那层补偿的回归。
+     * 用验证台里 defaultPressed 的那个（第 5 个），不用点。
+     */
+    name: 'Toggle · 选中态（Layer I）',
+    harness: 'button',
+    query: 'only=toggle',
+    target: '[data-slot="toggle"]',
+    nth: 4,
+    label: '[data-slot="toggle"] > span:last-child',
+    press: false,
+    gated: true,
+  },
+  {
+    /** Dialog 的标题与正文压在 elevated 面板上，且面板背后还有一层遮罩。 */
+    name: 'Dialog · 标题',
+    harness: 'dialog',
+    query: 'open=1',
+    target: '[data-slot="dialog-title"]',
+    nth: 0,
+    label: '[data-slot="dialog-title"]',
+    press: false,
+    gated: true,
+  },
+  {
+    name: 'Dialog · 正文（次级标签色）',
+    harness: 'dialog',
+    query: 'open=1',
+    target: '[data-slot="dialog-description"]',
+    nth: 0,
+    label: '[data-slot="dialog-description"]',
+    press: false,
+    gated: true,
   },
   {
     /**

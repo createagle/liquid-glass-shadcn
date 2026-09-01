@@ -40,6 +40,12 @@ for (const theme of ['light', 'dark']) {
       await expect(row(page)).toHaveScreenshot(`button-glass-${theme}-tier${tier}.png`, SHOT);
     });
   }
+  // Toggle 的几何继承自 Button，材质是 Tabs 指示器那一套 —— 各主题一张够了
+  test(`toggle · ${theme}`, async ({ page }) => {
+    await open(page, 'toggle', theme, 'a', 0.34);
+    await expect(row(page)).toHaveScreenshot(`toggle-${theme}.png`, SHOT);
+  });
+
   for (const variant of ['prominent', 'destructive', 'plain']) {
     test(`${variant} · ${theme}`, async ({ page }) => {
       await open(page, variant, theme, 'a', 0.34);

@@ -22,3 +22,4 @@ packages/glass-core/debug/glass-optics.js
 packages/glass-core/debug/react/*.js
 apps/www/dev/*.js
 apps/www/dev/tailwind.css
+apps/www/dev/dialog-shot.png

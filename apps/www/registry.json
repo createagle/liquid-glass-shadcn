@@ -139,6 +139,54 @@
         }
       ],
       "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 Button 的变体名不同 —— 这里用 Apple 的说法：\n  glass（默认，对应 shadcn 的 secondary/outline）\n  prominent（对应 default，SwiftUI 的 .glassProminent）\n  destructive\n  plain（对应 ghost，iOS 的 borderless）\n\n⚠️ plain 按定义没有材质，不提供可读性地板 —— 放在对比度可控的背景上是调用方的责任。\n⚠️ 不支持 asChild：shadcn 会在 base-* style 的工程里把它改写成 Base UI 的 render prop。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "dialog",
+      "type": "registry:ui",
+      "title": "Dialog / Alert",
+      "description": "弹窗。PROJECT_SPEC §2 给 Dialog 的分层只有「面板」——没有 Layer I，所以不折射、不挖洞。尺寸取自 iOS 27 官方设计资源（面板 300 宽、圆角 34、内边距 14、按钮 132×48 间距 8）。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-dialog",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/button"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/dialog.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 Dialog 的两点不同：\n  1) DialogClose **直接渲染本库的 Button**（接受 variant/size 等全部 Button props），\n     而不是 <DialogClose asChild><Button/></DialogClose> —— 本库禁用 asChild。\n  2) DialogTrigger 仍是 Radix 的原生 button，同样因为不能用 asChild；\n     要自定义触发器外观就给它 className，或者自己控制 open。\n\n面板默认 300 宽 = iOS Alert 的实测宽度，不是通用弹窗宽度；用 width 属性改。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "toggle",
+      "type": "registry:ui",
+      "title": "Toggle",
+      "description": "双态按钮。未选中无材质，选中升级为 Layer I 强玻璃并补回材质以保住可读性地板。几何继承自 Button（本组件没有独立的 Apple 参考图，这一点在源码里写明了）。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/toggle.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n⚠️ 这是本库唯一不走 Radix 的交互组件：按下要做 spring 缩放就得让 motion 拥有 button 元素，\n而把 Radix 的 Root 换成 motion 元素只能靠 asChild（本库禁用）。\nprops 名与 @radix-ui/react-toggle 完全一致（pressed / defaultPressed / onPressedChange），\n输出的 aria-pressed 与 data-state 也一致，迁移不用改调用处。"
     }
   ]
 }

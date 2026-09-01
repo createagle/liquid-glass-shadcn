@@ -175,6 +175,22 @@
   --lg-disperse-scale: 0.9; /* light 下色散偏冷 */
 
   /**
+   * 模态遮罩。
+   *
+   * 35% 这个数字是 `[官方]`：
+   * > "If the underlying content is bright, consider adding a dark dimming
+   * >  layer of 35% opacity."
+   * —— https://developer.apple.com/design/human-interface-guidelines/materials
+   *
+   * ⚠️ 但**那句话说的是 `clear` 玻璃变体的调暗层，不是模态遮罩**。
+   * 把它挪用到 Dialog 的遮罩上是本库的延伸，数值有出处、用法是推定的。
+   *
+   * 明暗两套同值。HIG 另有一句「背后内容足够暗时可以不加调暗层」，
+   * 但模态需要的是**层级分隔**而不只是压暗，暗色下去掉遮罩会让面板浮不起来。
+   */
+  --lg-scrim: rgb(0 0 0 / 0.35);
+
+  /**
    * 按下时压在**实心填充**控件上的压暗层。
    *
    * 明暗两套用同一个值，且刻意都是「黑」：实心按钮的标签是白的，

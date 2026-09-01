@@ -9,7 +9,9 @@
     "paths": {
       // 与 dev:build 的 esbuild --alias 保持一致
       "@glass/core": ["../../packages/glass-core/src/index.ts"],
-      "@/lib/utils": ["./registry/glass/lib/utils.ts"]
+      "@/lib/utils": ["./registry/glass/lib/utils.ts"],
+      // 组件之间可以互相引用（shadcn 的常规做法，靠 registryDependencies 传递）
+      "@/components/ui/*": ["./registry/glass/ui/*"]
     }
   },
   "include": ["registry/**/*.ts", "registry/**/*.tsx", "dev/**/*.tsx"],

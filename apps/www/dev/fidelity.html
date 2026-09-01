@@ -20,6 +20,9 @@
      max-width:none 不能省 —— Tailwind preflight 的 img{max-width:100%}
      会把图压回容器宽度，裁出来就是一片空白（踩过）。 */
   .frame.crop{width:404px;height:86px;overflow:hidden;position:relative}
+  /* Alert 面板：画布 450 宽下位于 (85,244)，尺寸 300×307（元数据 + 像素复核） */
+  .frame.crop-alert{width:302px;height:309px;overflow:hidden;position:relative}
+  .frame.crop-alert img{width:450px;max-width:none;position:absolute;left:-85px;top:-244px}
   .frame.crop img{width:450px;max-width:none;position:absolute;left:-24px;top:-812px}
   .note{margin-top:14px;font-size:11.5px;line-height:1.65;color:#3c3c43;
         border-left:3px solid #c7c7cc;padding-left:10px}
@@ -99,6 +102,32 @@
     ② 字体不同（SF Pro vs 系统回退字体），玻璃按钮的宽度因此差约 3px；
     ③ 左图是 Figma 静态稿，画不出折射 —— 本库的玻璃按钮在**按下时**才升级为
     Layer I 真玻璃，静态对照图里看不到那一态。
+  </div>
+</div>
+
+<div class="sheet" id="sheet-dialog">
+  <h2>Dialog / Alert —— Apple iOS 27 参考图 vs 本库组件</h2>
+  <div class="cols">
+    <div class="col">
+      <div class="cap">Apple <span>· Alert（节点 12740:24495），裁到面板的 300×307</span></div>
+      <div class="frame crop-alert"><img src="../../../docs/research/screenshots/ios27-alert.png" alt=""></div>
+    </div>
+    <div class="col">
+      <div class="cap">本库 <span>· &lt;Dialog&gt; 面板，Tier A / 默认档位（真实组件的截图）</span></div>
+      <div class="frame" style="width:302px"><img src="./dialog-shot.png" alt="" style="width:300px"></div>
+    </div>
+  </div>
+  <div class="note">
+    右侧是把**真实运行的组件**单独截出来再引进本页的（弹窗是 portal + fixed，塞不进栏里）——
+    不是照着尺寸另画一遍，否则会和组件悄悄漂移。<br>
+    已对齐：面板 300 宽、圆角 34（由参考图边缘轮廓拟合，34 个采样点、均方误差 0.35）、
+    内边距 14、正文块再内缩 8、标题与正文均 17/22、按钮 132×48 间距 8、
+    <b>文字左对齐</b>（iOS 26+ 不再像经典 Alert 那样居中）。<br>
+    <b>已知差异：</b>
+    ① <b>高度不同是因为参考图那一版带一个 Text Field</b>（面板 307 高里有 123 是输入框），
+    本库还没有 Input 组件，演示里没放 —— 可比的是宽度、圆角、内边距、排版与按钮，不是总高；
+    ② 参考图是 Figma 静态稿，面板材质是位图近似；本库是真的 backdrop-filter；
+    ③ 实心按钮的蓝色是 AA 解出来的 <code>#0071eb</code>，不是真实 systemBlue（见 Button 那张的说明）。
   </div>
 </div>
 

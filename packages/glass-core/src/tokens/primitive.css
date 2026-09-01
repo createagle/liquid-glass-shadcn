@@ -31,13 +31,17 @@
   /* ── 折射 / 色散阶梯 ───────────────────────────────────────────────
      来自 Phase 1 视觉标定（docs/research/optics-web.md §3.7）。
      [实测]，非 [官方] —— 标定时没有 iOS 参考截图。 */
-  --lg-refract-1: -110;
-  --lg-refract-2: -180;
-  --lg-refract-3: -260;
+  /* 折射强度：**短边的比例**，不是像素。绝对值无法同时服务
+     24px 的 knob 与 390px 的 sheet —— 详见 filter/use-glass-filter.ts
+     的 REFRACT_RATIO 注释与 screenshots/refraction-ab.png 的对照。 */
+  --lg-refract-1: -0.45;
+  --lg-refract-2: -0.7;
+  --lg-refract-3: -1;
 
-  --lg-disperse-1: 19;
-  --lg-disperse-2: 38;
-  --lg-disperse-3: 58;
+  /* 色散：相对 |折射量| 的比例（取蓝通道偏移，绿通道约为其 0.4） */
+  --lg-disperse-1: 0.16;
+  --lg-disperse-2: 0.32;
+  --lg-disperse-3: 0.48;
 
   /* ── 圆角 ──────────────────────────────────────────────────────────
      --lg-radius-continuous 由 shape/concentric.ts 与 `corner-shape` 配合使用 */

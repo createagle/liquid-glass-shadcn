@@ -60,11 +60,39 @@ export interface UseGlassFilterResult<T extends HTMLElement> {
   throttled: boolean;
 }
 
-const REFRACT_STEPS = { 1: -110, 2: -180, 3: -260 } as const;
-const DISPERSE_STEPS = {
-  1: { greenOffset: 9, blueOffset: 19 },
-  2: { greenOffset: 18, blueOffset: 38 },
-  3: { greenOffset: 28, blueOffset: 58 },
+/**
+ * 折射强度档位 —— **短边的比例**，不是绝对像素。
+ *
+ * ⚠️ 这里原先是绝对值（-110 / -180 / -260），是 Phase 1 在调试页上按
+ * 117×45 这一个尺寸标定出来的。做 Tabs 时暴露了问题：
+ *
+ *   85×54 的指示器上，-180 意味着边缘位移 ±90px —— **超过元素本身的宽度**。
+ *   边缘区域于是采样到完全无关的远处内容，整体糊成一团不贴合胶囊的团块，
+ *   并在边界留下一道生硬的深色闭合曲线。
+ *
+ * 绝对值从原理上就不成立：同一套参数要同时服务 24px 的 Slider knob 与
+ * 390px 宽的 Sheet，只有比例才可能两头都对。
+ *
+ * 校准依据：`docs/research/screenshots/refraction-ab.png` 的 A/B 对照，
+ * 在 85×54 上比例 0.7 让条纹在边缘渐进弯曲、中心近乎不失真，
+ * 且折射区域正确填满胶囊。原 -180 ÷ 54 ≈ 3.3，高了近 5 倍。
+ */
+const REFRACT_RATIO = { 1: -0.45, 2: -0.7, 3: -1.0 } as const;
+
+/**
+ * 色散档位 —— 相对 |distortionScale| 的比例。
+ *
+ * 同样从绝对值改为比例：色散偏移量是加在位移量上的，位移随尺寸缩放了，
+ * 偏移量不跟着缩放就会在小元素上变成整片彩虹。
+ *
+ * 原绝对值（green 18 / blue 38）在 85×54 上实测是**整片彩虹**而非边缘彩边，
+ * A/B 对照里降到 green 5 / blue 12 才读起来像玻璃 —— 即 |scale|≈37.8 的
+ * 0.13 与 0.32。
+ */
+const DISPERSE_RATIO = {
+  1: { green: 0.065, blue: 0.16 },
+  2: { green: 0.13, blue: 0.32 },
+  3: { green: 0.2, blue: 0.48 },
 } as const;
 
 export function useGlassFilter<T extends HTMLElement = HTMLElement>(
@@ -115,13 +143,16 @@ export function useGlassFilter<T extends HTMLElement = HTMLElement>(
 
   const refraction = useMemo<RefractionOptions | null>(() => {
     if (disabled || !measured) return null;
+    // 位移与色散都按**短边**缩放 —— 理由见 REFRACT_RATIO 的注释
+    const scale = REFRACT_RATIO[intensity] * Math.min(measured.w, measured.h);
     return {
       width: measured.w,
       height: measured.h,
       radius,
-      distortionScale: REFRACT_STEPS[intensity],
+      distortionScale: scale,
       redOffset: REFRACTION_DEFAULTS.redOffset,
-      ...DISPERSE_STEPS[dispersion],
+      greenOffset: Math.abs(scale) * DISPERSE_RATIO[dispersion].green,
+      blueOffset: Math.abs(scale) * DISPERSE_RATIO[dispersion].blue,
       ...overrides,
     };
   }, [disabled, measured, radius, intensity, dispersion, overrides]);

@@ -30,6 +30,11 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
+      # 静态规则，秒级失败 —— 抓的是「本机 typecheck 看不出来、
+      # 装到别人工程里才炸」的那类问题，不用等冒烟测试跑完
+      - name: registry 组件静态检查
+        run: node scripts/registry-lint.mjs
+
       - name: 安装 Chromium
         run: npx playwright install --with-deps chromium
 

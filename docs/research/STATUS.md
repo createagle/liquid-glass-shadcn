@@ -266,6 +266,37 @@ GlassProvider 会按材质档位把同一个变量以**内联样式**写到 `<ht
 knob 从关闭位弹到开启位。改为直接从 props 推初值（`checked ?? defaultChecked ?? false`）。
 测试量到的是加载 150ms 后 knob 停在 x=18 而不是 24。
 
+### 🔴 冒烟测试抓到的第二个真问题：`asChild` 在别人工程里会被改写坏
+
+第一次推上去时 **Registry 安装冒烟测试红了**，干净 Next 工程的 `next build` 报：
+
+```
+src/components/ui/switch.tsx(267,30): error TS2322:
+  Property 'render' does not exist on type '… SwitchThumbProps …'
+```
+
+原因在 shadcn CLI 里（`dist/chunk-*.js`）：
+
+```js
+if (!config.style?.startsWith("base-")) return sourceFile;
+// …把 <X asChild><Y/></X> 改写成 <X render={<Y/>} />
+```
+
+目标工程的 style 以 `base-` 开头时（**`shadcn init -d` 现在的默认值**），
+`asChild` 会被自动改写成 Base UI 的 `render` prop。而本库组件用的是
+`@radix-ui/react-*`，改写后直接类型不通过。
+
+**这一类问题本机 100% 发现不了** —— 本地 typecheck 查的是改写*前*的源码。
+
+处置两条：
+1. Switch 去掉 `asChild`，把 motion 包到外层、Thumb 放里层，效果一样。
+2. 新增 `scripts/registry-lint.mjs`，静态禁掉 registry 组件里的 `asChild`，
+   接进「组件行为回归」workflow（秒级失败，不用等冒烟测试跑几分钟）。
+   规则文件里写明了这条规则是怎么来的。
+
+⚠️ 这只堵住了**已知的**那一个改写。shadcn 的 add 还有别的 transform
+（RSC 指令、import 重写等），**能覆盖它们的只有冒烟测试本身**。
+
 ### 一个会坑到使用者的陷阱
 
 `.lg-surface` 自己声明了 `position: relative`。Tailwind 的 `absolute` 能不能盖住它，

@@ -263,20 +263,29 @@ function Switch({
         />
       </GlassSurface>
 
-      {/* Layer I —— knob。这里才是真正的 Liquid Glass。 */}
-      <SwitchPrimitive.Thumb asChild>
-        <motion.span
-          className="absolute block"
-          style={{ left: inset, top: inset, width: knobW, height: knobH }}
-          initial={false}
-          animate={{ x: checked ? travel : 0, scale }}
-          transition={transitionFor('snappy', reducedMotion)}
-          onUpdate={(latest) => {
-            const raw = latest['x'];
-            const x = typeof raw === 'number' ? raw : Number.parseFloat(String(raw));
-            if (Number.isFinite(x)) syncPunch(x);
-          }}
-        >
+      {/*
+        Layer I —— knob。这里才是真正的 Liquid Glass。
+
+        ⚠️ **刻意不用 `asChild`。** shadcn 的 add 在目标工程的 style 以 `base-`
+        开头时（`shadcn init -d` 现在的默认值），会把 `<X asChild><Y/></X>` 改写成
+        `<X render={<Y/>} />` —— 那是 Base UI 的 API，而本组件用的是
+        `@radix-ui/react-switch`，装到别人工程里会直接类型报错。
+        （registry 冒烟测试在干净工程里抓到过一次，见 STATUS.md §0.3。）
+        所以把 motion 包在外层、Thumb 放里层，效果一样且不触发那个改写。
+      */}
+      <motion.span
+        className="absolute block"
+        style={{ left: inset, top: inset, width: knobW, height: knobH }}
+        initial={false}
+        animate={{ x: checked ? travel : 0, scale }}
+        transition={transitionFor('snappy', reducedMotion)}
+        onUpdate={(latest) => {
+          const raw = latest['x'];
+          const x = typeof raw === 'number' ? raw : Number.parseFloat(String(raw));
+          if (Number.isFinite(x)) syncPunch(x);
+        }}
+      >
+        <SwitchPrimitive.Thumb data-slot="switch-thumb" className="block h-full w-full">
           <GlassSurface
             layer="indicator"
             radius={knobRadius}
@@ -294,8 +303,8 @@ function Switch({
               transition={transitionFor('snappy', reducedMotion)}
             />
           </GlassSurface>
-        </motion.span>
-      </SwitchPrimitive.Thumb>
+        </SwitchPrimitive.Thumb>
+      </motion.span>
     </SwitchPrimitive.Root>
   );
 }

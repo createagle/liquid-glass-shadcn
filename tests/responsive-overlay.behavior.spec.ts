@@ -135,12 +135,44 @@ test.describe('无障碍 —— 换了渲染方式也不许退化', () => {
     for (const viewport of [DESKTOP, COMPACT]) {
       await withContext(browser, { viewport }, async (page) => {
         await open(page, { open: false });
-        const trigger = page.getByRole('button', { name: '打开自适应浮层' });
-        await expect(trigger).toHaveAttribute('aria-expanded', 'false');
-        await trigger.click();
-        await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        /**
+         * ⚠️ 打开之后**必须换成 DOM 选择器**，不能继续用 getByRole。
+         *
+         * 移动路径的 Drawer 是**模态**的：Radix Dialog 打开时会把页面其余部分
+         * 从无障碍树里摘掉（aria-hidden），触发器于是 `getByRole` 找不到了。
+         * 桌面路径的 Popover 默认非模态，触发器还在树里。
+         *
+         * 这**不是 bug，两边都对** —— 但它意味着这条断言在两条路径下写法不能一样。
+         * 第一版用 getByRole 写的，本机跑绿、CI 上红：本机在 Radix 挂上
+         * aria-hidden 之前就断言完了。差异本身单独测（见下一条）。
+         */
+        const byRole = page.getByRole('button', { name: '打开自适应浮层' });
+        const byDom = page.locator('[data-slot="responsive-overlay-trigger"]');
+        await expect(byRole).toHaveAttribute('aria-expanded', 'false');
+        await byRole.click();
+        await expect(byDom).toHaveAttribute('aria-expanded', 'true');
       });
     }
+  });
+
+  test('模态性差异是真实的：Drawer 打开时把背景摘出无障碍树，Popover 不摘', async ({
+    browser,
+  }) => {
+    /**
+     * 这条把上一条里那个「写法不能一样」的原因钉住。
+     * 两边都符合各自的语义：底部 Drawer 是模态的（iOS 的 action sheet 也是），
+     * 锚定浮层不是。**等价的是「名称、Esc、焦点还原」，不是模态性。**
+     */
+    const inTree = async (viewport: { width: number; height: number }) => {
+      let visible = false;
+      await withContext(browser, { viewport }, async (page) => {
+        await open(page);
+        visible = (await page.getByRole('button', { name: '打开自适应浮层' }).count()) > 0;
+      });
+      return visible;
+    };
+    expect(await inTree(DESKTOP), '桌面：非模态，触发器仍在无障碍树里').toBe(true);
+    expect(await inTree(COMPACT), '移动：模态，触发器被摘出无障碍树').toBe(false);
   });
 
   test('触发器带 data-slot，两条路径下都在', async ({ browser }) => {

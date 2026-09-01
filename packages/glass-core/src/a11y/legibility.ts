@@ -219,13 +219,27 @@ export const AA_FLOOR_SECONDARY: Record<'light' | 'dark', number> = {
 export type LegibilityMode = 'guaranteed' | 'adaptive' | 'off';
 
 /**
- * 计算地板时用的目标对比度 —— 比 AA 的 4.5 略高。
+ * 计算地板时用的目标对比度。**这个值是实测标定的，不是推导出来的。**
  *
- * 留这个余量是因为**理论值与渲染值之间有取整误差**：地板按连续数学解出来
- * 恰好等于 4.5，但浏览器把合成结果量化成整数像素后会掉到 4.47。
- * 实测差距约 0.7%，取 4.6（约 2% 余量）足够吸收，且不会明显牺牲通透度。
+ * 本文件的模型是纯 alpha 合成：`C = a·F + (1-a)·B`。真实渲染比模型乐观，
+ * 差距来自模型没有涵盖的两件事：
+ *
+ *   1. `.lg-surface` 的 inset 描边高光（顶边偏白）会提亮靠近边缘的像素
+ *   2. `backdrop-filter: blur()` 的**平台差异** —— 这一条影响最大
+ *
+ * 第 2 条是在 CI 第一次真跑时暴露的：本机（Windows，有 GPU）最差组合是
+ * `tiera/white`，Linux CI（headless，软件光栅）却是 `tierb/checker`，
+ * 同一测点从 4.57 掉到 4.01。高频棋盘格在软件光栅下没被 blur 抹平那么多，
+ * 于是背景的亮度跨度更大。
+ *
+ * **CI 那个才是要认的数**：没有 GPU 加速的真实用户会遇到同样的渲染。
+ * 实测比值约 0.82（3.78 / 4.6），故取 `4.5 / 0.82 ≈ 5.5`，上浮到 5.6。
+ *
+ * ⚠️ 改动本文件的模型、描边、或档位表之后，**必须重新标定这个值** ——
+ * 办法是让 CI 跑一遍 `contrast-audit.mjs`，看最差测点离 4.5 还差多少。
+ * 本机跑出来的数偏乐观，不能作为标定依据。
  */
-export const AA_TARGET_WITH_MARGIN = 4.6;
+export const AA_TARGET_WITH_MARGIN = 5.6;
 
 export function resolveLegibleAlpha(
   rawAlpha: number,
@@ -308,7 +322,15 @@ export function resolveLegibleAlpha(
  */
 export function worstBaseUnderFloor(scheme: 'light' | 'dark'): [number, number, number] {
   const t = TOKEN_COLORS[scheme];
-  const floor = Math.max(AA_FLOOR_PRIMARY[scheme], AA_FLOOR_SECONDARY[scheme]);
+  /**
+   * ⚠️ 必须用 `resolveLegibleAlpha` 实际会给出的地板，不能用
+   * `AA_FLOOR_PRIMARY` / `AA_FLOOR_SECONDARY` —— 那两个常量是按裸 4.5 解的，
+   * 运行时用的却是带 `AA_TARGET_WITH_MARGIN` 的版本，比它们高。
+   *
+   * 用错会高估最不利底座的亮度，进而把着色标签推导到「怎么调都不够」：
+   * 曾经导致暗色主题下 9 个系统色全部塌成纯白，且仍达不到目标。
+   */
+  const floor = resolveLegibleAlpha(0, scheme, 'guaranteed', null);
   const extreme: readonly [number, number, number] =
     scheme === 'light' ? [0, 0, 0] : [255, 255, 255];
   return compositeOver(t.base, extreme, floor);

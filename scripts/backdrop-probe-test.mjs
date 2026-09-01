@@ -22,7 +22,13 @@ import { resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
 
-/** 期望：clear = 维持原始档位；floor = 抬到地板；null = 测不出并回落 */
+/**
+ * 期望：
+ *   clear    维持原始档位（背景本来就安全）
+ *   partial  抬了，但**明显低于**完整地板 —— 自适应真正的价值所在
+ *   floor    抬到完整地板（背景最不利）
+ *   null     测不出，回落 guaranteed
+ */
 const CASES = [
   ['纯黑背景 + 暗色主题', '#000', 'dark', 'clear'],
   ['纯白背景 + 暗色主题', '#fff', 'dark', 'floor'],
@@ -30,11 +36,12 @@ const CASES = [
   ['纯黑背景 + 亮色主题', '#000', 'light', 'floor'],
   ['深灰 #1c1c1e + 暗色主题', '#1c1c1e', 'dark', 'clear'],
   /**
-   * 中灰在暗色主题下**是有利背景**，不需要抬 alpha —— 这条反直觉，故留作用例。
-   * 0.22 的暗底座把 128 压到 104，白字 5.55:1、次级 4.63:1，都过 4.6 的目标。
-   * 「最不利」是纯白（把底座顶到 210），不是中灰。
+   * 中灰在暗色主题下只需要**很小**的补偿：0.22 的暗底座把 128 压到 104，
+   * 离目标只差一点，抬到 0.337 就够，远低于 0.696 的完整地板。
+   * 这条用例守的是「只抬到刚好够用」——
+   * 如果哪天实现退化成「不安全就一律拉满」，它会立刻失败。
    */
-  ['中灰 #808080 + 暗色主题', '#808080', 'dark', 'clear'],
+  ['中灰 #808080 + 暗色主题', '#808080', 'dark', 'partial'],
   ['半透明层叠 + 暗色主题', 'rgba(255,255,255,.5)', 'dark', 'floor'],
   ['渐变（测不出）+ 暗色主题', 'linear-gradient(#000,#fff)', 'dark', 'null'],
 ];
@@ -111,8 +118,17 @@ async function main() {
       ok = expect === 'null';
     } else {
       const clear = Math.abs(r.adaptive - r.raw) < 1e-6;
+      const atFloor = Math.abs(r.adaptive - r.guaranteed) < 1e-6;
       got = `alpha ${r.adaptive.toFixed(3)}（原始 ${r.raw}，地板 ${r.guaranteed.toFixed(3)}）`;
-      ok = expect === 'clear' ? clear : expect === 'floor' ? r.adaptive > r.raw + 0.05 : false;
+      ok =
+        expect === 'clear'
+          ? clear
+          : expect === 'floor'
+            ? atFloor
+            : // partial：确实抬了，但离完整地板还差得远（留 0.1 的判别余量）
+              expect === 'partial'
+              ? !clear && r.adaptive < r.guaranteed - 0.1
+              : false;
     }
     if (!ok) fails++;
     console.log(`  ${ok ? '✓' : '✗'} ${name.padEnd(26)} → ${got}`);

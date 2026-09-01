@@ -7,9 +7,10 @@
  *
  *   node scripts/on-glass-colors.mjs          校验（漂移则退出码 1）
  *   node scripts/on-glass-colors.mjs --print  打印当前应有的值
+ *   node scripts/on-glass-colors.mjs --write  直接把推导结果写回 semantic.css
  */
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   deriveOnGlassLabel,
@@ -62,6 +63,34 @@ function readOnGlass() {
 
 const system = readSystemColors();
 const printOnly = process.argv.includes('--print');
+const write = process.argv.includes('--write');
+
+/**
+ * 把推导结果写回 semantic.css。
+ * 亮/暗两块各有一份同名 token，按出现顺序替换（亮在前、暗在后）。
+ */
+if (write) {
+  let css = readFileSync(CSS, 'utf8');
+  let n = 0;
+  for (const name of NAMES) {
+    const wanted = ['light', 'dark'].map((scheme) =>
+      rgbToHex(deriveOnGlassLabel(hexToRgb(system[scheme][name]), scheme)),
+    );
+    let seen = 0;
+    css = css.replace(
+      new RegExp(`(--lg-on-glass-${name}:\\s*)#[0-9a-fA-F]{6}`, 'g'),
+      (_m, head) => {
+        const v = wanted[seen++] ?? wanted[wanted.length - 1];
+        n++;
+        return head + v;
+      },
+    );
+    if (seen !== 2) throw new Error(`--lg-on-glass-${name} 应当出现 2 次，实际 ${seen} 次`);
+  }
+  writeFileSync(CSS, css, 'utf8');
+  console.log(`已写回 ${n} 个 token 到 semantic.css`);
+  process.exit(0);
+}
 
 let drift = 0;
 for (const scheme of ['light', 'dark']) {
@@ -94,7 +123,7 @@ for (const scheme of ['light', 'dark']) {
 if (printOnly) process.exit(0);
 if (drift) {
   console.log(`✗ ${drift} 个 token 与推导结果不一致。`);
-  console.log('  跑 node scripts/on-glass-colors.mjs --print 拿到应有的值，更新 semantic.css。');
+  console.log('  跑 node scripts/on-glass-colors.mjs --write 写回 semantic.css，然后提交。');
   process.exit(1);
 }
 console.log('✓ 全部与推导一致');

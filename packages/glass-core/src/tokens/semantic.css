@@ -45,15 +45,15 @@
      > "To emphasize primary actions, apply color to the **background**
      >  rather than to symbols or text."
      ────────────────────────────────────────────────────────────────── */
-  --lg-on-glass-blue: #003b7b;
-  --lg-on-glass-green: #12451f;
-  --lg-on-glass-red: #741b16;
-  --lg-on-glass-orange: #593400;
-  --lg-on-glass-yellow: #4a3b00;
-  --lg-on-glass-pink: #761527;
-  --lg-on-glass-purple: #55286c;
-  --lg-on-glass-indigo: #34337e;
-  --lg-on-glass-teal: #12424b;
+  --lg-on-glass-blue: #003c7e;
+  --lg-on-glass-green: #134720;
+  --lg-on-glass-red: #771c16;
+  --lg-on-glass-orange: #5b3500;
+  --lg-on-glass-yellow: #4b3c00;
+  --lg-on-glass-pink: #791528;
+  --lg-on-glass-purple: #58296f;
+  --lg-on-glass-indigo: #353481;
+  --lg-on-glass-teal: #13444d;
 
   --lg-gray-1: var(--lg-gray-1-light);
   --lg-gray-2: var(--lg-gray-2-light);
@@ -105,7 +105,7 @@
      content layer to help create visual distinction."
      内容型组件（Card / Table / List / Accordion）用这一组，**不用 Liquid Glass**。
      见 docs/research/apple-liquid-glass.md §7。 */
-  --lg-content-ultrathin: rgb(255 255 255 / 0.47); /* AA 地板 0.4614（含渲染余量），见 a11y/legibility.ts */
+  --lg-content-ultrathin: rgb(255 255 255 / 0.52); /* AA 地板 0.5169，见 a11y/legibility.ts */
   --lg-content-thin: rgb(255 255 255 / 0.62);
   --lg-content-regular: rgb(255 255 255 / 0.78);
   --lg-content-thick: rgb(255 255 255 / 0.92);
@@ -147,15 +147,15 @@
   /* 玻璃上的着色文字（暗色）。同样由 deriveOnGlassLabel() 解出。
      ⚠️ 必须在 .dark 块里重新声明一整套 —— CSS 自定义属性的 var() 在
      **声明处**求值，只在 :root 声明会让暗色沿用亮色的值。 */
-  --lg-on-glass-blue: #dfefff;
-  --lg-on-glass-green: #d3f5dc;
-  --lg-on-glass-red: #ffe8e6;
-  --lg-on-glass-orange: #ffeaca;
-  --lg-on-glass-yellow: #ffee98;
-  --lg-on-glass-pink: #ffe7ec;
-  --lg-on-glass-purple: #f6e8fd;
-  --lg-on-glass-indigo: #ececfc;
-  --lg-on-glass-teal: #d4f3f8;
+  --lg-on-glass-blue: #daedff;
+  --lg-on-glass-green: #cdf4d7;
+  --lg-on-glass-red: #ffe4e3;
+  --lg-on-glass-orange: #ffe7c3;
+  --lg-on-glass-yellow: #ffeb88;
+  --lg-on-glass-pink: #ffe4e9;
+  --lg-on-glass-purple: #f5e5fd;
+  --lg-on-glass-indigo: #e9e9fc;
+  --lg-on-glass-teal: #cdf1f7;
 
   --lg-gray-1: var(--lg-gray-1-dark);
   --lg-gray-2: var(--lg-gray-2-dark);
@@ -188,7 +188,7 @@
   --lg-base-color: 20 20 24;
   --lg-elevated-color: 32 32 38;
 
-  --lg-content-ultrathin: rgb(28 28 30 / 0.62); /* AA 地板 0.6078（含渲染余量），见 a11y/legibility.ts */
+  --lg-content-ultrathin: rgb(28 28 30 / 0.67); /* AA 地板 0.6671，见 a11y/legibility.ts */
   --lg-content-thin: rgb(28 28 30 / 0.66);
   --lg-content-regular: rgb(28 28 30 / 0.8);
   --lg-content-thick: rgb(28 28 30 / 0.94);

@@ -26,7 +26,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "debug:build": "esbuild src/debug-entry.ts --bundle --format=iife --global-name=GlassOptics --outfile=debug/glass-optics.js",
     "debug": "npm run debug:build && echo 打开 packages/glass-core/debug/index.html",
-    "compat:build": "tailwindcss -i debug/shadcn-compat/input.css -o debug/shadcn-compat/tailwind.css"
+    "compat:build": "tailwindcss -i debug/shadcn-compat/input.css -o debug/shadcn-compat/tailwind.css",
+    "debug:react": "esbuild debug/react/punch-demo.tsx --bundle --format=iife --outfile=debug/react/punch-demo.js --jsx=automatic --log-level=error"
   },
   "peerDependencies": {
     "react": "^19.0.0",
@@ -41,10 +42,13 @@
     }
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.3.0",
     "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.2.5",
     "esbuild": "^0.25.0",
-    "typescript": "^5.7.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.0",
-    "@tailwindcss/cli": "^4.3.0"
+    "typescript": "^5.7.0"
   }
 }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties, type Rea
 import { useGlassFilter } from '../filter/use-glass-filter.js';
 import { useGlassOptional } from '../provider/glass-provider.js';
 import { useAdaptiveAlpha } from '../a11y/use-adaptive-alpha.js';
+import { punchClipPath, isPunchValid, type GlassPunch } from './punch.js';
 import type { RefractionOptions } from '../filter/filter-factory.js';
 
 /**
@@ -42,6 +43,13 @@ export interface GlassSurfaceProps {
   pressed?: boolean;
   /** 让原语自己监听指针按下，适合简单场景 */
   interactive?: boolean;
+  /**
+   * 在底座上挖一个洞，让洞内的指示器看到**未被底座模糊过**的背景。
+   *
+   * 只对 `layer="base" | "elevated"` 有意义。坐标相对底座左上角。
+   * 传 `null` 或宽高为 0 时不挖。原理与选型见 `surface/punch.ts`。
+   */
+  punch?: GlassPunch | null;
   /** 底层滤镜参数直通，调试用 */
   overrides?: Partial<RefractionOptions>;
   as?: 'div' | 'span';
@@ -58,6 +66,7 @@ export function GlassSurface({
   dispersion = 2,
   pressed,
   interactive = false,
+  punch = null,
   overrides,
   as: Tag = 'div',
 }: GlassSurfaceProps) {
@@ -134,6 +143,37 @@ export function GlassSurface({
     };
   }, [interactive, selfPressed]);
 
+  /**
+   * 挖洞需要底座**自身的像素尺寸** —— `clip-path: path()` 只接受绝对数值，
+   * 不支持百分比，所以必须实测。
+   */
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  const punchActive = isPunchValid(punch) && layer !== 'indicator';
+
+  useEffect(() => {
+    if (!punchActive) {
+      setSize(null);
+      return;
+    }
+    const el = ref.current;
+    if (!el) return;
+    const read = () => {
+      const r = el.getBoundingClientRect();
+      setSize((prev) =>
+        prev && Math.abs(prev.w - r.width) < 0.5 && Math.abs(prev.h - r.height) < 0.5
+          ? prev
+          : { w: r.width, h: r.height },
+      );
+    };
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [punchActive, ref]);
+
+  const clipPath =
+    punchActive && size ? punchClipPath(size.w, size.h, punch) : undefined;
+
   const mergedStyle = {
     ...style,
     '--lg-surface-radius': `${radius}px`,
@@ -155,9 +195,19 @@ export function GlassSurface({
       data-pressed={isPressed ? 'true' : undefined}
       data-refraction={refractionOff ? 'off' : undefined}
       data-legibility={adaptiveAlpha !== null ? 'adaptive' : undefined}
+      data-punched={clipPath ? 'true' : undefined}
       style={mergedStyle}
       onPointerDown={interactive ? onPointerDown : undefined}
     >
+      {/*
+        挖洞时把模糊从底座本体挪到这一层，再用 clip-path 挖穿。
+        必须是独立子层：直接在本体上挖会把**材质底色也一起挖掉**
+        （实测见 debug/holepunch-probe.html 的用例 B），
+        而 SPEC 要的是底色连续、只有模糊被挖穿。
+      */}
+      {clipPath ? (
+        <span aria-hidden="true" className="lg-punch-layer" style={{ clipPath }} />
+      ) : null}
       {children}
     </Tag>
   );

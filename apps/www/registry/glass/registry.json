@@ -381,6 +381,24 @@
           "[data-glass-tier='a'] .lg-surface[data-layer='indicator']": {
             "backdrop-filter": "brightness(1.06) saturate(1.22)"
           },
+          "[data-glass-tier='a'] .lg-surface[data-punched='true'], [data-glass-tier='b'] .lg-surface[data-punched='true']": {
+            "backdrop-filter": "none",
+            "-webkit-backdrop-filter": "none"
+          },
+          ".lg-punch-layer": {
+            "position": "absolute",
+            "inset": "0",
+            "border-radius": "inherit",
+            "pointer-events": "none",
+            "z-index": "0"
+          },
+          "[data-glass-tier='a'] .lg-surface[data-punched='true'] > .lg-punch-layer, [data-glass-tier='b'] .lg-surface[data-punched='true'] > .lg-punch-layer": {
+            "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
+            "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"
+          },
+          "[data-glass-tier='c'] .lg-punch-layer": {
+            "display": "none"
+          },
           "[data-glass-tier='b'] .lg-surface[data-layer='base'], [data-glass-tier='b'] .lg-surface[data-layer='elevated']": {
             "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
             "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"

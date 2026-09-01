@@ -1,0 +1,58 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>backdrop-filter 挖洞可行性</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font:13px/1.5 system-ui}
+  /* 高频条纹：被模糊 vs 未被模糊，一眼能分辨，也便于像素判定 */
+  .bg{position:absolute;inset:0;background:repeating-linear-gradient(90deg,#000 0 6px,#fff 6px 12px)}
+  .case{position:relative;height:120px;margin:0 0 8px;overflow:hidden}
+  .label{position:absolute;left:8px;top:6px;z-index:5;color:#0f0;font:700 12px monospace;
+         text-shadow:0 0 3px #000}
+  .glass{position:absolute;left:40px;top:30px;width:320px;height:60px;border-radius:30px}
+
+  /* A：普通 backdrop-filter，无挖洞（对照） */
+  #a .glass{backdrop-filter:blur(8px);background:rgb(255 255 255 / .3)}
+
+  /* B：mask 挖洞 —— 中间 100px 不参与模糊 */
+  #b .glass{
+    backdrop-filter:blur(8px);background:rgb(255 255 255 / .3);
+    -webkit-mask:linear-gradient(90deg,#000 0 110px,transparent 110px 210px,#000 210px 100%);
+    mask:linear-gradient(90deg,#000 0 110px,transparent 110px 210px,#000 210px 100%);
+  }
+
+  /* C：模糊放在子层 + mask，父层保留背景色（预期这个才实用） */
+  #c .glass{background:rgb(255 255 255 / .3)}
+  #c .glass::before{
+    content:'';position:absolute;inset:0;border-radius:inherit;
+    backdrop-filter:blur(8px);
+    -webkit-mask:linear-gradient(90deg,#000 0 110px,transparent 110px 210px,#000 210px 100%);
+    mask:linear-gradient(90deg,#000 0 110px,transparent 110px 210px,#000 210px 100%);
+  }
+  /* D：clip-path path(evenodd) 挖**圆角**洞 —— 指示器是胶囊形，直角洞不够用 */
+  #d .glass{background:rgb(255 255 255 / .3)}
+  #d .glass::before{
+    content:'';position:absolute;inset:0;border-radius:inherit;
+    backdrop-filter:blur(8px);
+    /* 外框 320x60 + 内部一个 100x44、半径 22 的胶囊洞（evenodd 使其成为洞） */
+    clip-path: path(evenodd,
+      "M0 0 H320 V60 H0 Z        M132 8 h56 a22 22 0 0 1 0 44 h-56 a22 22 0 0 1 0 -44 z");
+  }
+</style></head>
+<body>
+  <div class="case" id="a"><div class="bg"></div><div class="label">A 无挖洞（对照）</div><div class="glass"></div></div>
+  <div class="case" id="b"><div class="bg"></div><div class="label">B mask 直接挖在玻璃上</div><div class="glass"></div></div>
+  <div class="case" id="d"><div class="bg"></div><div class="label">D clip-path 圆角洞</div><div class="glass"></div></div>
+  <div class="case" id="c"><div class="bg"></div><div class="label">C 模糊放子层 + mask</div><div class="glass"></div></div>
+<script>
+/** 供探测脚本调用：返回每个用例「洞内」与「洞外」的采样点坐标 */
+window.__points = () => ['a','b','c','d'].map(id => {
+  const g = document.querySelector('#'+id+' .glass');
+  const r = g.getBoundingClientRect();
+  return {
+    id,
+    outside: { x: Math.round(r.x + 55), y: Math.round(r.y + r.height/2) },  // 洞外
+    inside:  { x: Math.round(r.x + 160), y: Math.round(r.y + r.height/2) }, // 洞内
+  };
+});
+window.__ready = true;
+</script>
+</body></html>

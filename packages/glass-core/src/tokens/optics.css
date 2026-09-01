@@ -95,6 +95,46 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════
+   底座挖洞 —— 让嵌套的指示器看到未被底座模糊过的背景
+   （PROJECT_SPEC §2「指示器区域看到的背景比底座更清晰」）
+
+   `backdrop-filter` 作用于元素背后**已绘制的全部内容**，包含父级底座
+   模糊后的结果。所以嵌在底座里的指示器天然看不到清晰背景 ——
+   这在纯 CSS 里没有声明式解法，必须把底座的模糊挖穿。
+
+   关键：模糊要放在**独立子层**上。直接在底座本体上挖，会把材质底色
+   也一起挖掉（实测见 debug/holepunch-probe.html 用例 B）。
+   洞的形状由 surface/punch.ts 生成的 clip-path 提供。
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* 挖洞时，模糊从本体移交给子层 */
+[data-glass-tier='a'] .lg-surface[data-punched='true'],
+[data-glass-tier='b'] .lg-surface[data-punched='true'] {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.lg-punch-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  /* 必须压在内容之下、底座底色之上 */
+  z-index: 0;
+}
+
+[data-glass-tier='a'] .lg-surface[data-punched='true'] > .lg-punch-layer,
+[data-glass-tier='b'] .lg-surface[data-punched='true'] > .lg-punch-layer {
+  backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+}
+
+/* Tier C 没有 backdrop-filter，挖洞无意义也无害 —— 子层不渲染任何东西 */
+[data-glass-tier='c'] .lg-punch-layer {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    Tier B —— 无真折射：多层 inset 阴影模拟边缘透镜 + 渐变边框模拟色散彩边
    这不是「坏掉的版本」，它必须自己看起来是完成度很高的设计。
    ══════════════════════════════════════════════════════════════════════ */

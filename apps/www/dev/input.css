@@ -1,0 +1,7 @@
+/* 验证台用的 Tailwind 输入。组件用了工具类，不编译的话那些类全是空的 —— 
+   首次渲染时指示器量出来是 40×0，就是因为漏了这一步。 */
+@import 'tailwindcss';
+
+/* 让 Tailwind 扫到组件源码与验证台 */
+@source '../registry/glass/ui';
+@source './';

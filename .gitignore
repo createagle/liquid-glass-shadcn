@@ -18,3 +18,5 @@ blob-report/
 # 调试台的 esbuild 产物（源在同目录的 .tsx / debug-entry.ts）
 packages/glass-core/debug/glass-optics.js
 packages/glass-core/debug/react/*.js
+apps/www/dev/tabs-demo.js
+apps/www/dev/tailwind.css

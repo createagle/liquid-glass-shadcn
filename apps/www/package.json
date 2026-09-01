@@ -7,9 +7,25 @@
     "registry:generate": "node scripts/generate-theme-item.mjs",
     "registry:build": "npm run registry:generate && shadcn build",
     "registry:validate": "shadcn registry validate registry.json",
-    "registry:serve": "node scripts/serve-registry.mjs"
+    "registry:serve": "node scripts/serve-registry.mjs",
+    "dev:build": "esbuild dev/tabs-demo.tsx --bundle --format=iife --outfile=dev/tabs-demo.js --jsx=automatic --alias:@glass/core=../../packages/glass-core/src/index.ts --alias:@/lib/utils=./registry/glass/lib/utils.ts --log-level=warning",
+    "dev:css": "tailwindcss -i dev/input.css -o dev/tailwind.css"
   },
   "devDependencies": {
-    "shadcn": "^4.19.0"
+    "@tailwindcss/cli": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "esbuild": "^0.25.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "shadcn": "^4.19.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@radix-ui/react-tabs": "^1.1.21",
+    "clsx": "^2.1.1",
+    "motion": "^13.1.1",
+    "tailwind-merge": "^3.6.0"
   }
 }

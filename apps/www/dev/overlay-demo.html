@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>Popover / ResponsiveOverlay 验证台</title>
+<link rel="stylesheet" href="./tailwind.css">
+<link rel="stylesheet" href="../../../packages/glass-core/src/tokens/theme.css">
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+  /* 花哨背景：玻璃的折射与色散只有压在复杂内容上才看得出来 */
+  #bg{position:fixed;inset:0;
+    background:
+      radial-gradient(40% 55% at 12% 18%,#ff2d55 0,transparent 60%),
+      radial-gradient(45% 60% at 84% 14%,#ffcc00 0,transparent 60%),
+      radial-gradient(55% 50% at 78% 86%,#001133 0,transparent 62%),
+      radial-gradient(45% 55% at 18% 88%,#30d158 0,transparent 60%),
+      linear-gradient(115deg,#000 0,#fff 35%,#0a84ff 70%,#000 100%)}
+  #bg[data-bg="stripes"]{background:repeating-linear-gradient(90deg,#000 0 6px,#fff 6px 12px)}
+  /* iOS 分组列表真正的场景：区块压在 systemGroupedBackground 上。
+     Fidelity 对照图用的就是这一档 —— 参考图里也是这个底色。 */
+  #bg[data-bg="grouped"]{background:var(--lg-grouped-bg)}
+  /* Fidelity 对照用：参考图背后就是这个中灰，换成白的会让玻璃看起来完全不一样 */
+  #bg[data-bg="mid"]{background:#5e5e5e}
+  /* 浮层要有地方展开，验证台给足空间；触发器不居中，好观察 side/align */
+  /* 上方留够 260：side="top" 时面板（180 高 + 8 间距）要放得下，
+     否则 Radix 的碰撞检测会把它翻回 bottom，测 side 就测不成了。 */
+  #root{position:relative;padding:260px 28px 120px;min-height:100vh}
+</style></head>
+<body><div id="bg"></div><div id="root"></div>
+<script>
+  const p = new URLSearchParams(location.search);
+  if (p.get('bg')) document.getElementById('bg').dataset.bg = p.get('bg');
+</script>
+<script src="./overlay-demo.js"></script></body></html>

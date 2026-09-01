@@ -972,6 +972,116 @@ React 认为订阅源变了，于是**每一次 render 都退订再重订**一�
 
 ---
 
+## 0.49 Phase 4 落地 · Popover + ResponsiveOverlay —— §14 自查（2026-09-01）
+
+**Popover 12 项过 9（2 项不适用）；ResponsiveOverlay 是原语，单独一套判据。**
+
+### ResponsiveOverlay：Phase 4 的正题
+
+任务卡的三条重点全部落地并有测试钉住：
+
+| 卡片要求 | 落地 |
+|---|---|
+| 用 `useSyncExternalStore` 订阅 matchMedia | ✅ `useIsCompact()` 在 core 里（Sheet 那批加的），SSR 快照返回 `false` |
+| 判定 `(max-width:768px) \|\| (pointer:coarse)` | ✅ **两条各有一个测试** —— 宽视口 + `hasTouch` 也走 Drawer |
+| `responsive={false}` 逃生口 | ✅ 窄视口下仍留在桌面路径，有测试 |
+| 焦点陷阱与还原在两条路径下都过测试 | ✅ Esc 关闭 + 焦点还给触发器，两条路径各跑一遍 |
+
+**最花心思的是「无障碍不能退化」这条。** 两条路径底层是两个不同的 Radix 原语，
+默认行为并不一致 —— 最扎眼的是可访问名称：Radix Dialog（Sheet 走它）**要求**必须有
+Title，Popover 则不要求。于是 `title` 在本原语里是**必填**的：移动路径下渲染成
+`SheetTitle` 并真的显示出来（iOS 的 action sheet 也有标题），桌面路径下落到
+`aria-label`。测试断言两条路径读出来的名称一样。
+
+**一处如实说明的代价：** 切换视口档位会**把子树整个重挂**（两条路径是两棵不同的
+Radix 树）。跨过 768 或指针类型变化才会发生，属于罕见事件。换成「同一棵树里换渲染」
+要么得放弃 Radix 原语，要么得把两套 aria 接线自己实现一遍 —— 那才是真会退化的做法。
+
+### Popover：一次**失败的**圆角测量，如实记下来
+
+前几个组件的圆角都是从参考图轮廓拟合出来的，残差都很小
+（Card 26 / RMSE 0.12，Sheet 34 / RMSE 0.38，Alert 34 / MSE 0.35）。
+**菜单这次不收敛：**
+
+| 模型 | 结果 | RMSE |
+|---|---|---|
+| 圆弧（亮度最低点找边） | r = 20.5 ~ 25.5 | **1.5 ~ 2.2 px** |
+| 圆弧（覆盖率求亚像素） | r = 25.5 | 2.18 px |
+| 自由超椭圆 `(r, n)` | n=3 → r=29.4；**n=4 → r=37.6** | 1.25 px（两者一样） |
+
+超椭圆把残差压到 1.25，但 **r 与 n 强烈互换 —— 半径不可辨识**。
+
+根因想明白了：Card / Sheet 的边缘两侧都是接近实色的区域，"覆盖率 = 归一化亮度"
+成立；而菜单面板是**半透明玻璃压在中灰背景上**，外面有落影、里面还有一道亮描边，
+边缘根本不是干净的两色台阶。
+
+> **所以圆角取 `--lg-radius-lg`（22）并标 `[推定]`** —— 圆弧拟合的落点集中在 20–25。
+> 组件注释、apple-metrics §7.7、registry 描述、Fidelity 图注**四处都写明了这是推定值**。
+> 测试里那条 `border-radius === 22px` 钉的是**实现不漂**，不是在断言 Apple 就是 22。
+
+顺带一个观察（不是结论）：残差呈系统性偏向 —— 小 dy 处实测比圆弧更贴边、大 dy 处又
+拖得更远，这正是**连续曲率（squircle）**的特征。组件因此开了 `continuous`。
+
+### 量到的东西
+
+| 项 | 值 |
+|---|---|
+| 面板宽 | **250**（节点元数据） |
+| 上下内边距 | **10**（338 − 66 − 262 = 10，与顶部对称） |
+| 左右内边距 | **16**（由菜单项 x=16 / 宽 218 反推） |
+| 分隔线 | **1pt，位于分隔区顶端 +2，左右各内缩 24（宽 202）** —— 两条分隔线独立复核一致 |
+| 分隔线颜色 | 灰度 182，压在面板 207 上 |
+
+### 一条差点写反的测试
+
+第一版写的是「Tier A 的面板应当有 `url(` 折射」，当场红了。
+**Tier A 是「折射可用」，不是「所有玻璃都折射」** —— SPEC §2 的 Layer B 定义就是
+**磨砂底座，不折射**，折射只挂在 `layer="indicator"` 上。Popover 的面板是 elevated，
+属于 Layer B，三档下都只有 blur + saturate。测试改成断言这件事，注释写明了理由。
+
+### §14 逐条
+
+| 验收项 | Popover |
+|---|---|
+| light / dark 各自独立调过 | ✅ 各录 5 张快照 |
+| 材质档位 0/1/2/3 正常可读 | ✅ 录了 0 / 0.34 / 1 |
+| Tier A/B/C 三条路径完整 | ✅ 各录快照，且有「任何 Tier 下都不折射」的测试 |
+| Layer B / Layer I 分层正确 | 🟡 **面板对了；Layer I 不在本组件** —— §2 给的 Layer I 是「高亮项」，Popover 里没有「项」，下一批随 Select / DropdownMenu 落地 |
+| 交互态齐全，用 spring 预设 | 🟡 开关走 `transitionFor()`；hover / active 属于「项」，同上 |
+| 移动端下拉类改 Drawer | ✅ **由 ResponsiveOverlay 提供**，两条路径各有测试；Popover 自身不做，组件与 registry 文档都写明了 |
+| 三种无障碍偏好正确降级 | ✅ 三条全有测试；reduced-transparency 用 CDP 真模拟 |
+| WCAG AA 对比度检查通过 | ✅ 面板内文字 17.10（条纹 17.94）—— 弹层**没有遮罩兜底**，比 Dialog 更接近最坏情况 |
+| registry item + 干净工程冒烟 | ✅ 两个 item 都已加进冒烟工作流 |
+| 文档页 Preview/Code/Fidelity/API | ❌ Phase 6 |
+| `// APPLE REFERENCE:` + 可信度标注 | ✅ **含拟合失败的完整记录**，没有把推定值伪装成实测 |
+| Playwright 视觉回归快照 | ⚠️ 15 张，只有 win32 基线 |
+
+### 未过的项
+
+- 🔴 **文档页未做** —— Phase 6
+- 🔴 **圆角是推定值**，理由见上；要定下来需要 iOS 真机截图或 Figma 的 cornerRadius 字段
+- 🟡 **视觉快照只有 win32 基线**
+- 🟡 **Layer I（高亮项）与项级交互态尚未落地** —— 下一批随 Select / DropdownMenu
+- 🟡 **SSR 那条只有推理，没有实测。** `useSyncExternalStore` 的 server snapshot 保证了
+  首帧走桌面路径且不产生 hydration mismatch，但本仓库的验证台是纯客户端渲染，
+  **测不到真正的 SSR**。registry 冒烟测试里那个干净 Next 工程倒是能做这件事，
+  目前只跑了 `next build`，没跑起来验证首屏 —— 这是一条可以补的债。
+- 🟡 **切换档位会重挂子树**（见上），已在组件与 registry 文档中写明。
+
+### 测试增量
+
+| 文件 | 数量 | 进 CI |
+|---|---|---|
+| `tests/popover.behavior.spec.ts` | 14 | ✅ |
+| `tests/responsive-overlay.behavior.spec.ts` | 11 | ✅ |
+| `scripts/press-legibility.mjs` | 34 → **36** 个测点 | ✅ |
+| `tests/overlay.visual.spec.ts` | 15 张 | ❌ 平台相关 |
+
+本机全绿：typecheck ×2 · registry 静态检查 · 派生色漂移 · 探针契约 ·
+对比度审计 1512 采样 · 交互态可读性 **36** 测点 · 行为回归 **156** 项 · 视觉 **121** 项。
+
+---
+
 ## 0.5 CI 第一次真跑（2026-09-01）—— 抓出 4 个真实故障
 
 仓库此前**没有远程**，两个 workflow 从建好起一次都没执行过。
@@ -1734,7 +1844,7 @@ docs/research/
 
 ## 10. 下一步（2026-09-01 更新）
 
-**Phase 0 / 1 / 2 / 5 已完成；Phase 3 交付 8 / 11；Phase 4 已起步。**
+**Phase 0 / 1 / 2 / 5 已完成；Phase 3 交付 9 / 11；Phase 4 的核心原语已落地。**
 
 | 已交付 | §14 成绩 |
 |---|---|
@@ -1746,30 +1856,36 @@ docs/research/
 | Toggle | 12 项过 9 |
 | Card | 12 项过 9（另 2 项不适用） |
 | Sheet / Drawer | 12 项过 9（1 项明确未达标、2 项不适用） |
+| Popover | 12 项过 9（2 项不适用 —— Layer I 属于菜单项） |
+| **ResponsiveOverlay**（Phase 4 原语） | 任务卡四条重点全部落地并有测试 |
 
-**剩下 3 个 P0：Select · DropdownMenu · Popover —— 全是从触发点弹出的浮层。**
+**剩下 2 个 P0：Select · DropdownMenu。**
 
-### 下一批：ResponsiveOverlay + 这三个一起做
+### 下一批：Select + DropdownMenu
 
-Sheet 已经把 ResponsiveOverlay 的**移动端那条路径**做完了（档位、抓手、
-甩动关闭、层叠后退、safe-area），判定用的 `useIsCompact()`（SPEC §9 的
-`max-width:768 || pointer:coarse`，走 `useSyncExternalStore`）也在 core 里了。
+两个都直接挂在 `<ResponsiveOverlay>` 上 —— 桌面锚定浮层、移动端底部 Drawer，
+那条路已经通了。要补的是**菜单项本身**：
 
-缺的是**桌面端那条路径**与切换外壳 —— 而它需要一个真实的桌面消费者才好定形状。
-所以下一批：Popover（桌面锚定浮层的最小样本）→ ResponsiveOverlay →
-Select / DropdownMenu 挂上去。**浮层类只做一遍。**
+- **Layer I 终于有地方落了。** SPEC §2 给这一类的 Layer I 是「高亮项（hover/focus）」，
+  Popover 里没有「项」这个概念，所以那一半一直空着。
+- 项的几何已经量好了（apple-metrics §7.7）：项高 40（双行 60）、左右内缩 16、
+  分隔区 21（1pt 线在区顶 +2、左右各内缩 24）。
+- Fidelity 对照图里现在那些菜单项是**对照台自己摆的占位**，做完之后要换成真组件。
 
-### 长期挂着的两件事（不阻塞，但迟早要做）
+### 长期挂着的三件事
 
-- **发布 `@glass/core` 到 npm** —— 否则真实用户装不了 registry item
-  （现在靠本地 npm shim 才能跑通冒烟测试）。
-- **在 Linux 环境录一次视觉基线** —— 视觉回归目前只有 win32 基线，
-  CI 里刻意不跑，等于这条验收只做到了「本地可用」。
+- **发布 `@glass/core` 到 npm** —— 否则真实用户装不了 registry item。
+- **在 Linux 环境录一次视觉基线** —— 视觉回归目前只有 win32 基线，CI 里刻意不跑。
+- **补一条真正的 SSR 验证** —— 冒烟测试里那个干净 Next 工程目前只跑 `next build`，
+  没起服务验证首屏。ResponsiveOverlay 的「SSR 首帧走桌面路径、无 hydration mismatch」
+  目前只有推理，没有实测。
 
 ### 仍然没有的东西
 
-🔴 **iOS 真机截图。** Figma 资源解决了**几何**（到 Sheet 这一批为止，
-Tab Bar / Switch / Slider / Alert / Menu / Button / Grouped List / Sheet 都有实测），
-但解决不了**光学** —— 折射强度、色散偏移、镜面高光、knob 与抓手静止态该白到
-什么程度，这些至今全是 `[推定]`，也是 Tier A 与 Tier B 至今无法真正区分开的原因。
+🔴 **iOS 真机截图。** Figma 资源解决了大部分**几何**，但解决不了**光学** ——
+折射强度、色散偏移、镜面高光、knob 与抓手静止态该白到什么程度，至今全是 `[推定]`，
+也是 Tier A 与 Tier B 至今无法真正区分开的原因。
+
+而且几何也开始碰到天花板了：**Popover 的圆角这次就没量出来** ——
+半透明玻璃压在中灰背景上，边缘不是干净的两色台阶，轮廓拟合不收敛。
 Fidelity 对照图里每一处相关差异都已逐条写明，没有含糊过去。

@@ -118,10 +118,10 @@ jobs:
 
       # 组件 item：验证 registryDependencies 能把 utils/theme 一并带进来，
       # 且组件源码里的 @/lib/utils 引用在目标工程里能解析
-      - name: 方式三 · 安装 UI 组件（tabs / slider / switch / button / dialog / toggle / card / sheet）
+      - name: 方式三 · 安装 UI 组件（tabs / slider / switch / button / dialog / toggle / card / sheet / popover / responsive-overlay）
         run: |
           cd "$RUNNER_TEMP/smoke"
-          npx --yes shadcn@latest add @glass/tabs @glass/slider @glass/switch @glass/button @glass/dialog @glass/toggle @glass/card @glass/sheet --yes --overwrite
+          npx --yes shadcn@latest add @glass/tabs @glass/slider @glass/switch @glass/button @glass/dialog @glass/toggle @glass/card @glass/sheet @glass/popover @glass/responsive-overlay --yes --overwrite
 
       - name: 断言 token 真的被注入（不需要手动补 CSS）
         run: |
@@ -132,7 +132,7 @@ jobs:
           done
           grep -q "lg-surface" "$css" || { echo "::error::缺少 .lg-surface 渲染路径"; exit 1; }
           test -f src/components/glass-providers.tsx || { echo "::error::组件文件未落地"; exit 1; }
-          for c in tabs slider switch button dialog toggle card sheet; do
+          for c in tabs slider switch button dialog toggle card sheet popover responsive-overlay; do
             test -f "src/components/ui/$c.tsx" || { echo "::error::$c 组件未落地"; exit 1; }
           done
           test -f src/lib/utils.ts || { echo "::error::registryDependencies 没把 utils 带进来"; exit 1; }

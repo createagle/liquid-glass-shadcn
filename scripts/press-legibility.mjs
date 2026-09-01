@@ -40,6 +40,7 @@ const HARNESS = {
   dialog: pathToFileURL(resolve('apps/www/dev/dialog-demo.html')).href,
   sheet: pathToFileURL(resolve('apps/www/dev/sheet-demo.html')).href,
   card: pathToFileURL(resolve('apps/www/dev/card-demo.html')).href,
+  overlay: pathToFileURL(resolve('apps/www/dev/overlay-demo.html')).href,
 };
 
 /**
@@ -186,6 +187,21 @@ const CASES = [
     target: '[data-slot="sheet-description"]',
     nth: 0,
     label: '[data-slot="sheet-description"]',
+    press: false,
+    gated: true,
+  },
+  {
+    /**
+     * Popover 的内容压在 elevated 面板上。面板是 Layer B（磨砂，不折射），
+     * 与 Dialog / Sheet 同类，但它**没有遮罩**兜底 —— 弹层直接压在页面内容上，
+     * 背景可能是任意东西，所以这条比 Dialog 那条更接近最坏情况。
+     */
+    name: 'Popover · 面板内文字',
+    harness: 'overlay',
+    query: 'only=popover&open=1',
+    target: '[data-testid="overlay-items"] > button',
+    nth: 0,
+    label: '[data-testid="overlay-items"] > button',
     press: false,
     gated: true,
   },

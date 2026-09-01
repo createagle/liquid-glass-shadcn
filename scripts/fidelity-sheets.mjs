@@ -86,13 +86,31 @@ const browser = await chromium.launch();
   await page.close();
 }
 
-/* ── 第三趟：渲染对照页 ─────────────────────────────────────────────── */
+/* ── 第三趟：把真实的 Popover 面板单独截出来 ─────────────────────────── */
+{
+  const page = await browser.newPage({
+    viewport: { width: 520, height: 640 },
+    deviceScaleFactor: 2,
+  });
+  // bg=mid：参考图背后是中灰，两边底色一致才谈得上比材质
+  await page.goto(`${dev('overlay-demo.html')}?theme=light&tier=a&tint=0.34&only=menu&bg=mid`);
+  await page.waitForFunction(() => window.__ready === true);
+  await page.waitForTimeout(700); // 等入场 spring 静止
+  await page.evaluate(() => document.activeElement?.blur?.());
+  await page.waitForTimeout(120);
+  await page
+    .locator('[data-slot="popover-content"] .lg-surface')
+    .screenshot({ path: 'apps/www/dev/menu-shot.png' });
+  await page.close();
+}
+
+/* ── 第四趟：渲染对照页 ─────────────────────────────────────────────── */
 {
   const page = await browser.newPage({ viewport: { width: 900, height: 900 }, deviceScaleFactor: 2 });
   await page.goto(dev('fidelity.html'));
   await page.waitForFunction(() => window.__ready === true);
   await page.waitForTimeout(700);
-  for (const id of ['sheet-switch', 'sheet-slider', 'sheet-button', 'sheet-dialog', 'sheet-card', 'sheet-sheet']) {
+  for (const id of ['sheet-switch', 'sheet-slider', 'sheet-button', 'sheet-dialog', 'sheet-card', 'sheet-sheet', 'sheet-menu']) {
     const name = id.replace('sheet-', '');
     await page.locator(`#${id}`).screenshot({ path: `${OUT}/compare-${name}.png` });
     console.log(`✓ ${OUT}/compare-${name}.png`);

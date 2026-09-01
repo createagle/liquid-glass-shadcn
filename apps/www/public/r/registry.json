@@ -759,6 +759,54 @@
       ],
       "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 Sheet 的差别：\n  1) 只做**底部**面板，没有 top/right/left —— Apple 的对应物是底部 sheet，侧边抽屉不是这个组件的语义。\n  2) 有档位（detents）与抓手：点抓手在档位间循环（HIG 明确要求），拖或甩可以关闭。\n  3) SheetClose **直接渲染本库的 Button**（同 DialogClose）—— 本库禁用 asChild，<SheetClose><Button/></SheetClose> 会变成 button 套 button。\n  4) **默认只有抓手区与 SheetHeader 能起手拖拽**。sheet 里通常有可滚动内容，整片可拖需要滚动协调，那套没做；内容不滚动时传 dragFrom=\"sheet\" 打开整片拖拽。\n\n想要「背后页面缩小后退」的层叠观感：给你的应用外壳加 data-glass-sheet-wrapper。可选，不加也能正常工作。注意那一层上会有 transform，会成为 position:fixed 后代的包含块 —— 外壳里的固定定位元素要改成 absolute。",
       "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "popover",
+      "title": "Popover",
+      "author": "Liquid Glass UI",
+      "description": "锚定浮层的面板，对应 iOS 的 UIMenu 底板。几何取自 iOS 27 官方设计资源的 Edit Menu：面板 250 宽、上下内边距 10、左右 16。⚠️ 圆角 22 是**推定值**——菜单面板是半透明玻璃压在中灰背景上，轮廓拟合不收敛（圆弧 RMSE 1.5–2.2px），详见组件注释。",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-popover",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/popover.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n⚠️ **本组件不做移动端 Drawer。** PROJECT_SPEC §9 要求「从触发点弹出的浮层」在移动端改成底部 Drawer —— 那是 <ResponsiveOverlay> 的职责（装 @glass/responsive-overlay）。直接用 Popover 就是永远的桌面行为。\n\n与 shadcn 默认 Popover 的差别：\n  1) PopoverTrigger 是 Radix 的原生 button —— 本库禁用 asChild，要自定义外观就给它 className。\n  2) 默认宽 250（iOS Edit Menu 的实测宽度）；传 width={null} 让内容撑开。\n  3) 面板是 Layer B（elevated）—— **磨砂，不折射**。折射只属于 Layer I，而 Popover 里没有「项」这个概念，高亮项属于 Select / DropdownMenu。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "responsive-overlay",
+      "title": "ResponsiveOverlay",
+      "author": "Liquid Glass UI",
+      "description": "PROJECT_SPEC §9 的核心原语：桌面端渲染 Popover，紧凑视口下渲染底部 Drawer，外部调用方式完全一致。判定规则 (max-width:768px) || (pointer:coarse)，走 useSyncExternalStore 订阅，杜绝 SSR hydration mismatch。",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/popover",
+        "@glass/sheet"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/responsive-overlay.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n```tsx\n<ResponsiveOverlay>\n  <ResponsiveOverlayTrigger>打开</ResponsiveOverlayTrigger>\n  <ResponsiveOverlayContent title=\"编辑菜单\" popover={{ side: 'bottom' }}>\n    …\n  </ResponsiveOverlayContent>\n</ResponsiveOverlay>\n```\n\n  1) `title` **必填** —— 两条路径的可访问名称必须一致。移动路径下它会显示出来（iOS 的 action sheet 也有标题），桌面路径下落到 aria-label。\n  2) `responsive={false}` 是逃生口，强制桌面行为（SPEC §9 明确要求提供）。\n  3) 两条路径参数分开传：`popover={{…}}` 与 `sheet={{…}}`。\n  4) ⚠️ 切换视口档位会**把子树整个重挂**（两条路径是两棵不同的 Radix 树）。跨过 768 或指针类型变化才会发生，属于罕见事件。",
+      "type": "registry:ui"
     }
   ]
 }

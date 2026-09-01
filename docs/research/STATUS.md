@@ -1,6 +1,6 @@
 # 项目状态
 
-**当前阶段：Phase 5（Registry 分发）已完成 · 可读性地板 + 元素级探针，14 个对比度测点全部达标**
+**当前阶段：Phase 5（Registry 分发）已完成 · 可读性地板 + 元素级探针 · CI 已接上远程并全绿**
 Phase 0（研究，部分）· Phase 1（光学引擎）· Phase 2（Token 体系）均已完成
 未开始：Phase 3（P0 组件，**尺寸阻塞已解除**，光学标定仍缺真机截图）· Phase 4 · Phase 6 · Phase 7
 最后更新：2026-08-31
@@ -133,6 +133,52 @@ Phase 0（研究，部分）· Phase 1（光学引擎）· Phase 2（Token 体�
   `legibility="off"` 下底座可能更透，那时这套色**不保证达标**。
 - 🟡 内容层材质只修了 `ultrathin`（其余三档本来就在地板之上）。
 - 🟡 Safari / Firefox 仍未测。
+
+---
+
+## 0.5 CI 第一次真跑（2026-09-01）—— 抓出 4 个真实故障
+
+仓库此前**没有远程**，两个 workflow 从建好起一次都没执行过。
+配上 `github.com/createagle/liquid-glass-shadcn` 后第一次真跑，
+连续挂了四轮，每一轮都是真问题，没有一个是配置噪音：
+
+| # | 故障 | 根因 |
+|---|---|---|
+| 1 | `Multiple versions of pnpm specified` | workflow 写了 `version: 11`，`package.json` 又有 `packageManager` —— action 拒绝在两处指定时继续 |
+| 2 | `ERR_PNPM_IGNORED_BUILDS` | `pnpm-workspace.yaml` 的 `allowBuilds` 块留着**没填完的占位符**（`set this to true or false`），等于没配。pnpm 11 下这是**失败**不是警告 |
+| 3 | registry 生成物漂移 | 多行 CSS 值被塞进 JSON **字符串值内部**，`.gitattributes` 管不了字符串内容里的回车符 → Windows 生成 CRLF、Linux 生成 LF，同源产出两种结果 |
+| 4 | 5 个对比度测点未达 AA | **本机的数字是乐观的**，见下 |
+
+### 最有价值的一条：本机测不出真实的最坏情况
+
+本机（Windows，有 GPU）最差组合一直是 `tiera/white`；
+Linux CI（headless，软件光栅）却是 `tierb/checker`，同一测点 4.57 → 4.01。
+
+tier 是无关变量（Tier B 的 base 层与 Tier A 完全相同），真正的驱动是
+**高频棋盘格 + 平台**：软件光栅下 `blur()` 没把棋盘抹平那么多，
+背景亮度跨度更大。
+
+**CI 那个才是要认的数** —— 没有 GPU 加速的真实用户会遇到同样的渲染。
+据此把 `AA_TARGET_WITH_MARGIN` 从 4.6 重新标定到 **5.6**（实测/理论 ≈ 0.82）。
+
+⚠️ 这个值是**实测标定**的，不是推导的。纯 alpha 合成模型没有涵盖
+inset 描边高光与平台 blur 差异。**改动模型 / 描边 / 档位表之后必须让 CI
+重跑一遍重新标定，本机数据不能作为依据。**
+
+连带查出一个真 bug：`worstBaseUnderFloor()` 用的是未加余量的地板常量，
+运行时用的却是加了余量的版本。用错会高估最不利底座亮度 ——
+提余量后暗色 9 个系统色一度全部塌成纯白且仍达不到目标。
+
+### 现状
+
+| | 值 |
+|---|---|
+| 底座地板 | light **0.734** / dark **0.696** |
+| 内容层 ultrathin | 0.52 / 0.67 |
+| CI 上 14 个测点 | **全部达标**，最紧 `elevated/secondary` 5.23:1 |
+| 两个 workflow | ✅ 全绿 |
+
+**教训：没跑过的 CI 等于没有 CI。** 这四个故障任何一个都不会在本机暴露。
 
 ---
 

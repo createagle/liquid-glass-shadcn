@@ -27,7 +27,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Node 24：contrast-audit.mjs / on-glass-colors.mjs 直接 import .ts 源
+          # （靠原生类型剥离），backdrop-probe-test.mjs 用 stripTypeScriptTypes。
+          # 22.x 要靠 backport 才有，别退。
+          node-version: 24
           cache: pnpm
 
       - name: 安装依赖

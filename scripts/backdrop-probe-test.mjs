@@ -16,16 +16,11 @@
  */
 
 import { chromium } from 'playwright';
-import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs';
-import { resolve, join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { stripTypeScriptTypes } from 'node:module';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
-const ESBUILD = resolve(
-  ROOT,
-  'node_modules/.pnpm/esbuild@0.25.0/node_modules/esbuild/bin/esbuild',
-);
 
 /** 期望：clear = 维持原始档位；floor = 抬到地板；null = 测不出并回落 */
 const CASES = [
@@ -44,31 +39,41 @@ const CASES = [
   ['渐变（测不出）+ 暗色主题', 'linear-gradient(#000,#fff)', 'dark', 'null'],
 ];
 
-function bundleProbe() {
-  const dir = mkdtempSync(join(tmpdir(), 'lg-probe-'));
-  const entry = resolve(ROOT, 'packages/glass-core/src/__probe-entry.ts');
-  const out = join(dir, 'probe.js');
-  writeFileSync(
-    entry,
-    "export { probeBackdrop } from './a11y/backdrop-probe.js';\n" +
-      "export { resolveLegibleAlpha } from './a11y/legibility.js';\n",
-  );
-  try {
-    execFileSync(
-      process.execPath,
-      [ESBUILD, entry, '--bundle', '--format=iife', '--global-name=LGProbe',
-       `--outfile=${out}`, '--log-level=error'],
-      { stdio: 'inherit' },
-    );
-    return readFileSync(out, 'utf8');
-  } finally {
-    rmSync(entry, { force: true });
-    rmSync(dir, { recursive: true, force: true });
-  }
+/**
+ * 把两个 TS 模块搓成一段能丢进浏览器的脚本。
+ *
+ * 刻意**不用打包器**：这两个文件都是自包含的（一个 import 都没有），
+ * 拼起来只需要剥掉类型和 `export` 关键字，Node 内建的
+ * `stripTypeScriptTypes` 就够了。
+ *
+ * 早先这里调 esbuild，路径写成 `node_modules/.pnpm/esbuild@0.25.0/...`
+ * —— **版本号写进了路径**，esbuild 一升级或换个 pnpm store 布局就崩，
+ * 而这仓库的 CI 从没跑过，崩了也不会有人知道。去掉打包器同时去掉了
+ * 那个隐患和一个构建步骤。
+ *
+ * 前提是两个源文件保持无 import。真需要跨文件依赖时，
+ * 与其在这里手写拼接顺序，不如老实引一个打包器 —— 所以下面显式断言。
+ */
+function buildProbeScript() {
+  const parts = ['legibility.ts', 'backdrop-probe.ts'].map((name) => {
+    const src = readFileSync(resolve(ROOT, 'packages/glass-core/src/a11y', name), 'utf8');
+    if (/^\s*import\s/m.test(src)) {
+      throw new Error(`${name} 出现了 import —— 朴素拼接不再成立，需要改用打包器`);
+    }
+    // 剥类型，再去掉 export 关键字，让它们变成同一段作用域里的普通声明
+    return stripTypeScriptTypes(src, { mode: 'strip' }).replace(/^export\s+/gm, '');
+  });
+
+  return [
+    '(() => {',
+    ...parts,
+    'window.LGProbe = { probeBackdrop, resolveLegibleAlpha };',
+    '})();',
+  ].join('\n');
 }
 
 async function main() {
-  const probeJs = bundleProbe();
+  const probeJs = buildProbeScript();
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 600, height: 400 } });
   let fails = 0;

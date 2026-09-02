@@ -25,7 +25,14 @@
 import * as React from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 import { motion } from 'motion/react';
-import { GlassSurface, concentricRadius, transitionFor, useGlassOptional, type GlassPunch } from '@glass/core';
+import {
+  GlassSurface,
+  concentricRadius,
+  transitionFor,
+  useGlassOptional,
+  usePunchState,
+  type GlassPunch,
+} from '@glass/core';
 import { cn } from '@/lib/utils';
 
 /**
@@ -35,9 +42,9 @@ import { cn } from '@/lib/utils';
  * 锁死的是**比例关系**，那才是设计语言里稳定的部分。
  */
 const GEOMETRY = {
-  /** 底座高度默认值。iOS 27 实测 62pt。 */
+  /** 底座高度默认值。[实测] 62pt */
   height: 62,
-  /** 底座 → 指示器的内缩。iOS 27 实测 4pt。 */
+  /** 底座 → 指示器的内缩。[实测] 4pt */
   inset: 4,
 } as const;
 
@@ -57,7 +64,7 @@ export interface GlassTabsProps extends React.ComponentProps<typeof TabsPrimitiv
 }
 
 function Tabs({ className, height = GEOMETRY.height, style, ...props }: GlassTabsProps) {
-  const [punch, setPunch] = React.useState<GlassPunch | null>(null);
+  const [punch, setPunch] = usePunchState();
   const inset = Math.round((GEOMETRY.inset / GEOMETRY.height) * height);
   const baseRadius = height / 2;
 
@@ -124,6 +131,7 @@ export interface GlassTabsTriggerProps
 function TabsTrigger({ className, children, value, ...props }: GlassTabsTriggerProps) {
   const ctx = React.useContext(TabsCtx);
   if (!ctx) throw new Error('<TabsTrigger> 必须放在 <Tabs> 里');
+  const { setPunch } = ctx;
   const ref = React.useRef<HTMLButtonElement>(null);
   const [selected, setSelected] = React.useState(false);
   const [hovered, setHovered] = React.useState(false);
@@ -147,7 +155,7 @@ function TabsTrigger({ className, children, value, ...props }: GlassTabsTriggerP
       if (!parent) return;
       const p = parent.getBoundingClientRect();
       const r = el.getBoundingClientRect();
-      ctx.setPunch({
+      setPunch({
         x: r.left - p.left,
         y: r.top - p.top,
         width: r.width,
@@ -165,7 +173,18 @@ function TabsTrigger({ className, children, value, ...props }: GlassTabsTriggerP
       mo.disconnect();
       ro.disconnect();
     };
-  }, [ctx]);
+    /**
+     * ⚠️ 依赖只能是 `setPunch`，**不能是整个 ctx**。
+     *
+     * ctx 的 memo 依赖 punch，而这个 effect 会 setPunch —— 依赖整个 ctx 就成了闭环：
+     * set → ctx 换新 → effect 重跑 → 再 set …… 值每次都一样，画面看不出异常，
+     * 但控制台刷 "Maximum update depth exceeded"，两个观察器每帧被拆掉重建。
+     * 从 Tabs 这个组件写出来起就一直是错的，做文档站时才被抓到。
+     *
+     * `setPunch` 来自 `usePunchState()`，引用稳定，而且值没变时不会触发重渲染。
+     */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setPunch]);
 
   /**
    * 按下态在 window 上收尾：指针可能在别的元素上松开（快速滑动切换时常见），

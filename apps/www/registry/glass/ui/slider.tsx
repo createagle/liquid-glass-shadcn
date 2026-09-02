@@ -46,11 +46,11 @@ import { cn } from '@/lib/utils';
  * 那才是设计语言里稳定的部分。
  */
 const GEOMETRY = {
-  /** knob 高度。iOS 27 实测 24pt。 */
+  /** knob 高度。[实测] 24pt —— 像素实测，Figma 包围盒在 knob 上不可信 */
   knobHeight: 24,
-  /** knob 宽度。iOS 27 实测 38pt（**胶囊，不是圆**）。 */
+  /** knob 宽度。[实测] 38pt（**胶囊，不是圆**）—— 与 Switch 的 knob 同尺寸，两处独立印证 */
   knobWidth: 38,
-  /** 轨道高度。iOS 27 实测 6pt。 */
+  /** 轨道高度。[实测] 6pt（经像素复核）*/
   trackHeight: 6,
   /** 最小触控目标。HIG 44×44pt，[官方]。 */
   minTouch: 44,
@@ -65,6 +65,7 @@ const GEOMETRY = {
    * 取值只保证「看得出来但不夸张」。
    */
   hoverScale: 1.04,
+  /** 按下时的放大倍数。`[推定]` —— 同上，没有参考视频可逐帧量 */
   pressScale: 1.1,
   /**
    * 按下 / 拖动时 knob 底色的不透明度倍数。
@@ -93,6 +94,8 @@ function Slider({
   value,
   min = 0,
   max = 100,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
   ...props
 }: GlassSliderProps) {
   const k = knobSize / GEOMETRY.knobHeight;
@@ -198,6 +201,18 @@ function Slider({
         <SliderPrimitive.Thumb
           key={i}
           data-slot="slider-thumb"
+          /**
+           * ⚠️ 无障碍名称必须落在 **Thumb** 上，不是 Root。
+           *
+           * `role="slider"` 在 Radix 里是 Thumb 承担的，Root 只是个容器。
+           * `<Slider aria-label="音量" />` 这种最自然的写法，如果原样透传给 Root，
+           * 屏幕阅读器读到的滑杆是**没有名字的** —— 而调用方看不出任何异常。
+           * 所以这里把 aria-label / aria-labelledby 从 props 里摘出来，转挂到 Thumb。
+           * （多 knob 时同一个名字会重复，那是 Radix 的既有限制：
+           *   要区分就自己给每个 knob 传 aria-label，本库不做猜测。）
+           */
+          {...(ariaLabel !== undefined ? { 'aria-label': ariaLabel } : {})}
+          {...(ariaLabelledBy !== undefined ? { 'aria-labelledby': ariaLabelledBy } : {})}
           className={cn(
             'block rounded-full outline-none',
             'focus-visible:ring-2 focus-visible:ring-[var(--lg-ring)] focus-visible:ring-offset-2',

@@ -74,6 +74,7 @@ export { glassSsrScript, STORAGE_KEYS, type SsrScriptOptions } from './provider/
 // ── 原语 ────────────────────────────────────────────────────────────────
 export { GlassSurface, type GlassLayer, type GlassSurfaceProps } from './surface/glass-surface.js';
 export { punchClipPath, isPunchValid, measurePunch, type GlassPunch } from './surface/punch.js';
+export { usePunchState, punchEquals } from './surface/use-punch-state.js';
 
 // ── 形状 ────────────────────────────────────────────────────────────────
 export {

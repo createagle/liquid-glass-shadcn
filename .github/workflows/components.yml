@@ -44,6 +44,9 @@ jobs:
           pnpm --filter www dev:css
           pnpm --filter www dev:build
 
+      # console.behavior.spec.ts 也在这个 project 里 —— 它盯的是
+      # 「功能正常但实现在空转」那一类问题（Tabs 曾经无限重渲染，
+      #   几何和像素都对，只有控制台在刷屏）。
       - name: 行为与几何回归
         run: npx playwright test --project=behavior
 

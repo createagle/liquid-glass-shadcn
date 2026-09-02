@@ -1,3 +1,8 @@
+'use client';
+
+// 这个模块导出的全是 hook。**没有这行指令，任何从服务端组件 import
+// `@glass/core` 的人都会构建失败** —— barrel 会把它一起拖进 RSC 图。
+// 做文档站时被 Next 的 webpack 构建抓到；Turbopack 那边不报，更隐蔽。
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   acquireFilter,

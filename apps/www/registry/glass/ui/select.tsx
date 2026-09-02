@@ -64,6 +64,7 @@ import {
   transitionFor,
   useGlassOptional,
   useIsCompact,
+  usePunchState,
   type GlassPunch,
 } from '@glass/core';
 import {
@@ -225,7 +226,8 @@ function Select({
   children,
 }: GlassSelectProps) {
   const compact = useIsCompact() && responsive;
-  const [punch, setPunch] = React.useState<GlassPunch | null>(null);
+  // 值没变就不重渲染 —— 观察器每次触发都产生新对象，理由见 usePunchState
+  const [punch, setPunch] = usePunchState();
 
   /**
    * 开关态与选中值都自己接管一份，两条路径都以受控方式驱动。

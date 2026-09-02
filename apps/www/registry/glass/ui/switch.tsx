@@ -50,15 +50,15 @@ import { cn } from '@/lib/utils';
 
 /** 几何 —— iOS 27 实测值，按轨道高度成比例缩放。 */
 const GEOMETRY = {
-  /** 轨道高。iOS 27 实测 28pt。 */
+  /** 轨道高。[实测] 28pt */
   trackHeight: 28,
-  /** 轨道宽。iOS 27 实测 64pt。 */
+  /** 轨道宽。[实测] 64pt —— ⚠️ 与 PROJECT_SPEC §10 的旧 UIKit 度量 51×31 冲突，见文件头 */
   trackWidth: 64,
-  /** knob 高。iOS 27 实测 24pt。 */
+  /** knob 高。[实测] 24pt */
   knobHeight: 24,
-  /** knob 宽。iOS 27 实测 38pt（胶囊）。 */
+  /** knob 宽。[实测] 38pt（胶囊，不是圆）—— 与 Slider 的 knob 同尺寸，两处独立印证 */
   knobWidth: 38,
-  /** knob 四周内缩。iOS 27 实测 2pt。 */
+  /** knob 四周内缩。[实测] 2pt —— knob 行程因此是 22（x 从 2 到 24）*/
   inset: 2,
   /** 最小触控目标。HIG 44×44pt，[官方]。 */
   minTouch: 44,
@@ -67,6 +67,7 @@ const GEOMETRY = {
    * ⚠️ `[推定]` —— 没有 iOS 参考视频可逐帧量，取值只保证看得出来但不夸张。
    */
   hoverScale: 1.03,
+  /** 按下时的放大倍数。`[推定]` —— 同上 */
   pressScale: 1.08,
   /**
    * 按下 / 拖动时 knob 底色的不透明度倍数。
@@ -85,6 +86,8 @@ const GEOMETRY = {
    * knob 按下时会放大，洞如果严丝合缝，四周就会露出一圈仍被模糊的背景。
    * 让洞恒定大一点，代价是 knob 边缘外有一圈未模糊的背景 —— 它正好被
    * knob 自身的落影盖住，比露出模糊环好得多。
+   *
+   * `[推定]` —— 这是本库的工程取舍，不是 Apple 的数值。
    */
   punchBleed: 1.5,
 } as const;

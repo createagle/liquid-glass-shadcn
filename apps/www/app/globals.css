@@ -1,0 +1,79 @@
+@import 'tailwindcss';
+
+/**
+ * 文档站的 token 来源就是**发给用户的那一份**。
+ *
+ * 走包名而不是相对路径 —— 这样 `@glass/core` 的 exports 映射
+ * （"./theme.css"）也顺带被验证了一遍：站点跑得起来，用户 import 就跑得起来。
+ */
+@import '@glass/core/theme.css';
+
+/* Tailwind v4 靠扫源码生成工具类。组件源码不在 app/ 下，必须显式加进来 ——
+   漏掉的话组件里的 `flex` / `absolute` 全是空类，指示器会量出 40×0。 */
+@source '../registry/glass/ui';
+@source '../registry/glass/examples';
+@source '../components';
+@source '../app';
+@source '../lib';
+
+/**
+ * 站点自身的语义色。
+ *
+ * **只用本库已有的 token，不新造一套。** PROJECT_SPEC §15.4 禁止裸色值，
+ * 而文档站是本库最大的一个「使用者」—— 它如果需要自己造色，说明 token 层有缺口，
+ * 那应该去补 token，而不是在站点里开后门。
+ */
+@theme inline {
+  --color-site-fg: var(--lg-label-primary);
+  --color-site-fg-muted: var(--lg-label-secondary);
+  --color-site-fg-subtle: var(--lg-label-tertiary);
+  --color-site-line: var(--lg-separator);
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* 顶栏是常驻的，锚点跳转要让开它 */
+    scroll-padding-top: 6rem;
+  }
+
+  :root[data-glass-motion='reduced'] html {
+    scroll-behavior: auto;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--lg-label-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* 玻璃压在纯色上什么都看不出来。站点底纹是本库的展台，不是装饰。 */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(38% 46% at 12% 14%, var(--lg-pink) 0, transparent 62%),
+      radial-gradient(34% 44% at 88% 10%, var(--lg-yellow) 0, transparent 60%),
+      radial-gradient(46% 46% at 82% 88%, var(--lg-indigo) 0, transparent 64%),
+      radial-gradient(40% 44% at 10% 90%, var(--lg-teal) 0, transparent 62%);
+    opacity: 0.42;
+  }
+
+  :root[data-glass-theme='dark'] body::before {
+    opacity: 0.3;
+  }
+
+  /* 无障碍：透明度偏好下把底纹一起收掉 —— 材质变实色之后它只剩噪音 */
+  @media (prefers-reduced-transparency: reduce) {
+    body::before {
+      display: none;
+    }
+  }
+}

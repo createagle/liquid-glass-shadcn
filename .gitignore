@@ -25,3 +25,8 @@ apps/www/dev/tailwind.css
 apps/www/dev/dialog-shot.png
 apps/www/dev/sheet-shot.png
 apps/www/dev/menu-shot.png
+
+# 文档站的生成物（`pnpm --filter www gen` 产出，见 apps/www/scripts/generate-*.mjs）
+apps/www/__registry__/
+apps/www/.next/
+apps/www/next-env.d.ts

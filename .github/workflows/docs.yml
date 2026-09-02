@@ -1,0 +1,70 @@
+name: 文档站
+
+# PROJECT_SPEC §12 / Phase 6 任务卡的验收：
+#   站点可用；顶栏三个全局控件生效并影响全站；文档站自身确实在用本库组件。
+#
+# 跑的是**生产构建**，不是 dev server —— dev 模式下 React 会双调用、
+# Next 会插一堆调试脚本，「控制台干净」这类断言在那里没有意义。
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 刻意不写 version —— package.json 的 packageManager 是唯一事实来源
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      # 文档站吃的是 @glass/core 的 **dist**（走 package.json 的 exports），
+      # 不是源码 —— 少映射一条路径，多验证一层发布表面。所以必须先构建。
+      - name: 构建 @glass/core
+        run: pnpm --filter @glass/core build
+
+      - name: 类型检查（组件源码 + 站点）
+        run: cd apps/www && npx tsc -p tsconfig.json --noEmit
+
+      # 生成物（API 表 / 示例表）不进库，这里现生成，顺带验证生成脚本本身没坏
+      - name: 生成 API 与示例数据
+        run: pnpm --filter www gen
+
+      # 本库的核心纪律：尺寸常量必须能说出出处。
+      # 生成脚本会统计没有 [官方]/[实测]/[推定]/[待核实] 标注的常量，这里钉成 0。
+      - name: 断言每个尺寸常量都带可信度标注
+        run: |
+          cd apps/www
+          node -e "
+            const { stats } = require('./__registry__/api.json');
+            if (stats.unlabelled > 0) {
+              console.error('::error::' + stats.unlabelled + ' 个尺寸常量没有可信度标注：' + stats.missing.join(', '));
+              process.exit(1);
+            }
+            console.log('✓ ' + stats.labelled + ' 个尺寸常量全部带可信度标注');
+          "
+
+      - name: 安装 Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: 站点行为回归（含生产构建）
+        run: npx playwright test -c playwright.docs.config.ts
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: docs-playwright-report
+          path: playwright-report/
+          retention-days: 7

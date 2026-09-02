@@ -48,8 +48,11 @@ import { cn } from '@/lib/utils';
 
 /** 几何 —— 与 Button 同一套，出处见该文件。 */
 const GEOMETRY = {
+  /** 高度阶梯。[实测] / [官方] / `[推定]` —— 三档的出处**完全继承 Button**，见 ui/button.tsx */
   height: { sm: 44, default: 48, lg: 56 } as const,
+  /** 水平内边距 / 高度。[实测] —— 继承 Button */
   paddingRatio: 0.25,
+  /** 标签字号（px）。[实测] —— 继承 Button */
   labelSize: 17,
   /** 按下时的缩放。`[推定]`，与 Button 取同值以保持手感一致。 */
   pressScale: 0.97,

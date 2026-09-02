@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "pnpm --filter www dev:css && pnpm --filter www dev:build && node scripts/serve-dev.mjs",
+    "docs": "pnpm --filter www dev",
+    "docs:build": "pnpm --filter www build",
     "build": "pnpm -r build",
     "registry:build": "pnpm --filter www registry:build",
     "typecheck": "pnpm -r typecheck",
@@ -15,7 +17,8 @@
     "lint": "pnpm -r lint",
     "contrast:audit": "node scripts/contrast-audit.mjs",
     "test:behavior": "playwright test --project=behavior",
-    "test:visual": "playwright test --project=visual"
+    "test:visual": "playwright test --project=visual",
+    "test:docs": "playwright test -c playwright.docs.config.ts"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

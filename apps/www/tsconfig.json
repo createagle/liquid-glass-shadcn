@@ -1,19 +1,45 @@
 {
-  // registry 里的组件源码此前从未被类型检查过 —— 它不在 glass-core 的
-  // tsconfig 范围内，而 apps/www 之前没有自己的 tsconfig。
-  // 做 Slider / Switch 时补上：组件源码是要发给用户的，类型必须是对的。
+  // 一份 tsconfig 兼两个用途：
+  //   1. registry 组件源码的类型检查 —— 组件是要发给用户的，类型必须是对的
+  //      （它不在 glass-core 的 tsconfig 范围内，做 Slider / Switch 时才补上）
+  //   2. 文档站（Next.js App Router）
+  //
+  // 路径别名刻意与 `shadcn add` 之后用户工程里的形态**一致**：
+  // examples/ 下的示例代码写的就是 `@/components/ui/button`，
+  // 既能在本站编译，也能被用户原样复制走。
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
+    "jsx": "preserve",
+    "allowJs": true,
+    "incremental": true,
     "baseUrl": ".",
+    "plugins": [{ "name": "next" }],
     "paths": {
-      // 与 dev:build 的 esbuild --alias 保持一致
-      "@glass/core": ["../../packages/glass-core/src/index.ts"],
+      // ⚠️ **刻意没有把 @glass/core 映射到源码。**
+      //
+      // 让它走 node_modules → package.json 的 exports → dist/index.d.ts，
+      // 于是文档站与类型检查吃到的是**发布出去的那个表面**，
+      // 而不是内部源码。少映射一条，多验证一层。
+      // （代价：跑 typecheck / build 之前要先 `pnpm --filter @glass/core build`，
+      //   两个脚本里都串好了。）
+      //
+      // 验证台那边不受影响 —— dev:build 的 esbuild --alias 指向源码，
+      // 改一行光学引擎不用重新构建包就能看到效果。
       "@/lib/utils": ["./registry/glass/lib/utils.ts"],
       // 组件之间可以互相引用（shadcn 的常规做法，靠 registryDependencies 传递）
-      "@/components/ui/*": ["./registry/glass/ui/*"]
+      "@/components/ui/*": ["./registry/glass/ui/*"],
+      // 站点自身的代码。⚠️ 站点组件一律不放在 components/ui/ 下 ——
+      // 那个前缀留给上面那条映射（本库组件），混在一起会互相盖住。
+      "@/*": ["./*"]
     }
   },
-  "include": ["registry/**/*.ts", "registry/**/*.tsx", "dev/**/*.tsx"],
-  "exclude": ["node_modules", "dev/**/*.js", "public"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "next.config.ts"
+  ],
+  "exclude": ["node_modules", "dev/**/*.js", "public", ".next"]
 }

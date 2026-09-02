@@ -1450,6 +1450,170 @@ DropdownMenu 完全同源，已经在 `compare-menu.png` 里比过了。
 
 ---
 
+## 0.6 Phase 6 第一批 · 文档站骨架 —— 自查（2026-09-02）
+
+任务卡的优先级里，这一批交付 **1–3**（组件页模板 · API 自动生成 · 全局顶栏），
+外加原本排在第 6 位的 `/view/[name]`（因为组件页要链接到它）。
+**4（Fidelity 页）、5（首页 Hero）、6 的其余部分、7（Materials / Optics）没做**，
+页面上逐条写着缺口，不做「即将上线」的空壳。
+
+### 站点长什么样
+
+- `app/(site)/` 带顶栏与侧栏，`app/view/` 刻意在路由组之外 —— `/view/[name]`
+  是给截图和 iframe 用的，除了 Provider 什么都不套。
+- 顶栏是一块 Layer B 底座，压在整页的彩色底纹上；三个控件（材质滑杆、
+  渲染路径、明暗）**用的是本库自己的 Slider / Tabs / Switch**。
+- 侧栏是本库的 `Card` + `CardRow`，也就是 iOS 的分组列表。
+- 12 个组件页 + 首页 + Docs 首页 + 安装页 + 12 条 `/view` 路由，共 **29 个静态页**。
+
+### 页面上几乎没有手写内容
+
+| 这一段 | 来自 |
+|---|---|
+| 标题 / 描述 / 依赖 / 安装命令 | `registry.json` —— **发给用户的同一份** |
+| Preview | 示例文件默认导出的组件，真的渲染出来 |
+| Code | **同一个文件的源码原文** |
+| props 表 / 默认值 / 继承说明 | 组件的 TS 类型与 JSDoc |
+| 尺寸常量 + 可信度标注 | 组件源码里的 `as const` 对象与它们的注释 |
+| APPLE REFERENCE | 组件文件头那段注释 |
+
+手写的只有一行：分层归属（抄自 PROJECT_SPEC §2 的速查表）。
+
+**Code 与磁盘上的示例文件逐字相同**这条有测试钉住 —— 手写一份说明、
+渲染另一份代码是 Preview/Code 模式最常见的退化方式。
+
+### API 生成器：刻意不摊平继承
+
+`react-docgen-typescript` 这类通用工具会把 `extends React.ComponentProps<'button'>`
+**整个摊平**，于是 API 表里出现 300 多个 DOM 属性，组件自己那两三个真正需要
+说明的 prop 反而被淹没。所以这里只取**接口自己声明的成员**，继承部分写成一行人话：
+
+> ↳ 继承 `<button>` 的原生属性（已排除 onDrag、onDragStart、…）
+
+默认值从组件函数的**解构参数**里读（`variant = 'glass'`），不是手抄的。
+
+### 意外收获：把「有没有裸数字」变成了可检查的量
+
+生成器顺手统计了「JSDoc 里没有 `[官方]/[实测]/[推定]/[待核实]` 标注的尺寸常量」。
+第一次跑出来：**90 个里有 29 个没有**。
+
+查下来不是真的缺依据 —— Tabs / Slider / Switch / Button / Dialog / Toggle
+这批早期组件把出处写在**文件头**，逐键的 JSDoc 里只写了「iOS 27 实测」这样的
+散文，没用方括号标记。后来的组件（Card 起）才统一成方括号。
+
+补齐之后 **90 / 90 全部带标注**，并在 CI 里钉死（`docs.yml` 会读生成物里的
+`stats.unlabelled`，不为 0 就 fail）。组件页上那张「尺寸常量与可信度」表
+因此每一行都有徽章 —— 这是本库区别于普通 UI 库最直观的一页。
+
+### 做站点时抓出来的三个真缺陷
+
+#### 一、Tabs 从第一天起就在无限重渲染
+
+`TabsTrigger` 里同步洞位置的 effect 依赖**整个 ctx**，而 `Tabs` 的 ctx memo
+依赖 `punch`，那个 effect 又会 `setPunch` —— 闭环：
+
+    set → ctx 换新 → effect 重跑 → 再 set → ……
+
+控制台刷 `Maximum update depth exceeded`，而**画面完全正常**（每次算出来的
+洞位置都一样）。代价是 MutationObserver 与 ResizeObserver **每帧被拆掉重建**。
+
+已有的测试一条都抓不到它：行为测试断言 DOM 与几何（值是对的）、
+视觉快照比像素（画面是对的）、**没有任何一条看过控制台**。
+
+修法两层：
+- `@glass/core` 新增 `usePunchState()` —— setter 在**值没变时不重渲染**
+  （0.01px 容差，避开 `getBoundingClientRect()` 的浮点噪声）；
+- effect 的依赖从 `ctx` 收窄到 `setPunch`（引用稳定）。
+
+Tabs / DropdownMenu / Select 三处挖洞全部换过来了。
+
+#### 二、`@glass/core` 的两个 hook 模块漏了 `'use client'`
+
+`use-glass-filter.ts` 与 `preferences.ts` 导出的全是 hook，但没有指令。
+后果：**任何从服务端组件 `import '@glass/core'` 的人都构建失败** ——
+barrel 会把它们一起拖进 RSC 图。本库自己的文档站 `app/layout.tsx` 第一个撞上。
+
+> 值得记的是 **Turbopack 不报，webpack 才报**。Next 16 默认 Turbopack，
+> 我是切到 `--webpack` 排查 CSS 问题时顺带看见的。
+
+#### 三、Slider 的 `aria-label` 落在了 Root 上，读不出来
+
+`role="slider"` 在 Radix 里是 **Thumb** 承担的，Root 只是容器。
+`<Slider aria-label="音量" />` 这种最自然的写法，透传给 Root 之后
+屏幕阅读器读到的是一个**没有名字的滑杆**，而调用方看不出任何异常
+（本库自己的示例文件就是这么写的）。改成把 `aria-label` / `aria-labelledby`
+摘出来转挂到 Thumb。
+
+### 新增的测试
+
+| 文件 | 内容 | 进 CI |
+|---|---|---|
+| `tests/console.behavior.spec.ts` | **10 个验证台，控制台必须零 error / warning** | ✅ components.yml |
+| `tests/docs/site.spec.ts` | 站点 15 条（见下） | ✅ docs.yml（新建） |
+
+站点那 15 条里，值得单独说的：
+
+- **顶栏三个控件真的影响全站** —— 不只查变量，还查绘制：
+  拉材质滑杆之后读 `.lg-surface` 的 `background-color` 必须变；
+  切到 Tier C 之后 `backdrop-filter` 必须是 `none`。
+- **Code 那一半与磁盘上的示例文件逐字相同**。
+- **每一行尺寸常量都必须有可信度徽章**（逐行遍历，不是抽查）。
+- **首屏不闪**：拆成两个确定性断言 —— 内联脚本在 `</head>` 之前、
+  且存了 `lg:theme=dark` 之后页面确实是暗色。
+  > 试过两种更"直接"的写法（第一个 rAF 里读、body 插入时读），**都偶发失败**：
+  > 前者 rAF 可能在文档还没解析到 `<head>` 时就烧掉一帧，后者 `addInitScript`
+  > 跑得比 `documentElement` 还早、观察器根本装不上。
+  > 那是测试的时序假设不成立，不是产品的问题 —— 记在测试注释里。
+
+### 一处妥协，写清楚
+
+防闪烁脚本是 `<head>` 里的**裸 `<script>`**，这会让 Next 在开发模式下打一条
+「Scripts inside React components are never executed when rendering on the client」。
+换 `next/script` 的 `beforeInteractive` 试过：**警告照旧**（它内部也是渲染一个
+script 标签），而注入位置反而从 `<head>` 掉到了 `<body>` 开头 —— 那正是可能
+闪一下的位置。所以保留裸标签，把这条警告放进站点测试的白名单，并写明原因。
+
+### §14 的那一项
+
+「文档页含 Preview/Code、Examples、Fidelity 对照、自动生成的 API 表」——
+这是 11 个组件**全都没过**的唯一一项。本批之后：
+
+| 子项 | 状态 |
+|---|---|
+| Preview / Code | ✅ |
+| 安装命令（CLI / 手动） | ✅ |
+| 自动生成的 API 表 | ✅ |
+| Examples（多个变体） | 🟡 **每个组件只有 1 个示例** —— 模板支持多个，内容没填 |
+| Fidelity 对照 | ❌ 没做 |
+
+所以这一项仍然**不算过**，只能算「过了一半多」。不四舍五入。
+
+### 未做的（任务卡原文照抄）
+
+🔴 **首页 Hero**：规格要的是「一个完全可交互的 iOS 风格界面（tab bar +
+segmented + slider 全部是活的）」。现在只是普通落地页。
+🔴 **Fidelity 标签页**（任务卡第 4 位）—— 对照图早就生成在 `public/fidelity/` 下了，
+缺的是「并排 + 逐条差异说明」那一页。
+🔴 **⌘K 命令面板**、**Themes / Playground**（能导出 CSS 变量片段的那个）。
+🔴 **Docs 章节只有 Introduction 与 Installation。**
+Theming / Dark Mode / CLI / Registry 四页没有；
+**Materials 与 Optics 两页也没有** —— 任务卡说这两页是本库与其他
+「毛玻璃 UI 库」的分水岭，要写透，所以不糊弄，留到下一批。
+🟡 **代码块没有语法高亮。** 加高亮库会引入一套与本库无关的配色表，
+而 §15.4 禁止裸色值 —— 要么另建一套 token（超出本批范围），要么就是一堆硬编码颜色。
+现在用等宽 + 本库的标签色层级。
+
+### 顺带的两处结构决策
+
+- `apps/www/tsconfig.json` **刻意不再把 `@glass/core` 映射到源码**，让它走
+  `package.json` 的 exports → `dist`。文档站与类型检查吃到的因此是
+  **发布出去的那个表面**。代价是 build / typecheck 前要先构建包，两个脚本里串好了。
+  （验证台不受影响 —— `dev:build` 的 esbuild alias 仍指向源码。）
+- 文档站的测试单独一个 config（`playwright.docs.config.ts`），因为它要先
+  `next build` 再 `next start`。混进主 config 会让秒级的组件回归每次白等一次构建。
+
+---
+
 ## 0.5 CI 第一次真跑（2026-09-01）—— 抓出 4 个真实故障
 
 仓库此前**没有远程**，两个 workflow 从建好起一次都没执行过。
@@ -2212,7 +2376,8 @@ docs/research/
 
 ## 10. 下一步（2026-09-02 更新）
 
-**Phase 0 / 1 / 2 / 5 已完成；Phase 3 的 P0 组件 11 / 11 全部交付；Phase 4 的核心原语已落地。**
+**Phase 0 / 1 / 2 / 5 已完成；Phase 3 的 P0 组件 11 / 11 全部交付；
+Phase 4 的核心原语已落地；Phase 6 交付第一批（骨架 + 组件页模板 + API 自动生成 + 全局顶栏）。**
 
 | 已交付 | §14 成绩 |
 |---|---|
@@ -2222,43 +2387,47 @@ docs/research/
 | Sheet / Drawer | 12 项过 9（1 项明确未达标、2 项不适用） |
 | Popover | 12 项过 9（2 项不适用 —— Layer I 属于菜单项） |
 | DropdownMenu | 12 项过 10 |
-| **Select** | 12 项过 10 |
+| Select | 12 项过 10 |
 | **ResponsiveOverlay**（Phase 4 原语） | 任务卡四条重点全部落地并有测试 |
+| **文档站**（Phase 6 第一批） | 任务卡 7 项里的 1–3 + 6 的一半；见 §0.6 |
 
-### 下一批该做什么
+> ⚠️ §14 的「文档页」那一项**仍然不算过**：Preview/Code、安装命令、
+> 自动生成的 API 表都有了，但每个组件只有 1 个示例，Fidelity 对照页没做。
+> 不四舍五入成「过 11」。
 
-P0 清单已经空了。按 `LIQUID_GLASS_UI_PROMPT.md` 的任务卡，接下来有三个方向，
-**需要你选一个**（不打算自己抢跑）：
+### Phase 6 的下一批（按任务卡的优先级）
 
-1. **Phase 6 · 文档站。** §14 里唯一一项**所有组件都没过**的验收
-   （Preview / Code / Fidelity / API 四个页签）。做完它，
-   11 个组件的自查表会一次性从「12 项过 10」变成「过 11」。
-2. **Phase 4 剩下的部分。** ResponsiveOverlay 已落地，但 §9 点名的
-   `Tooltip / Combobox / DatePicker` 这类还没做。
-3. **还债。** 下面三件长期挂着的事，做完 P0 之后已经开始变成阻塞。
+4. **Fidelity 标签页** —— 对照图已经在 `public/fidelity/` 下，缺的是并排 + 逐条差异说明。
+5. **首页 Hero** —— 「一个完全可交互的 iOS 风格界面」，任务卡点名的卖点。
+6. **⌘K 命令面板** —— `/view/[name]` 与代码复制已经有了，剩这一件。
+7. **Materials 与 Optics 两页** —— 任务卡说这两页是本库与其他「毛玻璃 UI 库」的
+   分水岭，要写透。**这两页写完，站点才真的有说服力。**
+
+另外还欠：Themes / Playground、Theming / Dark Mode / CLI / Registry 四页、
+每个组件的第 2 个以上示例、代码块语法高亮。
 
 ### 长期挂着的三件事
 
 - **发布 `@glass/core` 到 npm** —— 否则真实用户装不了 registry item。
-  冒烟测试目前靠本地 shim 顶着。
-- **在 Linux 环境录一次视觉基线** —— 视觉回归目前只有 win32 基线，CI 里刻意不跑。
-  这一批 31 张基线因为两个真缺陷而变化，全靠 `--update-snapshots=all` 手工重录。
-- **补一条真正的 SSR 验证** —— 冒烟测试里那个干净 Next 工程目前只跑 `next build`。
-  ResponsiveOverlay 与 Select 的「SSR 首帧走桌面路径、无 hydration mismatch」
-  只有推理没有实测。
+  冒烟测试目前靠本地 shim 顶着，安装页上如实写了这一条。
+- **在 Linux 环境录一次视觉基线** —— 视觉回归只有 win32 基线，CI 里刻意不跑。
+- **补一条真正的 SSR 验证** —— 冒烟测试里那个干净 Next 工程只跑 `next build`。
+  ⚠️ 不过文档站本身现在**就是**一个真实的 App Router 工程，
+  `docs.yml` 每次 push 都会构建它 —— Select / ResponsiveOverlay 的
+  「SSR 首帧走桌面路径」间接有了覆盖（它们在 `/docs/components/*` 上被服务端渲染过）。
+  仍然缺的是「无 hydration mismatch」的显式断言。
 
-### 这一批学到的：快照回归有一块结构性盲区
+### 这一段时间学到的两条
 
-Select 这一批修的三个缺陷里，**有两个是视觉快照本该抓到却没抓到的**：
+**一、快照回归有一块结构性盲区。** Select 那一批修的三个缺陷里有两个是
+视觉快照本该抓到却没抓到的：1px 内描边在 250×220 的面板上只占 0.9%，
+正好在 `maxDiffPixelRatio: 0.01` 的容差之内；挖洞偏 16px 在平滑渐变背景上
+几乎不改变像素。**几何与光学的正确性不能只靠截图比对。**
 
-- 亮色下所有 elevated 面板丢了描边与落影 —— 1px 内描边在 250×220 的面板上
-  只占 0.9%，`maxDiffPixelRatio: 0.01` 的容差正好放过去；落影在元素框外，
-  按元素截图根本截不到。
-- 挖洞偏了 16px —— 快照背景是平滑渐变，而渐变上折射本来就看不出来。
-
-**结论：几何与光学的正确性不能只靠截图比对。** 能从 DOM / 计算值断言的
-就写成行为测试（确定性、能进 CI）；只能靠像素的就用统计量并写下阈值来由。
-这一批两条都补上了。
+**二、没有任何测试看过控制台。** Tabs 从第一天起就在无限重渲染 ——
+几何对、像素对、控制台在刷屏，三套测试一条都没红。
+现在有 `tests/console.behavior.spec.ts`（10 个验证台）与站点的 4 条页面级检查。
+这类「功能正常、实现在空转」的问题，只有控制台会说话。
 
 ### 仍然没有的东西
 
@@ -2271,3 +2440,6 @@ Alert / Menu / Button / Grouped List / Sheet / 菜单项内部布局都有实测
 DropdownMenu 那批第一次给出了色散的**相对**证据（高亮项内通道差 29 vs 面板 2），
 Select 这批补上了挖洞位置的**绝对**证据（洞与项 1px 内对齐），
 但「29 是不是对的」仍然无从校准。
+
+> 文档站现在把这件事**摆到了明面上**：每个组件页的「尺寸常量与可信度」表里，
+> 橙色的「推定」徽章有多少个，一眼就能数出来。

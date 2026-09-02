@@ -16,6 +16,8 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
+  // 文档站的测试要先构建再起服务，单独一个 config（playwright.docs.config.ts）
+  testIgnore: ['docs/**'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0,

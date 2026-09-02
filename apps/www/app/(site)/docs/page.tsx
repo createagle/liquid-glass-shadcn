@@ -65,23 +65,24 @@ export default function DocsIndexPage() {
           {apiStats.labelled + apiStats.unlabelled} 个尺寸常量里，{apiStats.labelled}{' '}
           个带可信度标注。
         </p>
-        <Link
-          href="/docs/components/button"
-          className="text-[15px] underline underline-offset-4"
-        >
-          从 Button 开始看 →
-        </Link>
+        <div className="flex flex-wrap gap-5 text-[15px]">
+          <Link href="/docs/materials" className="underline underline-offset-4">
+            先读 Materials（分层与可读性）→
+          </Link>
+          <Link href="/docs/components/button" className="underline underline-offset-4">
+            直接看组件 →
+          </Link>
+        </div>
       </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-[22px] font-semibold">这一页还缺什么</h2>
         <ul className="flex list-disc flex-col gap-1.5 pl-5 text-[15px] text-[var(--lg-label-secondary)]">
+          <li>🔴 Theming / Dark Mode / CLI / Registry 四页还没有。</li>
           <li>
-            🔴 <strong className="font-medium">Materials</strong>（讲透 Layer B vs Layer I）与{' '}
-            <strong className="font-medium">Optics</strong>（讲透三级降级）两页还没写 ——
-            任务卡说这两页是本库和其他「毛玻璃 UI 库」的分水岭，不能糊弄，所以留到下一批。
+            🟡 Materials 与 Optics 已经写了 —— 那两页是本库与其他「毛玻璃 UI 库」的分水岭，
+            建议从它们开始读。
           </li>
-          <li>🔴 Theming / Dark Mode / CLI / Registry 四页也还没有。</li>
         </ul>
       </section>
     </article>

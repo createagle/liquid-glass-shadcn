@@ -11,6 +11,19 @@
  *   [data-glass-motion="reduced"]   prefers-reduced-motion
  */
 
+/**
+ * ⚠️ **`-webkit-backdrop-filter` 一律写在标准属性之前。**
+ *
+ * 顺序不是风格问题。Lightning CSS（Next 的 CSS 管线）看得懂这两者是同一个属性，
+ * 遇到手写的一对时会**只保留后面那条**。原本写成「标准在前、前缀在后」，
+ * 打包产物里于是只剩 `-webkit-backdrop-filter` —— 而 Chromium 并不把它当成
+ * 标准属性的别名，结果是 Tier B 的指示器规则在浏览器里**根本没生效**，
+ * 悄悄退回了 Tier A 的兜底值。
+ *
+ * 做 Optics 文档页的「三档并排」演示时才发现：三格长得一模一样。
+ * 翻成「前缀在前、标准在后」之后，被保留的就是标准属性，两边都对。
+ */
+
 /* ══════════════════════════════════════════════════════════════════════
    GlassSurface 基础
    ══════════════════════════════════════════════════════════════════════ */
@@ -80,8 +93,8 @@
 
 [data-glass-tier='a'] .lg-surface[data-layer='base'],
 [data-glass-tier='a'] .lg-surface[data-layer='elevated'] {
-  backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
   -webkit-backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+  backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
 }
 
 /* 指示器的完整 backdrop-filter（含运行时生成的 filter id）由 JS 以**内联样式**注入，
@@ -110,8 +123,8 @@
 /* 挖洞时，模糊从本体移交给子层 */
 [data-glass-tier='a'] .lg-surface[data-punched='true'],
 [data-glass-tier='b'] .lg-surface[data-punched='true'] {
-  backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .lg-punch-layer {
@@ -125,8 +138,8 @@
 
 [data-glass-tier='a'] .lg-surface[data-punched='true'] > .lg-punch-layer,
 [data-glass-tier='b'] .lg-surface[data-punched='true'] > .lg-punch-layer {
-  backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
   -webkit-backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+  backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
 }
 
 /* Tier C 没有 backdrop-filter，挖洞无意义也无害 —— 子层不渲染任何东西 */
@@ -141,14 +154,14 @@
 
 [data-glass-tier='b'] .lg-surface[data-layer='base'],
 [data-glass-tier='b'] .lg-surface[data-layer='elevated'] {
-  backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
   -webkit-backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
+  backdrop-filter: blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate));
 }
 
 [data-glass-tier='b'] .lg-surface[data-layer='indicator'] {
   /* ≤2px 的微模糊 + 提亮，模拟「透镜把背景拉近」的观感 */
-  backdrop-filter: blur(1px) brightness(1.12) saturate(1.3);
   -webkit-backdrop-filter: blur(1px) brightness(1.12) saturate(1.3);
+  backdrop-filter: blur(1px) brightness(1.12) saturate(1.3);
   box-shadow:
     inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),
     inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),
@@ -161,8 +174,8 @@
 /* 折射未生效时（Tier A 但超过性能红线 / 滤镜尚未就绪）借用 Tier B 的处理，
    这样降级实例仍然是一个完成度正确的设计，而不是一块空白。 */
 .lg-surface[data-layer='indicator'][data-refraction='off'] {
-  backdrop-filter: blur(1px) brightness(1.12) saturate(1.3);
   -webkit-backdrop-filter: blur(1px) brightness(1.12) saturate(1.3);
+  backdrop-filter: blur(1px) brightness(1.12) saturate(1.3);
   box-shadow:
     inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),
     inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),
@@ -207,6 +220,25 @@
 [data-glass-tier='c'] .lg-surface[data-layer='elevated'] {
   /* 不透明度拉高来补偿没有模糊 —— 否则背景内容会直接糊掉前景文字 */
   background-color: rgb(var(--lg-base-color) / min(1, calc(var(--lg-base-alpha) + 0.26)));
+}
+
+/**
+ * Tier C 显式清掉 backdrop-filter。
+ *
+ * 全局场景下本来就没人给它设过（`<html>` 上只有一个 tier），写不写都一样。
+ * 但**局部覆盖**时不一样：文档站的「三档并排」把 `data-glass-tier` 写在一个
+ * 中间 div 上，此时 `<html>` 仍然是 A —— Tier A 的规则同样命中这个元素，
+ * 而 Tier C 没有对应声明去盖住它，结果 C 那一格还带着 A 的提亮与饱和。
+ * 补上这条，局部覆盖才是干净的。
+ */
+[data-glass-tier='c'] .lg-surface[data-layer='base'],
+[data-glass-tier='c'] .lg-surface[data-layer='elevated'],
+[data-glass-tier='c'] .lg-surface[data-layer='indicator'] {
+  /* 三个 data-layer 逐个写，是为了让特异度与 Tier A / B 的规则**相等** ——
+     只写 `[data-glass-tier='c'] .lg-surface` 的话特异度更低，
+     局部覆盖时会被祖先 `<html>` 上那一档的规则压住。 */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 [data-glass-tier='c'] .lg-surface[data-layer='indicator'] {

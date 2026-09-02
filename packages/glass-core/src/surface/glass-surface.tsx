@@ -52,6 +52,21 @@ export interface GlassSurfaceProps {
   punch?: GlassPunch | null;
   /** 底层滤镜参数直通，调试用 */
   overrides?: Partial<RefractionOptions>;
+  /**
+   * 关掉 **JS 注入的 SVG 折射**，把这块玻璃的表现交还给 CSS 分支。
+   *
+   * 默认 `true`（跟随 Provider 的 tier 与无障碍偏好）。
+   *
+   * ⚠️ **这不是「tier 覆写」。** 三档渲染路径是 CSS 的后代选择器
+   * （`[data-glass-tier='b'] .lg-surface[...]`），要局部切换得把属性写在**祖先**上。
+   * 但光有属性还不够 —— Tier A 的折射是以**内联样式**注入的，优先级高于任何 CSS，
+   * 祖先写了 `data-glass-tier="b"` 也盖不住它。所以想在一屏之内同时展示三档，
+   * 两件事都要做：祖先加属性 + 这里传 `refraction={false}`。
+   *
+   * 唯一的真实用例就是文档站的「三档并排」演示。业务代码不需要它 ——
+   * tier 由运行时检测决定，顶栏的强制开关走的是 Provider。
+   */
+  refraction?: boolean;
   as?: 'div' | 'span';
 }
 
@@ -68,6 +83,7 @@ export function GlassSurface({
   interactive = false,
   punch = null,
   overrides,
+  refraction = true,
   as: Tag = 'div',
 }: GlassSurfaceProps) {
   const glass = useGlassOptional();
@@ -75,7 +91,7 @@ export function GlassSurface({
   const isPressed = pressed ?? selfPressed;
 
   // 只有指示器需要折射；底座绝不折射（PROJECT_SPEC §15.2）
-  const wantsRefraction = layer === 'indicator' && (glass?.refractionEnabled ?? false);
+  const wantsRefraction = refraction && layer === 'indicator' && (glass?.refractionEnabled ?? false);
 
   // 按下时折射强度上扬一档
   const activeIntensity = useMemo<1 | 2 | 3>(() => {
@@ -124,8 +140,13 @@ export function GlassSurface({
       : `${backdropFilter} brightness(1.06) saturate(1.22)`
     : undefined;
 
-  // 想折射但没拿到（超过性能红线 / 滤镜未就绪）→ 借用 Tier B 的处理，
-  // 保证降级实例仍是一个完成度正确的设计。
+  /**
+   * 想折射但没拿到（超过性能红线 / 滤镜未就绪）→ 借用 Tier B 的处理，
+   * 保证降级实例仍是一个完成度正确的设计。
+   *
+   * ⚠️ `refraction={false}` **不算**这种情况：那是调用方主动交还控制权，
+   * 该让祖先的 `data-glass-tier` 说了算，不能再打上 Tier B 的兜底标记。
+   */
   const refractionOff = wantsRefraction && !backdropFilter;
 
   const onPointerDown = useCallback(() => {

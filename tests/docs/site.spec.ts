@@ -296,6 +296,133 @@ test.describe('⌘K 命令面板', () => {
   });
 });
 
+
+/* ── Materials / Optics（任务卡点名的两页分水岭）──────────────────────── */
+
+test.describe('Materials / Optics', () => {
+  test('两页都在，且在侧栏与 ⌘K 里都能找到', async ({ page }) => {
+    await page.goto('/docs');
+    for (const label of ['Materials', 'Optics']) {
+      await expect(page.getByRole('link', { name: label, exact: true })).toHaveCount(1);
+    }
+    await page.keyboard.press('Control+k');
+    await page.getByRole('combobox', { name: '搜索组件与文档' }).fill('optics');
+    await expect(page.getByRole('option')).toContainText(['Optics']);
+  });
+
+  test('Materials：演示是活的 —— 分层对照 / 挖洞开关 / α 滑杆', async ({ page }) => {
+    await page.goto('/docs/materials');
+    // 分层对照：同一块背景上两种材质
+    const layers = page.locator('#two-layers .lg-surface[data-layer]');
+    await expect(layers.filter({ has: page.locator('xpath=.') })).not.toHaveCount(0);
+    await expect(page.locator('#two-layers .lg-surface[data-layer="base"]').first()).toHaveCount(1);
+    await expect(
+      page.locator('#two-layers .lg-surface[data-layer="indicator"]').first(),
+    ).toHaveCount(1);
+    /**
+     * 挖洞开关：关掉之后底座上不该再有洞。
+     * ⚠️ 必须限定到演示自己的舞台 —— 这一节里还有 Tabs（背景切换）与 Switch（开关），
+     * 它们各自也会挖洞，只按 [data-punched] 找会一次找到三个。
+     */
+    const punchLayer = page.locator('[data-lab="punch-stage"] .lg-surface[data-punched="true"]');
+    await expect(punchLayer).toHaveCount(1);
+    await page.locator('#punch').getByRole('switch', { name: '挖洞' }).click();
+    await expect(punchLayer).toHaveCount(0);
+  });
+
+  test('Materials：α 滑杆拉到 0 时明确报「不过 AA」', async ({ page }) => {
+    /**
+     * 这一页的核心论断是「α 归零 = 保证消失」。
+     * 演示如果算不出这个结论，整节就白写了。
+     */
+    await page.goto('/docs/materials');
+    // 原生 range 上 fill() 不触发 React 的 onChange，得自己派发 input 事件
+    const setAlpha = (v: string) =>
+      page.locator('#alpha input[type=range]').evaluate((el, value) => {
+        const input = el as HTMLInputElement;
+        const setter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'value',
+        )!.set!;
+        setter.call(input, value);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }, v);
+    await setAlpha('0');
+    await expect(page.locator('#alpha')).toContainText('不过 AA');
+    await setAlpha('1');
+    await expect(page.locator('#alpha')).toContainText('过 WCAG AA');
+  });
+
+  test('Optics：三档同屏渲染，而且**真的不一样**', async ({ page }) => {
+    /**
+     * 第一版这三格长得一模一样 —— 祖先加了 data-glass-tier，
+     * 但 Tier A 的折射是 JS 注入的内联样式，优先级高于任何 CSS。
+     * 这条断言钉住三档的 backdrop-filter 互不相同。
+     */
+    await page.goto('/docs/optics');
+    const read = (t: string) =>
+      page.evaluate(
+        (tier) =>
+          getComputedStyle(
+            document.querySelector(
+              '#tiers div[data-glass-tier="' + tier + '"] .lg-surface[data-layer="indicator"]',
+            )!,
+          ).backdropFilter,
+        t,
+      );
+    // 折射滤镜是量完尺寸之后异步创建的，等它就绪再断言
+    await expect.poll(() => read('a'), { timeout: 5000 }).toContain('url(');
+    const [a, b, c] = [await read('a'), await read('b'), await read('c')];
+    expect(a, 'Tier A 必须是真折射').toContain('url(');
+    expect(b, 'Tier B 是微模糊，不是折射').toContain('blur(1px)');
+    expect(b).not.toContain('url(');
+    expect(c, 'Tier C 完全没有 backdrop-filter').toBe('none');
+  });
+
+  test('Tier B 的 backdrop-filter 没有被压缩器吃掉', async ({ page }) => {
+    /**
+     * 回归测试，钉的是一个**真的上线过**的缺陷：
+     *
+     * optics.css 原先把 「backdrop-filter」 写在 「-webkit-backdrop-filter」 **前面**。
+     * Lightning CSS（Next 的 CSS 管线）看得懂两者是同一个属性，遇到手写的一对
+     * 只保留后面那条 —— 打包产物里于是只剩 「-webkit-」 版本，
+     * 而 Chromium 不把它当标准属性的别名，Tier B 的指示器规则**根本没生效**。
+     *
+     * 验证台用的是未压缩的 CSS，所以视觉快照一直是对的；
+     * 只有走真实构建管线才会现形。这正是「本机看不出来、装到别人工程里才炸」那一类。
+     */
+    await page.goto('/docs/optics');
+    const decls = await page.evaluate(() => {
+      const out: string[] = [];
+      for (const sheet of Array.from(document.styleSheets)) {
+        let rules: CSSRuleList;
+        try {
+          rules = sheet.cssRules;
+        } catch {
+          continue; // 跨域样式表读不到，跳过
+        }
+        for (const rule of Array.from(rules)) {
+          // CSSOM 会不会给属性值加引号取决于浏览器，统一去掉再比
+          const text = ((rule as CSSStyleRule).selectorText ?? '').replace(/["']/g, '');
+          if (text.includes('[data-glass-tier=b] .lg-surface[data-layer=indicator]')) {
+            out.push((rule as CSSStyleRule).style.getPropertyValue('backdrop-filter'));
+          }
+        }
+      }
+      return out;
+    });
+    expect(decls.length, '应当能找到 Tier B 的指示器规则').toBeGreaterThan(0);
+    expect(decls.some((d) => d.includes('blur(1px)')), '标准属性必须还在').toBe(true);
+  });
+
+  test('Optics 必须写清楚「光学至今没有真机基准」', async ({ page }) => {
+    // 一个讲光学的页面如果不写这件事，就是在拿推定值冒充实测值
+    await page.goto('/docs/optics');
+    await expect(page.locator('#no-baseline')).toContainText('没有真机基准');
+    await expect(page.locator('#no-baseline')).toContainText('全是 [推定]');
+  });
+});
+
 /* ── 控制台 ──────────────────────────────────────────────────────────── */
 
 /**
@@ -311,7 +438,14 @@ const ALLOW: { re: RegExp; why: string }[] = [
   },
 ];
 
-for (const path of ['/', '/docs', '/docs/installation', '/docs/components/select']) {
+for (const path of [
+  '/',
+  '/docs',
+  '/docs/installation',
+  '/docs/materials',
+  '/docs/optics',
+  '/docs/components/select',
+]) {
   test(`控制台无 error / warning：${path}`, async ({ page }) => {
     const noise: string[] = [];
     page.on('console', (m) => {

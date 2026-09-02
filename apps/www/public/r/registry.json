@@ -397,15 +397,15 @@
             "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\n    \n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.28),\n    \n    inset 1px 0 1px -0.5px var(--lg-stroke-side),\n    inset -1px 0 1px -0.5px var(--lg-stroke-side),\n    0 3px 10px rgb(0 0 0 / 0.26)"
           },
           "[data-glass-tier='a'] .lg-surface[data-layer='base'], [data-glass-tier='a'] .lg-surface[data-layer='elevated']": {
-            "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
-            "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"
+            "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
+            "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"
           },
           "[data-glass-tier='a'] .lg-surface[data-layer='indicator']": {
             "backdrop-filter": "brightness(1.06) saturate(1.22)"
           },
           "[data-glass-tier='a'] .lg-surface[data-punched='true'], [data-glass-tier='b'] .lg-surface[data-punched='true']": {
-            "backdrop-filter": "none",
-            "-webkit-backdrop-filter": "none"
+            "-webkit-backdrop-filter": "none",
+            "backdrop-filter": "none"
           },
           ".lg-punch-layer": {
             "position": "absolute",
@@ -415,24 +415,24 @@
             "z-index": "0"
           },
           "[data-glass-tier='a'] .lg-surface[data-punched='true'] > .lg-punch-layer, [data-glass-tier='b'] .lg-surface[data-punched='true'] > .lg-punch-layer": {
-            "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
-            "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"
+            "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
+            "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"
           },
           "[data-glass-tier='c'] .lg-punch-layer": {
             "display": "none"
           },
           "[data-glass-tier='b'] .lg-surface[data-layer='base'], [data-glass-tier='b'] .lg-surface[data-layer='elevated']": {
-            "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
-            "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"
+            "-webkit-backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))",
+            "backdrop-filter": "blur(var(--lg-base-blur)) saturate(var(--lg-base-saturate))"
           },
           "[data-glass-tier='b'] .lg-surface[data-layer='indicator']": {
-            "backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
             "-webkit-backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
+            "backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
             "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),\n    \n    inset 0 0 2px 1px rgb(255 255 255 / 0.16),\n    inset 0 0 8px 3px rgb(255 255 255 / 0.08),\n    0 3px 10px rgb(0 0 0 / 0.26)"
           },
           ".lg-surface[data-layer='indicator'][data-refraction='off']": {
-            "backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
             "-webkit-backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
+            "backdrop-filter": "blur(1px) brightness(1.12) saturate(1.3)",
             "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.3),\n    inset 0 0 2px 1px rgb(255 255 255 / 0.16),\n    inset 0 0 8px 3px rgb(255 255 255 / 0.08),\n    0 3px 10px rgb(0 0 0 / 0.26)"
           },
           "[data-glass-tier='b'] .lg-surface[data-layer='indicator']::before, .lg-surface[data-layer='indicator'][data-refraction='off']::before": {
@@ -450,6 +450,10 @@
           },
           "[data-glass-tier='c'] .lg-surface[data-layer='base'], [data-glass-tier='c'] .lg-surface[data-layer='elevated']": {
             "background-color": "rgb(var(--lg-base-color) / min(1, calc(var(--lg-base-alpha) + 0.26)))"
+          },
+          "[data-glass-tier='c'] .lg-surface[data-layer='base'], [data-glass-tier='c'] .lg-surface[data-layer='elevated'], [data-glass-tier='c'] .lg-surface[data-layer='indicator']": {
+            "-webkit-backdrop-filter": "none",
+            "backdrop-filter": "none"
           },
           "[data-glass-tier='c'] .lg-surface[data-layer='indicator']": {
             "background": "linear-gradient(\n    180deg,\n    rgb(255 255 255 / 0.32) 0%,\n    rgb(255 255 255 / 0.16) 46%,\n    rgb(255 255 255 / 0.22) 100%\n  )",
@@ -485,8 +489,8 @@
             "background-color": "var(--lg-content-thick)"
           },
           "[data-glass-tier='a'] .lg-content, [data-glass-tier='b'] .lg-content": {
-            "backdrop-filter": "blur(var(--lg-content-blur)) saturate(1.4)",
-            "-webkit-backdrop-filter": "blur(var(--lg-content-blur)) saturate(1.4)"
+            "-webkit-backdrop-filter": "blur(var(--lg-content-blur)) saturate(1.4)",
+            "backdrop-filter": "blur(var(--lg-content-blur)) saturate(1.4)"
           },
           "[data-glass-tier='c'] .lg-content": {
             "background-color": "var(--lg-content-thick)"
@@ -511,8 +515,8 @@
               "--lg-disperse-scale": "0"
             },
             ".lg-surface, .lg-content": {
-              "backdrop-filter": "none !important",
-              "-webkit-backdrop-filter": "none !important"
+              "-webkit-backdrop-filter": "none !important",
+              "backdrop-filter": "none !important"
             },
             ".lg-content": {
               "background-color": "var(--lg-card-fill) !important"

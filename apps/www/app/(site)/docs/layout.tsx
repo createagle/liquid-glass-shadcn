@@ -17,6 +17,14 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       ],
     },
     {
+      // 任务卡：这两页是本库和其他「毛玻璃 UI 库」的分水岭
+      title: '原理',
+      items: [
+        { href: '/docs/materials', label: 'Materials' },
+        { href: '/docs/optics', label: 'Optics' },
+      ],
+    },
+    {
       title: '组件',
       items: registryItems.map((i) => ({
         href: `/docs/components/${i.name}`,

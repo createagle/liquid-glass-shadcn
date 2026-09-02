@@ -46,8 +46,8 @@
 /* 标准材质在支持时用模糊增强层次；Tier C 下自然退化为不透明度更高的纯色 */
 [data-glass-tier='a'] .lg-content,
 [data-glass-tier='b'] .lg-content {
-  backdrop-filter: blur(var(--lg-content-blur)) saturate(1.4);
   -webkit-backdrop-filter: blur(var(--lg-content-blur)) saturate(1.4);
+  backdrop-filter: blur(var(--lg-content-blur)) saturate(1.4);
 }
 
 [data-glass-tier='c'] .lg-content {
@@ -110,8 +110,8 @@
   }
   .lg-surface,
   .lg-content {
-    backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
   /**
    * 内容层材质必须**真的变不透明**，只摘掉模糊是不够的。

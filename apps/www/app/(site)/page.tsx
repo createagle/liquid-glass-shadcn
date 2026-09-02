@@ -47,7 +47,11 @@ export default function HomePage() {
         <p className="max-w-[62ch] text-[15px] text-[var(--lg-label-secondary)]">
           下面这个 Select 的面板是 Layer B（磨砂，不折射），高亮项是 Layer I
           （强玻璃，折射且有可见色散）—— 面板会为高亮项挖一个洞，
-          它折射到的才是没被面板模糊过的背景。
+          它折射到的才是没被面板模糊过的背景。完整的推导、可交互的对照与实测数字在{' '}
+          <Link href="/docs/materials" className="underline underline-offset-4">
+            Materials
+          </Link>
+          。
         </p>
         <ComponentPreview name="select-demo" minHeight={340} />
       </section>
@@ -84,10 +88,6 @@ export default function HomePage() {
           <li>
             🔴 这个首页还不是规格要求的「完全可交互的 iOS 界面」——
             现在只是一个普通落地页，Hero 那件事还没做。
-          </li>
-          <li>
-            🔴 <strong className="font-medium">Materials 与 Optics 两页还没写。</strong>
-            任务卡说这两页是本库和其他「毛玻璃 UI 库」的分水岭，要写透，所以没打算糊弄过去。
           </li>
           <li>🔴 Themes / Playground（实时调档位并导出 CSS 变量片段）还没有。</li>
           <li>🟡 代码块没有语法高亮 —— 理由见 components/code-block.tsx 的文件头。</li>

@@ -41,6 +41,7 @@ const HARNESS = {
   sheet: pathToFileURL(resolve('apps/www/dev/sheet-demo.html')).href,
   card: pathToFileURL(resolve('apps/www/dev/card-demo.html')).href,
   overlay: pathToFileURL(resolve('apps/www/dev/overlay-demo.html')).href,
+  select: pathToFileURL(resolve('apps/www/dev/select-demo.html')).href,
 };
 
 /**
@@ -225,6 +226,39 @@ const CASES = [
     press: true,
     gated: true,
     viewport: { width: 900, height: 700 },
+  },
+  {
+    /**
+     * Select 的高亮项与 DropdownMenu 同构（叠在面板材质之上），
+     * 但多一层东西压在同一块玻璃上：**对勾**。
+     * 对勾用的是 label 色，与标签同色 —— 所以量标签就等于量它。
+     */
+    name: 'Select · 高亮项（Layer I）',
+    harness: 'select',
+    query: 'only=default&open=1&value=size',
+    target: '[data-slot="select-item"]',
+    nth: 0,
+    label: '[data-slot="select-item"]',
+    press: true,
+    gated: true,
+    viewport: { width: 1000, height: 800 },
+  },
+  {
+    /**
+     * Select 的**触发器**是另一类：它按下时升级为 Layer I，而它
+     * **自己就是那层底座** —— 与 Button 一样，α 归零标签就没背景了，
+     * 必须补回材质。这条与上一条构成对照：同一个组件里的两处 Layer I，
+     * 一处补底色、一处不补，理由不同。
+     */
+    name: 'Select · 触发器按下（Layer I，需补底色）',
+    harness: 'select',
+    query: 'only=default&value=size',
+    target: '[data-slot="select-trigger"]',
+    nth: 0,
+    label: '[data-slot="select-value"]',
+    press: true,
+    gated: true,
+    viewport: { width: 1000, height: 800 },
   },
   {
     /**

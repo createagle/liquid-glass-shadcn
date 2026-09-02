@@ -1,5 +1,6 @@
 import registry from '@/registry.json';
 import api from '@/__registry__/api.json';
+import fidelity from '@/__registry__/fidelity.json';
 
 /**
  * 组件页的数据源。
@@ -83,24 +84,92 @@ export interface ComponentEditorial {
 }
 
 export const EDITORIAL: Record<string, ComponentEditorial> = {
-  tabs: { layerB: '底座', layerI: '选中指示器', examples: ['tabs-demo'] },
-  slider: { layerB: '轨道', layerI: 'knob', examples: ['slider-demo'] },
-  switch: { layerB: '轨道', layerI: 'knob', examples: ['switch-demo'] },
-  button: { layerB: '静止：底座', layerI: '按下：升级为 Layer I', examples: ['button-variants'] },
-  toggle: { layerB: '未选中：底座', layerI: '选中：Layer I', examples: ['toggle-demo'] },
-  dialog: { layerB: '面板', layerI: null, examples: ['dialog-demo'] },
-  card: { layerB: '内容层（不堆玻璃）', layerI: null, examples: ['card-demo'] },
-  sheet: { layerB: '面板', layerI: 'grabber 抓手', examples: ['sheet-demo'] },
-  popover: { layerB: '弹层面板', layerI: '（属于菜单项，见 DropdownMenu）', examples: ['popover-demo'] },
-  'dropdown-menu': { layerB: '弹层面板', layerI: '高亮项', examples: ['dropdown-menu-demo'] },
-  select: { layerB: '弹层面板', layerI: '高亮项', examples: ['select-demo'] },
+  tabs: { layerB: '底座', layerI: '选中指示器', examples: ['tabs-demo', 'tabs-tabbar'] },
+  slider: { layerB: '轨道', layerI: 'knob', examples: ['slider-demo', 'slider-range'] },
+  switch: { layerB: '轨道', layerI: 'knob', examples: ['switch-demo', 'switch-in-list'] },
+  button: {
+    layerB: '静止：底座',
+    layerI: '按下：升级为 Layer I',
+    examples: ['button-variants', 'button-sizes'],
+  },
+  toggle: {
+    layerB: '未选中：底座',
+    layerI: '选中：Layer I',
+    examples: ['toggle-demo', 'toggle-sizes'],
+  },
+  dialog: { layerB: '面板', layerI: null, examples: ['dialog-demo', 'dialog-single'] },
+  card: {
+    layerB: '内容层（不堆玻璃）',
+    layerI: null,
+    examples: ['card-demo', 'card-variants'],
+  },
+  sheet: { layerB: '面板', layerI: 'grabber 抓手', examples: ['sheet-demo', 'sheet-detents'] },
+  popover: {
+    layerB: '弹层面板',
+    layerI: '（属于菜单项，见 DropdownMenu）',
+    examples: ['popover-demo', 'popover-sides'],
+  },
+  'dropdown-menu': {
+    layerB: '弹层面板',
+    layerI: '高亮项',
+    examples: ['dropdown-menu-demo', 'dropdown-menu-desktop'],
+  },
+  select: { layerB: '弹层面板', layerI: '高亮项', examples: ['select-demo', 'select-groups'] },
   'responsive-overlay': {
     layerB: '取决于落到哪条路径',
     layerI: null,
-    examples: ['responsive-overlay-demo'],
+    examples: ['responsive-overlay-demo', 'responsive-overlay-escape'],
   },
 };
 
 export function getEditorial(slug: string): ComponentEditorial | undefined {
   return EDITORIAL[slug];
 }
+
+/* ── Fidelity 对照 ───────────────────────────────────────────────────── */
+
+export interface FidelitySheet {
+  slug: string;
+  /** 只有两栏的那一版 —— 说明文字由页面单独渲染，避免同一段并排两遍 */
+  image: string;
+  /** 整张（含说明）。给「另存 / 贴到别处」用 */
+  fullImage: string;
+  title: string;
+  captions: string[];
+  /** 差异说明。来自 dev/fidelity.html 里那段 `.note`，不是文档站另写的 */
+  notes: string[];
+}
+
+const fidelitySheets = fidelity as unknown as Record<string, FidelitySheet>;
+
+export function getFidelity(slug: string): FidelitySheet | undefined {
+  return fidelitySheets[slug];
+}
+
+/**
+ * **没有对照图的组件，必须说清楚为什么。**
+ *
+ * 这一份是人写的，而且刻意不给默认文案 —— 缺一条就是页面上一句
+ * 「（还没写原因）」，比一句敷衍的「暂无对照图」诚实。
+ */
+export const NO_FIDELITY: Record<string, string> = {
+  toggle:
+    '**没有属于 Toggle 自己的 Apple 参考图。** 在 iOS 27 设计资源里找过 —— Edit Menu 是 Cut/Copy/Paste，' +
+    '不是格式化开关；文件里也没有单独的 Toggle 组件页。所以它的几何**全部继承自 Button**' +
+    '（那边是两处独立节点实测出来的），选中态的材质沿用 Tabs 指示器。' +
+    '每个数字都有来源，只是来源是本库的另外两个组件 —— 去看 Button 与 Tabs 的对照图。',
+  popover:
+    '**Popover 的圆角是唯一一个量不出来的几何。** 它是半透明玻璃压在中灰背景上，' +
+    '外面有落影、里面还有一道亮描边，边缘不是干净的两色台阶 —— 轮廓拟合不收敛' +
+    '（圆弧 RMSE 1.5–2.2px，自由超椭圆里半径与指数强烈互换）。' +
+    '既然连几何都对不齐，并排图只会给人「已经比过了」的错觉，所以不做。' +
+    '面板本身的材质与 DropdownMenu 同源，去看那一张。',
+  select:
+    '**参考图里没有任何带选中态的菜单。** Select 的弹层与 DropdownMenu 是同一块材质、' +
+    '同一套几何（250 / 10 / 16 / 40 / 21），已经在 DropdownMenu 那张里比过了；' +
+    '再做一张只是同一张图换个标题。**对勾画在哪一列是推定的**，' +
+    '本来也没有参考图可比 —— 见「尺寸常量与可信度」表里那两个橙色徽章。',
+  'responsive-overlay':
+    '**这是一个行为原语，不是一个有外观的组件。** 它按视口决定渲染成 Popover 还是 Sheet，' +
+    '外观完全由那两个组件提供 —— 对照图应该去看它们各自那一张。',
+};

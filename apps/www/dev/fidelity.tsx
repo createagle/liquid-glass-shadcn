@@ -14,6 +14,7 @@ import { Slider } from '../registry/glass/ui/slider';
 import { Switch } from '../registry/glass/ui/switch';
 import { Button } from '../registry/glass/ui/button';
 import { Card, CardRow } from '../registry/glass/ui/card';
+import { Tabs, TabsList, TabsTrigger } from '../registry/glass/ui/tabs';
 
 /** iOS 列表行：白底、行高 52pt、左右 16pt 边距 */
 function Row({ children }: { children: React.ReactNode }) {
@@ -107,11 +108,48 @@ function CardScene() {
   );
 }
 
+
+/**
+ * 浮动式 Tab Bar，节点 12740:24081（402×95）。
+ *
+ * 位置与尺寸全部来自元数据（apple-metrics §7.2）：
+ *   玻璃底座 244×62，左右边距 21（对称）
+ *   底座 → 按钮组内缩 4，单个 Tab 120×54
+ *   Search 是**独立的 62×62 胶囊**，不在主底座里
+ *
+ * ⚠️ 右侧只画主底座。**本库的 Tabs 没有「分离的尾随胶囊」这个能力** ——
+ *    Phase 0 就把它记成了实现要求，至今没做。对照图里如实留空，
+ *    不用一个假的方块糊上去。
+ *
+ * 参考图背后是中灰，两边底色必须一致才谈得上比材质。
+ */
+function TabsScene() {
+  return (
+    /* 402×97 与背景灰 rgb(103 103 103) 都是从参考图**量出来的**，不是目测配的：
+       角落与四边取样全是 103；底座在 y=11…74（即 top 12、高 62）、x 从 20 起。 */
+    <div style={{ width: 402, height: 97, background: 'rgb(103 103 103)', position: 'relative' }}>
+      <div style={{ position: 'absolute', left: 21, top: 12 }}>
+        <Tabs defaultValue="t1" height={62}>
+          <TabsList>
+            <TabsTrigger value="t1" style={{ width: 118 }}>
+              Tab 1
+            </TabsTrigger>
+            <TabsTrigger value="t2" style={{ width: 118 }}>
+              Tab 2
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
+
 for (const [id, node] of [
   ['switch-scene', <SwitchScene key="s" />],
   ['slider-scene', <SliderScene key="l" />],
   ['button-scene', <ButtonScene key="b" />],
   ['card-scene', <CardScene key="c" />],
+  ['tabs-scene', <TabsScene key="t" />],
 ] as const) {
   const el = document.getElementById(id);
   if (el) {

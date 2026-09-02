@@ -113,10 +113,30 @@ const browser = await chromium.launch();
   await page.goto(dev('fidelity.html'));
   await page.waitForFunction(() => window.__ready === true);
   await page.waitForTimeout(700);
-  for (const id of ['sheet-switch', 'sheet-slider', 'sheet-button', 'sheet-dialog', 'sheet-card', 'sheet-sheet', 'sheet-menu']) {
+    const SHEETS = [
+    'sheet-tabs',
+    'sheet-switch',
+    'sheet-slider',
+    'sheet-button',
+    'sheet-dialog',
+    'sheet-card',
+    'sheet-sheet',
+    'sheet-menu',
+  ];
+  for (const id of SHEETS) {
     const name = id.replace('sheet-', '');
+    // 整张：标题 + 两栏 + 差异说明。给 STATUS、issue、聊天里贴图用，自带上下文。
     await page.locator(`#${id}`).screenshot({ path: `${OUT}/compare-${name}.png` });
-    console.log(`✓ ${OUT}/compare-${name}.png`);
+    /**
+     * 只有两栏的那一版，给文档站用。
+     *
+     * 文档站会把 `.note` 的文字**单独渲染**成页面正文（可选中、可搜索、
+     * 跟着站点主题走），整张图贴上去就会出现同一段说明并排两遍。
+     */
+    await page
+      .locator(`#${id} .cols`)
+      .screenshot({ path: `${OUT}/compare-${name}-cols.png` });
+    console.log(`✓ ${OUT}/compare-${name}.png（含说明）+ -cols.png（仅两栏）`);
   }
   await page.close();
 }

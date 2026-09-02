@@ -20,6 +20,7 @@ import { useGlass, tintToStep, GlassSurface } from '@glass/core';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CommandPalette, type CommandItem } from '@/components/command-palette';
 import { cn } from '@/lib/utils';
 
 const NAV = [
@@ -34,7 +35,7 @@ const TIER_LABEL = {
   c: 'C · 实色',
 } as const;
 
-export function SiteHeader() {
+export function SiteHeader({ commands }: { commands: CommandItem[] }) {
   const pathname = usePathname();
   const { resolvedTheme, setTheme, tint, setTint, tintStep, tier, tierOverride, setTierOverride } =
     useGlass();
@@ -77,6 +78,9 @@ export function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex flex-wrap items-center gap-x-5 gap-y-3">
+          {/* ⌘K —— 面板本身是本库的 Dialog + Card（SPEC §12 要求搜索面板也用本库组件） */}
+          <CommandPalette items={commands} />
+
           {/* ── 材质档位 —— SPEC §8 的连续滑杆 ── */}
           <label className="flex items-center gap-3">
             <span className="text-[13px] whitespace-nowrap text-[var(--lg-label-secondary)]">

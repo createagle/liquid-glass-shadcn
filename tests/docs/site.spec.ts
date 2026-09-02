@@ -107,8 +107,10 @@ test('Code 那一半与磁盘上的示例文件逐字相同', async ({ page }) =
    * 手写一份说明文档、渲染另一份代码，是这个模式最常见的退化方式。
    */
   await page.goto('/docs/components/button');
-  await page.getByRole('tab', { name: '代码' }).click();
-  const shown = (await page.locator('pre code').first().innerText()).trim();
+  // 组件页上不止一个 ComponentPreview（「预览」区 + 「示例」区），限定到第一个
+  const preview = page.locator('#preview');
+  await preview.getByRole('tab', { name: '代码' }).click();
+  const shown = (await preview.locator('pre code').first().innerText()).trim();
   const onDisk = readFileSync(
     resolve('apps/www/registry/glass/examples/button-variants.tsx'),
     'utf8',
@@ -189,6 +191,109 @@ test('/view/[name] 没有站点装饰 —— 截图与 iframe 用的就是它', 
   await expect(page.locator('[data-slot="select-trigger"]')).toHaveCount(1);
   await expect(page.locator('header')).toHaveCount(0);
   await expect(page.locator('nav')).toHaveCount(0);
+});
+
+
+/* ── Fidelity（PROJECT_SPEC §12 里标着「本库独有」的那一节）───────────── */
+
+test.describe('Fidelity 对照', () => {
+  test('有对照图的组件：图 + 差异说明都在，且说明与 fidelity.html 同源', async ({ page }) => {
+    await page.goto('/docs/components/tabs');
+    const fid = page.locator('#fidelity');
+    await expect(fid.locator('img')).toHaveCount(1);
+    await expect(fid.locator('img')).toHaveAttribute('src', /compare-tabs-cols\.png$/);
+    // 差异说明是从 dev/fidelity.html 的 .note 抽出来的，不是页面另写的
+    const html = readFileSync(resolve('apps/www/dev/fidelity.html'), 'utf8');
+    expect(html, '这句话应当来自 fidelity.html').toContain('Search 独立胶囊');
+    await expect(fid).toContainText('Search 独立胶囊');
+    await expect(fid).toContainText('至今没做');
+  });
+
+  test('页面上必须先声明「左边不是真机截图」', async ({ page }) => {
+    /**
+     * 这不是免责声明，是这一整节该怎么读的前提：
+     * Figma 静态稿画不出折射与色散，所以材质本来就不可比。
+     * 少了这句话，读者会把「右边有色散、左边没有」当成还原度问题。
+     */
+    await page.goto('/docs/components/switch');
+    await expect(page.locator('#fidelity')).toContainText('不是真机截图');
+  });
+
+  test('没有对照图的组件：说清楚为什么，不是「暂无」', async ({ page }) => {
+    for (const [slug, phrase] of [
+      ['toggle', '没有属于 Toggle 自己的 Apple 参考图'],
+      ['popover', '轮廓拟合不收敛'],
+      ['select', '参考图里没有任何带选中态的菜单'],
+      ['responsive-overlay', '行为原语'],
+    ] as const) {
+      await page.goto('/docs/components/' + slug);
+      await expect(page.locator('#fidelity'), slug).toContainText(phrase);
+      await expect(page.locator('#fidelity'), slug + ' 不该出现敷衍文案').not.toContainText('暂无');
+    }
+  });
+});
+
+/* ── Examples ────────────────────────────────────────────────────────── */
+
+test('每个组件都不止一个示例（§14 的 Examples 那一条）', async ({ page }) => {
+  const registry = JSON.parse(readFileSync(resolve('apps/www/registry.json'), 'utf8')) as {
+    items: { name: string; type: string }[];
+  };
+  const ui = registry.items.filter((i) => i.type === 'registry:ui');
+  for (const item of ui) {
+    await page.goto('/docs/components/' + item.name);
+    await expect(page.locator('#preview'), item.name).toHaveCount(1);
+    await expect(
+      page.locator('#examples [data-slot="tabs"]'),
+      item.name + ' 缺第二个示例',
+    ).not.toHaveCount(0);
+  }
+});
+
+/* ── ⌘K ──────────────────────────────────────────────────────────────── */
+
+test.describe('⌘K 命令面板', () => {
+  test('Ctrl/⌘+K 打开，输入能过滤，↵ 跳转', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Control+k');
+    const input = page.getByRole('combobox', { name: '搜索组件与文档' });
+    await expect(input).toBeFocused();
+    await input.fill('select');
+    const options = page.getByRole('option');
+    await expect(options).toHaveCount(1);
+    await expect(options.first()).toContainText('Select');
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/\/docs\/components\/select$/);
+  });
+
+  test('面板是本库的 Dialog + Card 搭的（§12：搜索面板也要吃自己的狗粮）', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Control+k');
+    await expect(page.locator('[data-command-palette]')).toHaveCount(1);
+    // 面板本体是 Dialog 的 elevated 材质
+    await expect(
+      page.locator('[data-slot="dialog-content"] .lg-surface[data-layer="elevated"]'),
+    ).toHaveCount(1);
+    // 高亮项是 Layer I —— 与菜单项同一层材质
+    await expect(
+      page.locator('[role="option"] .lg-surface[data-layer="indicator"]').first(),
+    ).toHaveCount(1);
+  });
+
+  test('Esc 关闭', async ({ page }) => {
+    await page.goto('/');
+    await page.keyboard.press('Control+k');
+    await expect(page.locator('[data-command-palette]')).toHaveCount(1);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('[data-command-palette]')).toHaveCount(0);
+  });
+
+  test('如实说明搜索能力的边界', async ({ page }) => {
+    // 「像全文搜索」是这类面板最容易造成的误解，面板底部必须写清楚
+    await page.goto('/');
+    await page.keyboard.press('Control+k');
+    await expect(page.locator('[data-command-palette]')).toContainText('不是全文搜索');
+  });
 });
 
 /* ── 控制台 ──────────────────────────────────────────────────────────── */

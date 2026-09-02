@@ -82,11 +82,14 @@ export default function HomePage() {
         <h2 className="text-[22px] font-semibold">这个站点还缺什么</h2>
         <ul className="flex list-disc flex-col gap-1.5 pl-5 text-[15px] text-[var(--lg-label-secondary)]">
           <li>
-            🔴 首页 Hero 还不是规格要求的「完全可交互的 iOS 界面」——
-            现在只是一个普通落地页。
+            🔴 这个首页还不是规格要求的「完全可交互的 iOS 界面」——
+            现在只是一个普通落地页，Hero 那件事还没做。
           </li>
-          <li>🔴 Fidelity 标签页、⌘K 命令面板、Themes / Playground 都还没做。</li>
-          <li>🔴 Docs 章节只有骨架；Materials 与 Optics 两页是重点，还没写。</li>
+          <li>
+            🔴 <strong className="font-medium">Materials 与 Optics 两页还没写。</strong>
+            任务卡说这两页是本库和其他「毛玻璃 UI 库」的分水岭，要写透，所以没打算糊弄过去。
+          </li>
+          <li>🔴 Themes / Playground（实时调档位并导出 CSS 变量片段）还没有。</li>
           <li>🟡 代码块没有语法高亮 —— 理由见 components/code-block.tsx 的文件头。</li>
         </ul>
       </section>

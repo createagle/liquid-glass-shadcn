@@ -8,7 +8,7 @@
     "build": "npm run core:build && npm run gen && next build",
     "start": "next start --port 4200",
     "core:build": "pnpm --filter @glass/core build",
-    "gen": "npm run gen:examples && npm run gen:api",
+    "gen": "npm run gen:examples && npm run gen:api && npm run gen:fidelity",
     "gen:examples": "node scripts/generate-examples.mjs",
     "gen:api": "node scripts/generate-api.mjs",
     "registry:generate": "node scripts/generate-theme-item.mjs",
@@ -17,7 +17,8 @@
     "registry:serve": "node scripts/serve-registry.mjs",
     "dev:build": "esbuild dev/tabs-demo.tsx dev/controls-demo.tsx dev/button-demo.tsx dev/dialog-demo.tsx dev/card-demo.tsx dev/sheet-demo.tsx dev/overlay-demo.tsx dev/select-demo.tsx dev/fidelity.tsx --bundle --format=iife --outdir=dev --jsx=automatic --alias:@glass/core=../../packages/glass-core/src/index.ts --alias:@/lib/utils=./registry/glass/lib/utils.ts --alias:@/components/ui/button=./registry/glass/ui/button.tsx --alias:@/components/ui/popover=./registry/glass/ui/popover.tsx --alias:@/components/ui/sheet=./registry/glass/ui/sheet.tsx --alias:@/components/ui/dropdown-menu=./registry/glass/ui/dropdown-menu.tsx --alias:@/components/ui/select=./registry/glass/ui/select.tsx --log-level=warning",
     "dev:css": "tailwindcss -i dev/input.css -o dev/tailwind.css",
-    "typecheck": "npm run core:build && tsc -p tsconfig.json --noEmit"
+    "typecheck": "npm run core:build && tsc -p tsconfig.json --noEmit",
+    "gen:fidelity": "node scripts/generate-fidelity.mjs"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",

@@ -5,14 +5,20 @@ import { InstallTabs } from '@/components/install-tabs';
 import { ApiTable, GeometryTable, AppleReference } from '@/components/api-table';
 import { CodeBlock } from '@/components/code-block';
 import { RichText } from '@/components/rich-text';
-import { registryItems, getRegistryItem, getApi, getEditorial } from '@/lib/registry';
+import { FidelitySheet, NoFidelity } from '@/components/fidelity-sheet';
+import {
+  registryItems,
+  getRegistryItem,
+  getApi,
+  getEditorial,
+  getFidelity,
+  NO_FIDELITY,
+} from '@/lib/registry';
 
 /**
  * 组件页模板 —— PROJECT_SPEC §12 的页内结构。
  *
- * 本批交付：Preview/Code · 安装命令 tabs · Examples · API Reference。
- * **Fidelity 标签页还没有**（任务卡里排第 4 位，下一批），页面上如实标了缺口，
- * 不做成「即将上线」的空壳。
+ * 页内结构：Preview/Code · 安装命令 tabs · Examples · **Fidelity 对照** · API Reference。
  *
  * 页面上几乎没有手写内容：
  *   标题 / 描述 / 依赖 / 安装  ← registry.json（发给用户的同一份）
@@ -68,6 +74,7 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
 
   const api = getApi(slug);
   const editorial = getEditorial(slug);
+  const fid = getFidelity(slug);
   const examples = editorial?.examples ?? [];
 
   return (
@@ -115,19 +122,9 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
       <Section
         id="fidelity"
         title="Fidelity 对照"
-        hint="Apple 参考图 vs 本库组件"
+        hint="左边是 Apple 的 Figma 渲染图，不是真机截图 —— 可比的是几何，不是材质"
       >
-        {/*
-          诚实标注：对照图已经生成在 public/fidelity 下，但把它做成一个
-          带差异说明的标签页是任务卡里排第 4 位的事，本批没做。
-          这里不放「即将上线」的空壳，直接说缺口在哪。
-        */}
-        <p className="text-[15px] text-[var(--lg-label-secondary)]">
-          🔴 <strong className="font-medium">本批未交付。</strong>
-          对照图已由 <code className="font-mono">scripts/fidelity-sheets.mjs</code> 生成在{' '}
-          <code className="font-mono">public/fidelity/</code> 下，但「并排对照 + 逐条差异说明」
-          这一页还没做（Phase 6 任务卡里排第 4 位）。
-        </p>
+        {fid ? <FidelitySheet sheet={fid} /> : <NoFidelity reason={NO_FIDELITY[slug]} />}
       </Section>
 
       {api ? (

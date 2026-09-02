@@ -35,12 +35,14 @@ jobs:
       - name: 构建 @glass/core
         run: pnpm --filter @glass/core build
 
-      - name: 类型检查（组件源码 + 站点）
-        run: cd apps/www && npx tsc -p tsconfig.json --noEmit
-
       # 生成物（API 表 / 示例表）不进库，这里现生成，顺带验证生成脚本本身没坏
       - name: 生成 API 与示例数据
         run: pnpm --filter www gen
+
+      # ⚠️ 必须在 gen **之后** —— 站点代码 import 的正是那两个生成物
+      # （__registry__/examples.tsx 与 api.json），先跑就是 TS2307。
+      - name: 类型检查（组件源码 + 站点）
+        run: cd apps/www && npx tsc -p tsconfig.json --noEmit
 
       # 本库的核心纪律：尺寸常量必须能说出出处。
       # 生成脚本会统计没有 [官方]/[实测]/[推定]/[待核实] 标注的常量，这里钉成 0。

@@ -197,7 +197,7 @@
           "lg-stroke-side": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength) * var(--lg-stroke-boost)))",
           "lg-specular-opacity": "0.72",
           "lg-shadow": "0 8px 26px rgb(16 22 40 / 0.18), 0 1px 2px rgb(16 22 40 / 0.1)",
-          "lg-glow": "none",
+          "lg-glow": "0 0 0 rgb(0 0 0 / 0)",
           "lg-refract-scale": "0.85",
           "lg-disperse-scale": "0.9",
           "lg-scrim": "rgb(0 0 0 / 0.35)",
@@ -831,6 +831,31 @@
         }
       ],
       "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 DropdownMenu 的差别：\n  1) `DropdownMenuContent` 的 `title` **必填** —— 移动路径走 Radix Dialog，它要求必须有可见 Title。⚠️ 两条路径的可访问名称**不一样，而且都对**：桌面由触发器命名（WAI-ARIA 的 menu 模式），移动由 Drawer 的可见标题命名。\n  2) `responsive={false}` 是逃生口，强制桌面行为。\n  3) **未交付**：CheckboxItem / RadioItem / Sub（子菜单）/ Shortcut。\n  4) ⚠️ **移动路径没有 typeahead（首字母跳转）**。桌面路径 Radix 自带；移动路径的 role=menu 与方向键是本库自己接的线，只覆盖 ↑ ↓ Home End。移动端没有物理键盘时用不上，接了外接键盘就会缺 —— 这是已知缺口，测试里钉住了。\n  5) 触发器是原语的原生 button（本库禁用 asChild），要自定义外观就给 className。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "select",
+      "title": "Select",
+      "author": "Liquid Glass UI",
+      "description": "下拉选择。桌面端是 Radix 的锚定 listbox，紧凑视口下按 PROJECT_SPEC §9 换成底部 Drawer（自带 typeahead）。面板几何与 iOS 27 菜单同源：250 宽、内边距 10/16、项高 40、分隔区 21；前导图标列 28×20、间距 8 是本批新测。**高亮项是 Layer I**（折射 + 色散，面板为它挖洞），**选中项用对勾**，两者互不替代。",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-select",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/sheet"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/select.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 Select 的差别：\n  1) `SelectContent` 的 `title` **必填** —— 移动路径走 Radix Dialog，它要求必须有可见 Title。两条路径的可访问名称在这里是**一致的**（都落到 title），与 DropdownMenu 不同（那边是 WAI-ARIA 的 menu 模式，桌面由触发器命名）。\n  2) `responsive={false}` 是逃生口，强制桌面行为。\n  3) `SelectTrigger` 自带玻璃外观（250×48 胶囊、chevron.up.chevron.down、按下升级为 Layer I 并补回底色），不需要再包 Button —— 本库禁用 asChild，包了就是 button 套 button。\n  4) **未交付**：多选、可搜索、分组的粘性标题、ScrollUpButton / ScrollDownButton（选项超出可视高度时视口本身可滚，但没有 Radix 那两个箭头按钮）。\n  5) ⚠️ `name` / `required` 只在**桌面路径**生效 —— 表单提交靠 Radix 接出的隐藏 input，移动路径是本库自己接的 listbox，没有这个。需要提交表单时请自行受控并写进自己的隐藏字段。\n  6) 前导图标列 28×20、间距 8、项内再内缩 6 是 iOS 27 实测值；**对勾画在这一列、以及对勾用 label 色，都是推定**，不是实测。",
       "type": "registry:ui"
     }
   ]

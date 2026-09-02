@@ -196,7 +196,7 @@
           "lg-stroke-side": "rgb(255 255 255 / calc(0.3 * var(--lg-stroke-strength) * var(--lg-stroke-boost)))",
           "lg-specular-opacity": "0.72",
           "lg-shadow": "0 8px 26px rgb(16 22 40 / 0.18), 0 1px 2px rgb(16 22 40 / 0.1)",
-          "lg-glow": "none",
+          "lg-glow": "0 0 0 rgb(0 0 0 / 0)",
           "lg-refract-scale": "0.85",
           "lg-disperse-scale": "0.9",
           "lg-scrim": "rgb(0 0 0 / 0.35)",

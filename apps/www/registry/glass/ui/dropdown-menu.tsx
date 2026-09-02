@@ -55,6 +55,7 @@ import * as MenuPrimitive from '@radix-ui/react-dropdown-menu';
 import { motion } from 'motion/react';
 import {
   GlassSurface,
+  measurePunch,
   transitionFor,
   useGlassOptional,
   useIsCompact,
@@ -300,15 +301,18 @@ function DropdownMenuContent({
           return;
         }
         cancelAnimationFrame(clearRafRef.current);
-        const p = node.getBoundingClientRect();
-        const r = item.getBoundingClientRect();
-        setPunch({
-          x: r.left - p.left,
-          y: r.top - p.top,
-          width: r.width,
-          height: r.height,
-          radius: MENU_GEOMETRY.itemRadius,
-        });
+        /**
+         * ⚠️ 基准是 **`.lg-surface` 本体**，不是这个装内容的 div。
+         *
+         * 第一版拿 `node.getBoundingClientRect()` 当基准，而 node 在面板的
+         * 内边距**里面** —— 洞于是整体偏了 (16, 10)：218 宽的项，洞落在
+         * x=0…218，项其实在 x=16…234。偏了之后仍有 ~90% 重叠，
+         * 条纹清晰度照样翻倍，所以「有没有色散」量对了，
+         * 「洞在不在位置上」却一直没人验。Select 那一批才查出来。
+         * 缩放补偿也在 measurePunch 里，理由见 @glass/core 的 punch.ts。
+         */
+        const surface = node.closest<HTMLElement>('.lg-surface');
+        if (surface) setPunch(measurePunch(surface, item, MENU_GEOMETRY.itemRadius));
       };
       sync();
       const mo = new MutationObserver(sync);

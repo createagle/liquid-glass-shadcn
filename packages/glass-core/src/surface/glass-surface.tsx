@@ -157,17 +157,30 @@ export function GlassSurface({
     }
     const el = ref.current;
     if (!el) return;
-    const read = () => {
-      const r = el.getBoundingClientRect();
+    const apply = (w: number, h: number) =>
       setSize((prev) =>
-        prev && Math.abs(prev.w - r.width) < 0.5 && Math.abs(prev.h - r.height) < 0.5
-          ? prev
-          : { w: r.width, h: r.height },
+        prev && Math.abs(prev.w - w) < 0.5 && Math.abs(prev.h - h) < 0.5 ? prev : { w, h },
       );
-    };
-    read();
-    const ro = new ResizeObserver(read);
+    /**
+     * ⚠️ **不能用 `getBoundingClientRect()`** —— 它量的是**变换后**的盒子，
+     * 而 `clip-path` 的坐标系是**未变换**的布局坐标。
+     *
+     * 浮层入场时整块面板在做 scale 动画（0.94 → 1）：在那一帧量到的宽高比
+     * 真实布局小 5%，外框于是短了一截，面板右下角的模糊被裁掉；
+     * 而 ResizeObserver **不会**因为 transform 变化再触发一次，
+     * 尺寸就一直错着不会自愈。（Select 打开时 Radix 立刻高亮选中项，
+     * 正好撞在动画中间，这才把它暴露出来。）
+     *
+     * `borderBoxSize` 给的是布局尺寸，与 transform 无关，且是亚像素精度。
+     */
+    const ro = new ResizeObserver((entries) => {
+      const box = entries[0]?.borderBoxSize?.[0];
+      if (box) apply(box.inlineSize, box.blockSize);
+      else apply(el.offsetWidth, el.offsetHeight);
+    });
     ro.observe(el);
+    // RO 的首次回调要等到下一帧，先用整数尺寸兜一帧，免得入场时闪一下没有洞
+    apply(el.offsetWidth, el.offsetHeight);
     return () => ro.disconnect();
   }, [punchActive, ref]);
 

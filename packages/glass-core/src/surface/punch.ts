@@ -74,3 +74,45 @@ export function punchClipPath(width: number, height: number, p: GlassPunch): str
 export function isPunchValid(p: GlassPunch | null | undefined): p is GlassPunch {
   return !!p && p.width > 0 && p.height > 0;
 }
+
+/**
+ * 量出「目标元素相对底座」的洞。
+ *
+ * 看着只是两次 `getBoundingClientRect()` 相减，**但那样写是错的**，两个坑都踩过：
+ *
+ * 1. **必须相对底座本体，不是它的内容框。**
+ *    弹层面板普遍有内边距（菜单是 10/16），如果拿「装内容的那个 div」当基准，
+ *    洞会整体偏移一个内边距。DropdownMenu 就是这么错的 —— 218 宽的项，
+ *    洞落在 x=0…218，项实际在 x=16…234，**整整差了 16**。
+ *    偏了之后洞仍然与项有 ~90% 重叠，条纹清晰度照样翻倍，
+ *    所以「有没有色散」的实测是对的，「洞在不在位置上」却一直没人验。
+ *
+ * 2. **`getBoundingClientRect()` 量到的是变换后的盒子，而 clip-path 的坐标系
+ *    是未变换的布局坐标。** 浮层入场时整块面板在做 scale 动画（0.94 → 1），
+ *    在那一帧量，洞会小 5% 且位置也跟着缩。Select 打开时 Radix 会立刻高亮
+ *    当前选中项 —— 正好撞在动画中间，这才把这个坑暴露出来。
+ *
+ *    解法：用 `offsetWidth` 反解出当前缩放（它不受 transform 影响），
+ *    把量到的值除回去。
+ *
+ * @param surface 底座元素（`.lg-surface` 本体）
+ * @param target  要挖穿的目标元素
+ */
+export function measurePunch(
+  surface: HTMLElement,
+  target: HTMLElement,
+  radius: number,
+): GlassPunch | null {
+  const s = surface.getBoundingClientRect();
+  const t = target.getBoundingClientRect();
+  // offsetWidth 是布局尺寸，不受 transform 影响 —— 两者的比值就是当前缩放
+  const scale = surface.offsetWidth > 0 ? s.width / surface.offsetWidth : 1;
+  if (!(scale > 0)) return null;
+  return {
+    x: (t.left - s.left) / scale,
+    y: (t.top - s.top) / scale,
+    width: t.width / scale,
+    height: t.height / scale,
+    radius,
+  };
+}

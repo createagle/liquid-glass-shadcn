@@ -201,7 +201,23 @@
   /* ── 光学表现的明暗差异（PROJECT_SPEC §7 差异表） ──────────────────── */
   --lg-specular-opacity: 0.72; /* light 下高光要克制，白底上易过曝 */
   --lg-shadow: 0 8px 26px rgb(16 22 40 / 0.18), 0 1px 2px rgb(16 22 40 / 0.1);
-  --lg-glow: none; /* light 用落影分离层级 */
+  /**
+   * light 用落影分离层级，不要外发光 —— 但**不能写 `none`**。
+   *
+   * `--lg-glow` 是 `.lg-surface[data-layer='elevated']` 那条 box-shadow
+   * 列表里的最后一项：`inset …, inset …, var(--lg-shadow), var(--lg-glow)`。
+   * `none` 单独用是合法的，出现在**逗号列表里就是无效值** —— 整条声明会被
+   * 丢弃，box-shadow 直接退回 initial 的 `none`。
+   *
+   * 后果是：亮色下**所有** elevated 面板（Dialog / Sheet / Popover /
+   * DropdownMenu / Select）既没有描边也没有落影，而暗色下一切正常
+   * （那边 --lg-glow 是个真的阴影值）。
+   * 做 Select 的 prefers-contrast 测试时才发现 —— 那条测试断言「高对比下
+   * 描边会变」，结果两次读到的都是 `none`。
+   *
+   * 所以这里写一个**零尺寸全透明**的阴影：语义上等于没有，但它是合法值。
+   */
+  --lg-glow: 0 0 0 rgb(0 0 0 / 0);
   --lg-refract-scale: 0.85; /* light 下折射略低：浅背景上畸变太显脏 */
   --lg-disperse-scale: 0.9; /* light 下色散偏冷 */
 

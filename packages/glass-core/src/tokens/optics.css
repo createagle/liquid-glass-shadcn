@@ -28,14 +28,32 @@
    GlassSurface 基础
    ══════════════════════════════════════════════════════════════════════ */
 
-.lg-surface {
-  position: relative;
-  isolation: isolate;
-  border-radius: var(--lg-surface-radius, var(--lg-radius-md));
-  color: var(--lg-label);
-  transition:
-    background-color 240ms linear,
-    box-shadow 240ms linear;
+/*
+ * ⚠️ **这条规则必须待在 `@layer components` 里，别把它搬出来。**
+ *
+ * 级联层的规则是：**无层的声明胜过任何有层的声明**，与特异度、源码顺序都无关。
+ * 而 Tailwind v4 把工具类放在 `@layer utilities`。所以这条规则一旦无层，
+ * `.lg-surface` 上的这四个属性就**再也没法用工具类覆盖**了 ——
+ * `className="absolute"`、`className="rounded-none"`、`className="text-white"`
+ * 全部静默失效，没有报错、没有警告，看起来就像类名写错了。
+ *
+ * 首页 Hero 把 Tab Bar 定到屏幕底部时踩到的就是这个：
+ * `absolute` 明明在 class 列表里，computed 出来还是 `relative`。
+ *
+ * 放进 `components` 层（Tailwind 自己声明的四层之一，排在 utilities **之前**）
+ * 之后，工具类正常压过它，而库里那些**材质**规则仍然无层 —— 那是故意的：
+ * 底座该长什么样是本库的职责，不该被一个顺手写的 bg-* 掀翻。
+ */
+@layer components {
+  .lg-surface {
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--lg-surface-radius, var(--lg-radius-md));
+    color: var(--lg-label);
+    /* 一行写完：多行值会被原样搬进 registry 的 JSON 字符串里，
+       缩进一变生成物就 diff（CI 有一道「生成物与源同步」的门） */
+    transition: background-color 240ms linear, box-shadow 240ms linear;
+  }
 }
 
 /* 大圆角容器用连续曲率。Chromium 148+ 原生支持；其余浏览器自然回退普通圆角。

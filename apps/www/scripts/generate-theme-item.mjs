@@ -198,6 +198,19 @@ for (const file of FILES) {
       Object.assign(cssVars.dark, parseDecls(body));
     } else if (selector === '@theme inline') {
       Object.assign(cssVars.theme, parseDecls(body));
+    } else if (selector === '@layer components') {
+      /*
+       * 源码里**已经**分好层的，拆开并进去，不要再套一层。
+       *
+       * optics.css 里的 .lg-surface 现在自己写在 @layer components 里
+       * （给直接 `@import '@glass/core/optics.css'` 的消费方用 —— 无层规则
+       *  会压过 Tailwind 的工具类，见那条规则上面的注释）。
+       * 而这里本来就要把组件类归到 components 层，照搬就成了
+       * `@layer components { @layer components { … } }` —— 一个多余的子层。
+       */
+      for (const inner of topLevelRules(body)) {
+        mergeInto(layerComponents, inner.selector, ruleToObject(inner.body));
+      }
     } else if (isVarOnlyRule(body)) {
       // 只含自定义属性的块（高对比覆盖等）→ base 层
       mergeInto(layerBase, selector, ruleToObject(body));

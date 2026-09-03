@@ -207,6 +207,29 @@ export function acquireFilter(o: RefractionOptions): string {
   return id;
 }
 
+/**
+ * 名额释放的订阅。
+ *
+ * 性能红线是**先到先得**：超限时后来的实例被拒，退回 Tier B。
+ * 但「被拒」必须是**可恢复**的 —— 切一下标签页造成的一瞬间超编，
+ * 不该让那个实例余生都比旁边的兄弟少一层玻璃。
+ *
+ * 实测踩到的就是这个：首页 Hero 从「资料库」切到「设置」时，
+ * 旧面板的实例还没退场、新面板的已经在申请，中间有一帧到了 9 个；
+ * Tab Bar 的选中胶囊正好是那一帧申请的，于是**永久**停在 Tier B ——
+ * 整页稳定在 8 个（不超编）之后它也不会自己回来，
+ * 因为拒绝路径直接 return 了，effect 的依赖再没变过。
+ */
+const waiters = new Set<() => void>();
+
+/** 订阅「有名额被还回来了」。返回退订函数。 */
+export function onFilterReleased(fn: () => void): () => void {
+  waiters.add(fn);
+  return () => {
+    waiters.delete(fn);
+  };
+}
+
 /** 释放一个折射滤镜。引用计数归零时从 DOM 摘掉，避免 defs 无限膨胀。 */
 export function releaseFilter(o: RefractionOptions): void {
   const key = filterKey(o);
@@ -216,6 +239,17 @@ export function releaseFilter(o: RefractionOptions): void {
   if (hit.refCount <= 0) {
     hit.filter.remove();
     cache.delete(key);
+  }
+  if (waiters.size > 0) {
+    /*
+     * 快照 + 微任务：本函数是在 React 的 effect 清理里被调的，
+     * 同步回调会在同一次提交里再触发 setState，且回调自己可能退订，
+     * 边遍历边改 Set 是未定义行为。推到微任务里等这次提交收尾。
+     */
+    const snapshot = [...waiters];
+    queueMicrotask(() => {
+      for (const fn of snapshot) fn();
+    });
   }
 }
 

@@ -366,7 +366,7 @@
         "isolation": "isolate",
         "border-radius": "var(--lg-surface-radius, var(--lg-radius-md))",
         "color": "var(--lg-label)",
-        "transition": "background-color 240ms linear,\n    box-shadow 240ms linear"
+        "transition": "background-color 240ms linear, box-shadow 240ms linear"
       },
       "@supports (corner-shape: squircle)": {
         ".lg-surface[data-continuous='true']": {

@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   acquireFilter,
   activeFilterCount,
+  onFilterReleased,
   releaseFilter,
   REFRACTION_DEFAULTS,
   type RefractionOptions,
@@ -26,6 +27,30 @@ export const MAX_ACTIVE_REFRACTIONS = 8;
 
 /** 尺寸量化步长（px）。小于该步长的变化不重建滤镜。 */
 const SIZE_QUANTUM = 2;
+
+/**
+ * 零面积 = 还没被画出来，不建滤镜、不占 §5.2 的名额。
+ *
+ * 要挡的是**根本不在文档里**的那种实例：Select 为了在关闭状态下也能拿到
+ * value→label 的映射，会把子树 createPortal 到一个**游离的 DocumentFragment**
+ * 里（Radix 自己也用这招）。游离子树的 effect 照跑、ResizeObserver 照报 ——
+ * 报的是 0×0。而 `quantize(0)` 是 1，于是每个隐形实例都**真的申请了一个滤镜、
+ * 真的占着名额**，却永远不会被画到屏幕上。
+ *
+ * 实测：文档站首页 activeFilterCount() = 8，页面上只有 7 个指示器；
+ * /docs/components/select 更明显，8 对 6 —— 差额正好等于页面上 Select 的个数。
+ * 首页 Hero 的 Tab Bar 胶囊被挤下 Tier A，根因就在这儿。
+ *
+ * ⚠️ 判据是**零面积**，不是「小于某个尺寸」。第一版写了「短边 < 8px 就跳过」，
+ * 结果把 Sheet 的抓手（36×5，货真价实的 Layer I）一起毙了 ——
+ * tests/sheet.behavior.spec.ts 立刻红了。库里确实存在极扁的强玻璃。
+ *
+ * 元素后来被接进文档时 ResizeObserver 会因为尺寸变化再报一次，
+ * 那时自然就建了 —— 不需要额外去监听 isConnected。
+ */
+function isPaintable(w: number, h: number): boolean {
+  return w > 0 && h > 0;
+}
 
 const quantize = (n: number) => Math.max(1, Math.round(n / SIZE_QUANTUM) * SIZE_QUANTUM);
 
@@ -115,7 +140,7 @@ export function useGlassFilter<T extends HTMLElement = HTMLElement>(
 
   const ref = useRef<T>(null);
   const [measured, setMeasured] = useState<{ w: number; h: number } | null>(
-    fixedWidth != null && fixedHeight != null
+    fixedWidth != null && fixedHeight != null && isPaintable(fixedWidth, fixedHeight)
       ? { w: quantize(fixedWidth), h: quantize(fixedHeight) }
       : null,
   );
@@ -124,6 +149,10 @@ export function useGlassFilter<T extends HTMLElement = HTMLElement>(
   // 显式尺寸变化时同步
   useEffect(() => {
     if (fixedWidth == null || fixedHeight == null) return;
+    if (!isPaintable(fixedWidth, fixedHeight)) {
+      setMeasured((prev) => (prev === null ? prev : null));
+      return;
+    }
     setMeasured((prev) => {
       const next = { w: quantize(fixedWidth), h: quantize(fixedHeight) };
       return prev && prev.w === next.w && prev.h === next.h ? prev : next;
@@ -139,6 +168,11 @@ export function useGlassFilter<T extends HTMLElement = HTMLElement>(
     const observer = new ResizeObserver((entries) => {
       const rect = entries[0]?.contentRect;
       if (!rect) return;
+      // 量化之前判零：quantize(0) 是 1，量化之后就分不出「零面积」和「1px」了
+      if (!isPaintable(rect.width, rect.height)) {
+        setMeasured((prev) => (prev === null ? prev : null));
+        return;
+      }
       const next = { w: quantize(rect.width), h: quantize(rect.height) };
       setMeasured((prev) => (prev && prev.w === next.w && prev.h === next.h ? prev : next));
     });
@@ -163,6 +197,12 @@ export function useGlassFilter<T extends HTMLElement = HTMLElement>(
   }, [disabled, measured, radius, intensity, dispersion, overrides]);
 
   const [filterId, setFilterId] = useState<string | null>(null);
+  /** 被红线挡下之后递增，逼 effect 再试一次 */
+  const [retry, setRetry] = useState(0);
+  /** 同一次「参数没变」的等待里，延迟重检只安排一次，避免无限自旋 */
+  const rechecked = useRef(false);
+  /** 同一个实例只警告一次，别让重试把控制台刷满 */
+  const warned = useRef(false);
 
   useEffect(() => {
     if (!refraction) {
@@ -175,23 +215,51 @@ export function useGlassFilter<T extends HTMLElement = HTMLElement>(
     if (activeFilterCount() >= MAX_ACTIVE_REFRACTIONS) {
       setFilterId(null);
       setThrottled(true);
-      if (isDev()) {
+      if (isDev() && !warned.current) {
+        warned.current = true;
         console.warn(
           `[@glass/core] 同屏折射实例已达上限 ${MAX_ACTIVE_REFRACTIONS}，` +
             `本实例回退到 Tier B 渲染路径。` +
             `请减少同屏强玻璃元素，或用 <GlassContainer> 合并。`,
         );
       }
-      return;
+      /*
+       * ⚠️ 这里**必须**留一条回来的路，不能直接 return。
+       *
+       * 超编常常只是一瞬间的事 —— 切换标签页时旧面板的实例还没全退场、
+       * 新面板的已经在申请，中间会有一帧顶到红线。谁赶上那一帧谁被拒，
+       * 而拒绝路径如果就此收工，它的依赖（refraction）此后再没变过，
+       * effect 永远不会重跑：整页早就回到 8 个以内了，它还停在 Tier B，
+       * 表现是「这一个胶囊的玻璃跟旁边的不一样」，而且只有刷新才好。
+       *
+       * 两条路都要，因为它们盖的是不同的情形：
+       *
+       *   延迟重检   本次提交内部的瞬时超编。**这种情况下拒绝就是最后一个事件**，
+       *              之后不会再有任何 release 来叫醒它 —— 只订阅是叫不醒的。
+       *              一次性，不自旋：第二次仍被拒就老老实实去等订阅。
+       *   订阅       之后别人卸载、真的腾出名额。
+       */
+      let raf = 0;
+      if (!rechecked.current && typeof requestAnimationFrame === 'function') {
+        rechecked.current = true;
+        raf = requestAnimationFrame(() => setRetry((n) => n + 1));
+      }
+      const unsubscribe = onFilterReleased(() => setRetry((n) => n + 1));
+      return () => {
+        if (raf) cancelAnimationFrame(raf);
+        unsubscribe();
+      };
     }
 
     const id = acquireFilter(refraction);
     setFilterId(id);
     setThrottled(false);
+    // 拿到名额了，下次再被挤下去时还能再安排一次延迟重检
+    rechecked.current = false;
     return () => {
       releaseFilter(refraction);
     };
-  }, [refraction]);
+  }, [refraction, retry]);
 
   return {
     ref,

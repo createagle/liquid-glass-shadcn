@@ -54,6 +54,19 @@ interface TabsContextValue {
   setPunch: (p: GlassPunch | null) => void;
   inset: number;
   baseRadius: number;
+  /**
+   * 这一组 Tabs 专属的 `layoutId`。
+   *
+   * ⚠️ **必须每个实例一个。** motion 的 layoutId 是**全树共享**的命名空间，
+   * 一个页面上只要同时挂着两组 Tabs，写死同一个字符串就会让它们的指示器
+   * 被当成**同一个元素** —— 实测结果不是「动画串台」这么轻，而是四组 Tabs 的
+   * 指示器全部塌到同一个坐标上（首页 Hero 一上去就现形：
+   * 顶栏 tier 切换 + Preview/Code + Tab Bar + 分段，四个指示器同一个 rect）。
+   *
+   * 为什么一直没被发现：视觉回归是**逐个示例单独渲染**的（/view/[name] 一屏一个组件），
+   * 永远不会有第二组 Tabs 在场。又一次「隔离渲染看不见组合问题」。
+   */
+  layoutId: string;
 }
 
 const TabsCtx = React.createContext<TabsContextValue | null>(null);
@@ -67,10 +80,12 @@ function Tabs({ className, height = GEOMETRY.height, style, ...props }: GlassTab
   const [punch, setPunch] = usePunchState();
   const inset = Math.round((GEOMETRY.inset / GEOMETRY.height) * height);
   const baseRadius = height / 2;
+  // 见 TabsContextValue.layoutId —— 每个实例必须自成一个 layout 命名空间
+  const layoutId = React.useId();
 
   const ctx = React.useMemo(
-    () => ({ punch, setPunch, inset, baseRadius }),
-    [punch, inset, baseRadius],
+    () => ({ punch, setPunch, inset, baseRadius, layoutId }),
+    [punch, inset, baseRadius, layoutId],
   );
 
   return (
@@ -96,7 +111,7 @@ export interface GlassTabsListProps
  *  2. 按指示器位置挖洞，让指示器看到未被底座模糊过的背景（§2）
  *  3. 用 relative 定位为指示器提供坐标系
  */
-function TabsList({ className, children, ...props }: GlassTabsListProps) {
+function TabsList({ className, children, style, ...props }: GlassTabsListProps) {
   const ctx = React.useContext(TabsCtx);
   if (!ctx) throw new Error('<TabsList> 必须放在 <Tabs> 里');
 
@@ -106,7 +121,16 @@ function TabsList({ className, children, ...props }: GlassTabsListProps) {
       radius={ctx.baseRadius}
       punch={ctx.punch}
       className={cn('relative isolate w-fit', className)}
-      style={{ height: 'var(--lg-tabs-height)', padding: ctx.inset }}
+      /*
+       * `style` 与 `className` 必须落在**同一个元素**上。
+       *
+       * 原先 className 给了 GlassSurface（可见的那层玻璃），而 style 跟着 ...props
+       * 落到里面那个 flex 行上 —— 于是 `className="absolute"` + `style={{bottom:16}}`
+       * 这种再正常不过的写法会得到「absolute 生效了但 bottom 没生效」，
+       * 栏跑到容器顶上去。首页 Hero 把 Tab Bar 定到屏幕底部时踩到的就是这个。
+       * 这是和 data-slot 覆盖同一类的坑：**调用方看不到组件内部把 props 拆到了哪儿**。
+       */
+      style={{ height: 'var(--lg-tabs-height)', padding: ctx.inset, ...style }}
     >
       <TabsPrimitive.List
         data-slot="tabs-list"
@@ -262,7 +286,7 @@ function TabsTrigger({ className, children, value, ...props }: GlassTabsTriggerP
 
       {selected ? (
         <motion.span
-          layoutId="lg-tabs-indicator"
+          layoutId={ctx.layoutId}
           transition={transitionFor('snappy', reducedMotion)}
           className="absolute inset-0 -z-10"
           aria-hidden="true"

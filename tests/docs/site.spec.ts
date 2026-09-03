@@ -423,6 +423,179 @@ test.describe('Materials / Optics', () => {
   });
 });
 
+
+/* ── 首页 Hero（任务卡第 5 项）────────────────────────────────────────── */
+
+/** 把手机切到某个 tab。 */
+async function heroTab(page: import('@playwright/test').Page, label: string) {
+  await page.locator('[data-hero-phone] [role=tab]', { hasText: label }).click();
+  await expect(page.locator('[data-hero-phone] h3')).toHaveText(label);
+}
+
+test.describe('首页 Hero', () => {
+  test('三个 tab 都是活的，切换后内容真的换了', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('[data-hero-phone]')).toHaveCount(1);
+    await expect(page.locator('[data-hero-phone] h3')).toHaveText('资料库');
+
+    await heroTab(page, '设置');
+    await expect(page.locator('[data-hero-phone] [role=switch]')).toHaveCount(2);
+
+    await heroTab(page, '相册');
+    await expect(page.locator('[data-hero-photos] > div')).toHaveCount(27);
+
+    await heroTab(page, '资料库');
+    await expect(page.locator('[data-hero-grid] > div')).toHaveCount(8);
+  });
+
+  test('分段控件真的在过滤，不是换个高亮', async ({ page }) => {
+    await page.goto('/');
+    const grid = page.locator('[data-hero-grid] > div');
+    await expect(grid).toHaveCount(8);
+    // 「专辑」5 条、「艺人」3 条 —— 数字来自 hero-phone.tsx 的 ITEMS
+    await page.locator('[data-hero-phone] [role=tab]', { hasText: '专辑' }).click();
+    await expect(grid).toHaveCount(5);
+    await page.locator('[data-hero-phone] [role=tab]', { hasText: '艺人' }).click();
+    await expect(grid).toHaveCount(3);
+  });
+
+  test('亮度滑杆真的把屏幕压暗；大字体开关真的改字号', async ({ page }) => {
+    await page.goto('/');
+    await heroTab(page, '设置');
+
+    const dim = page.locator('[data-hero-dim]');
+    const before = await dim.evaluate((e) => +getComputedStyle(e).opacity);
+    // Radix 的 role=slider 在 Thumb 上，键盘能直接操作 —— 比拖动稳定
+    const slider = page.getByRole('slider', { name: '亮度' });
+    await slider.focus();
+    for (let i = 0; i < 10; i++) await slider.press('ArrowLeft');
+    const after = await dim.evaluate((e) => +getComputedStyle(e).opacity);
+    expect(after, '亮度调低 → 遮罩变浓').toBeGreaterThan(before);
+
+    const fontOf = () =>
+      page.locator('[data-hero-phone]').evaluate((e) => getComputedStyle(e).fontSize);
+    expect(await fontOf()).toBe('17px');
+    await page.getByRole('switch', { name: '大字体' }).click();
+    expect(await fontOf()).toBe('19px');
+  });
+
+  test('滚动边缘效果：内容滚到栏底下才出现，滚到底就退场', async ({ page }) => {
+    /**
+     * PROJECT_SPEC §13 里唯一一条**此前完全没实现**的要求。
+     * 方向按 Apple —— 模糊并压暗**背后的内容**、栏自身不变，
+     * 而不是 SPEC 字面写的「栏底自动增加不透明度」。
+     */
+    await page.goto('/');
+    const top = page.locator('[data-hero-phone] [data-glass-scroll-edge=top]');
+    const bottom = page.locator('[data-hero-phone] [data-glass-scroll-edge=bottom]');
+    const progress = (l: typeof top) => l.evaluate((e) => +getComputedStyle(e).opacity);
+
+    // 起始：没有任何内容钻到顶栏底下，顶部那条必须彻底不存在
+    expect(await progress(top)).toBe(0);
+    expect(await progress(bottom), '底下还有内容 → 底部那条在').toBeGreaterThan(0);
+
+    const scroller = page.locator('[data-hero-scroll]');
+    await scroller.evaluate((e) => {
+      e.scrollTop = 40;
+    });
+    await expect.poll(() => progress(top)).toBe(1);
+
+    await scroller.evaluate((e) => {
+      e.scrollTop = e.scrollHeight;
+    });
+    await expect.poll(() => progress(bottom), { message: '滚到底 → 底部那条退场' }).toBe(0);
+  });
+
+  test('内容真的能滚到悬浮 Tab Bar 底下', async ({ page }) => {
+    // 玻璃的正题就是这个 —— 栏底下没有东西流过，材质就没有存在的理由
+    await page.goto('/');
+    // ⚠️ 手机里有**两个** tablist（Tab Bar 和分段），而分段在 DOM 里排在前面。
+    //    按 role 取第一个会取到分段 —— 必须用内容认人。
+    const bar = (await page
+      .locator('[data-hero-phone] [role=tablist]')
+      .filter({ hasText: '相册' })
+      .boundingBox())!;
+    const scroller = (await page.locator('[data-hero-scroll]').boundingBox())!;
+    expect(bar.y + bar.height, 'Tab Bar 落在滚动容器的范围之内').toBeLessThan(
+      scroller.y + scroller.height,
+    );
+    const scrollable = await page
+      .locator('[data-hero-scroll]')
+      .evaluate((e) => e.scrollHeight - e.clientHeight);
+    expect(scrollable, '内容必须比一屏长').toBeGreaterThan(100);
+  });
+
+  test('§5.2 的同屏折射预算没被顶穿', async ({ page }) => {
+    /**
+     * 红线是 8 个活跃折射实例（该数字本身是 [推定]）。超限的实例会被静默拒绝、
+     * 退回 Tier B，并打上 data-refraction="off"。
+     *
+     * 首页实测：「设置」那一屏正好是 **8**，一点余量没有 ——
+     * 顶栏 3 + 页面下方 ComponentPreview 的 Preview/Code 1 + 手机 4。
+     * 所以这条断言是有意义的：首页再多一个强玻璃控件，它就会红。
+     */
+    await page.goto('/');
+    for (const label of ['资料库', '设置', '相册']) {
+      await heroTab(page, label);
+      await expect(
+        page.locator('[data-refraction=off]'),
+        label + ' 这一屏有实例被挤下 Tier A',
+      ).toHaveCount(0);
+    }
+  });
+});
+
+/* ── 组合起来才暴露的两个库级缺陷（都是 Hero 挖出来的）──────────────── */
+
+test('同一页多组 Tabs：指示器必须各归各的', async ({ page }) => {
+  /**
+   * 回归测试。motion 的 layoutId 是**全树共享**的命名空间，
+   * 而 Tabs 原先写死 layoutId="lg-tabs-indicator" —— 于是一页上只要有两组 Tabs，
+   * 它们的指示器就被当成同一个元素。首页一上 Hero 就现形：
+   * 四组 Tabs（顶栏 tier 切换 / Preview·Code / Tab Bar / 分段）的指示器
+   * 报出来是**同一个 rect**。
+   *
+   * 视觉回归为什么没抓到：它逐个示例单独渲染（/view/[name] 一屏一个组件），
+   * 永远不会有第二组 Tabs 在场。又一次「隔离渲染看不见组合问题」。
+   */
+  await page.goto('/');
+  // page.evaluate 不会像 locator 那样自动等 —— 指示器是水合之后才由 motion 挂上的
+  await expect(
+    page.locator('[data-slot=tabs-list] .lg-surface[data-layer=indicator]').first(),
+  ).toBeVisible();
+  const boxes = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-slot=tabs-list]')].map((list) => {
+      const ind = list.querySelector('.lg-surface[data-layer=indicator]');
+      if (!ind) return null;
+      const l = list.getBoundingClientRect();
+      const i = ind.getBoundingClientRect();
+      return {
+        inside: i.left >= l.left - 1 && i.right <= l.right + 1 && i.top >= l.top - 1,
+        key: Math.round(i.x) + 'x' + Math.round(i.y),
+      };
+    }),
+  );
+  const found = boxes.filter((b): b is NonNullable<typeof b> => b !== null);
+  expect(found.length, '首页上应当有多组 Tabs 同时在场').toBeGreaterThan(2);
+  for (const b of found) expect(b.inside, '指示器跑到自己的 TabsList 外面去了').toBe(true);
+  expect(new Set(found.map((b) => b.key)).size, '多个指示器塌在同一个坐标上').toBe(found.length);
+});
+
+test('工具类能覆盖 .lg-surface 的定位 —— 级联层没写反', async ({ page }) => {
+  /**
+   * 回归测试。.lg-surface 原先是**无层**规则，而 Tailwind 的工具类在
+   * @layer utilities 里 —— 级联层的规则是「无层胜过任何有层」，
+   * 于是 className="absolute" 在任何一块玻璃上都**静默失效**，
+   * 连带 rounded-* / text-* 一样，没有报错、看起来就像类名写错了。
+   *
+   * Hero 把 Tab Bar 定到屏幕底部时踩到：class 列表里明明有 absolute，
+   * computed 出来还是 relative，栏跑到屏幕顶上去。
+   */
+  await page.goto('/');
+  const bar = page.locator('[data-hero-phone] .lg-surface').filter({ hasText: '相册' }).first();
+  await expect(bar).toHaveCSS('position', 'absolute');
+});
+
 /* ── 控制台 ──────────────────────────────────────────────────────────── */
 
 /**

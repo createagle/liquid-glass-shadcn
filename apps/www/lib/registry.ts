@@ -165,6 +165,21 @@ export const EDITORIAL: Record<string, ComponentEditorial> = {
     layerI: null,
     examples: ['avatar-demo', 'avatar-sizes'],
   },
+  tooltip: {
+    layerB: '气泡面板',
+    layerI: null,
+    examples: ['tooltip-demo', 'tooltip-sides'],
+  },
+  toast: {
+    layerB: '通知面板',
+    layerI: null,
+    examples: ['toast-demo', 'toast-stack'],
+  },
+  'input-group': {
+    layerB: '整组一块玻璃（输入框自己不画框）',
+    layerI: null,
+    examples: ['input-group-demo', 'input-group-password'],
+  },
 };
 
 export function getEditorial(slug: string): ComponentEditorial | undefined {
@@ -261,4 +276,19 @@ export const NO_FIDELITY: Record<string, string> = {
   avatar:
     '**Apple 没有 Avatar 控件。** 通讯录、信息、FaceTime 里的圆形头像是各家 App 自己画的，' +
     'HIG 里没有对应的组件规范，设计资源里也没有可量的样例。几何全部 [推定]。',
+  tooltip:
+    '**只有一句 HIG 原文，没有任何图。** iOS 27 资源里没有 tooltip ——' +
+    '触屏上本来就没有 hover，这是个 macOS / iPadOS 指针场景的东西。' +
+    '几何（内边距、圆角、字号）**一个都不是量出来的**。' +
+    '面板材质与 Popover 同源，要看材质去那一张。',
+  toast:
+    '**Apple 那边没有对应物。** 清单写的「接近系统通知横幅」要当真：' +
+    '系统横幅是**系统级**的，App 画不出来，设计资源里当然也不会有它的样例。' +
+    '内边距 14 借自 Alert 实测、最大宽 370 借自 Grouped List 实测 ——' +
+    '要比对照图请去看那两个组件的，但要记住那是别人的图。' +
+    '而且本组件把通知区放在**底部**（iOS 的系统横幅在顶部），这是刻意的选择，不是还原。',
+  'input-group':
+    '**资源里唯一带附件的输入框样例是清除按钮**（18×18、右内缩 17），' +
+    '已经在 Input 那一页的尺寸表里了。「输入框 + 前后附件」这个形态本身没有参考图，' +
+    '高度与内边距沿用 Input 的 field 变体 —— 而那一支本来就是 [推定]。',
 };

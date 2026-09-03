@@ -522,6 +522,76 @@
         }
       ],
       "docs": "有图时 alt 必须给 —— 头像通常代表一个人，不是装饰。\n\n既没有 alt 也没有 fallback 时整个头像对辅助技术隐藏：一个既没有名字也没有内容的圆圈对屏幕阅读器只是噪音。\n\n换 src 时组件会自己把「加载失败」状态清掉 —— 否则第一张图失败会让后面所有图都显示不出来。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "tooltip",
+      "type": "registry:ui",
+      "title": "Tooltip",
+      "description": "提示气泡。⚠️ **只有一句 HIG 原文，没有任何图** —— iOS 27 资源里没有 tooltip（触屏上本来就没有 hover，这是 macOS / iPadOS 指针场景的东西）。几何全部 [推定]，面板材质与 Popover 同源。触发器**自己就是那个按钮**，不要再往里塞 Button —— 本库禁用 asChild。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-tooltip",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/tooltip.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ 触屏上 tooltip 是不可达的 —— 没有 hover 就永远不会出现。\n所以 tooltip 里的信息**永远不能是唯一的信息来源**：图标按钮该有 aria-label，破坏性操作该有确认文案，tooltip 只能是锦上添花。\n\n已知能力缺口：触发器拿不到本库 Button 的外观（variant / size）。Button 没有把样式计算导出来，硬抄一份必然漂移 —— 需要按钮外观时请自己传 className。\n\nTooltipProvider 要包在应用（或局部子树）外面：「跳过延迟」的接力行为只有共享 Provider 才有。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "toast",
+      "type": "registry:ui",
+      "title": "Toast / 通知",
+      "description": "临时通知。⚠️ **Apple 那边没有对应物，参考图一张都没有** —— 清单写的「接近系统通知横幅」要当真：系统横幅是系统级的，App 画不出来，资源里也不会有。内边距 14 借自 Alert 实测、最大宽 370 借自 Grouped List 实测，其余（圆角、停留时长、滑动阈值）纯推定。位置定在**底部**是刻意选择，不是还原。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-toast"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/toast.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "为什么用 @radix-ui/react-toast 而不是自己写：一个能用的 toast 要处理 live region、计时器在 hover/focus 时暂停、滑动关闭、窗口失焦不计时、F8 跳到通知区、多条时的焦点顺序 ——这些全是无障碍语义，自己写十有八九是错的。本库负责皮，不负责行为。\n\n⚠️ 队列是**模块级单例**：一个页面只能有一个 <Toaster />，放两个会让同一条消息显示两遍。\n\n⚠️ ToastAction 必须带 altText —— 那是给辅助技术的兜底（屏幕阅读器用户听到通知时按钮可能已经消失了）。缺了 Radix 会直接报错。\n\ndestructive 变体只换描边色不换材质：红底白字在最通透的档位下会被稀释成粉色，白字掉出 AA。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "input-group",
+      "type": "registry:ui",
+      "title": "Input Group / 带附件的输入框",
+      "description": "输入框 + 前后附件。⚠️ 没有自己的参考图 —— 资源里唯一带附件的样例是清除按钮（18×18、右内缩 17，已实测）。**框由 group 画，输入框自己不画**，所以里面的 Input 必须传 variant=\"list\"（那一支才有实测依据）；忘了传会变成两层玻璃叠在一起，dev 模式会警告。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/input"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/input-group.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "装饰性附件渲染成 aria-hidden 的 span，不进无障碍树 ——一个「￥」符号对屏幕阅读器没有意义，输入框的 aria-label 里本来就该写清楚这是金额。\n\n可点的附件（interactive）才是真的 button，命中区用伪元素撑到 44×44（HIG [官方]），视觉尺寸不变。有两个状态的附件（比如显示/隐藏密码）记得给 aria-pressed。"
     }
   ]
 }

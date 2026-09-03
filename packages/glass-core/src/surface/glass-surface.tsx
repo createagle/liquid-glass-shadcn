@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import type * as React from 'react';
 import { useGlassFilter } from '../filter/use-glass-filter.js';
 import { useGlassOptional } from '../provider/glass-provider.js';
 import { useAdaptiveAlpha } from '../a11y/use-adaptive-alpha.js';
@@ -23,7 +24,29 @@ import type { RefractionOptions } from '../filter/filter-factory.js';
 
 export type GlassLayer = 'base' | 'indicator' | 'elevated';
 
-export interface GlassSurfaceProps {
+/**
+ * 宿主元素的属性。
+ *
+ * ⚠️ **必须让多余的属性透传下去。**
+ *
+ * 早先这个接口是个「白名单」—— 只声明 GlassSurface 自己认识的那几个 prop，
+ * 函数里也只解构它们。于是调用方传的 `data-slot` / `id` / `onClick` /
+ * `aria-*` **全部被静默丢掉**，而且 TypeScript 一声不吭：
+ * **JSX 的展开（`{...props}`）不做多余属性检查**。
+ *
+ * 是 InputGroup 把它撞出来的：组件声明成 `ComponentProps<'div'>`、
+ * 把 props 透传进来，测试里 `[data-slot="input-group"]` 数出来是 0。
+ *
+ * 这与仓库里踩过四次的 `data-slot` 覆盖是同一家族，但更隐蔽 ——
+ * 那边是被**覆盖**（值不对，还看得见），这边是被**吞掉**（属性压根不存在）。
+ */
+type SurfaceHostProps = Omit<
+  React.ComponentProps<'div'>,
+  // 下面这些由本组件自己管，不接受外部覆盖
+  'ref' | 'children' | 'className' | 'style' | 'color'
+>;
+
+export interface GlassSurfaceProps extends SurfaceHostProps {
   layer?: GlassLayer;
   children?: ReactNode;
   className?: string;
@@ -85,6 +108,7 @@ export function GlassSurface({
   overrides,
   refraction = true,
   as: Tag = 'div',
+  ...rest
 }: GlassSurfaceProps) {
   const glass = useGlassOptional();
   const [selfPressed, setSelfPressed] = useState(false);
@@ -222,6 +246,13 @@ export function GlassSurface({
 
   return (
     <Tag
+      /*
+       * ⚠️ `...rest` 必须放在**最前面** —— 后面那些 data-* 与 ref 是本组件的
+       * 内部契约（punch / 折射降级 / 可读性探测都靠它们），
+       * 让调用方能覆盖掉会让组件自己的状态标记失效。
+       * 透传是为了别把属性吞掉，不是为了把控制权交出去。
+       */
+      {...rest}
       ref={ref as React.Ref<HTMLDivElement & HTMLSpanElement>}
       className={['lg-surface', className].filter(Boolean).join(' ')}
       data-layer={layer}

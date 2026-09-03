@@ -483,6 +483,84 @@
           "background-position-x": "var(--lg-progress-stripe, 24px)"
         }
       },
+      "@keyframes lg-toast-in": {
+        "from": {
+          "opacity": "0",
+          "transform": "translateY(16px) scale(0.96)"
+        },
+        "to": {
+          "opacity": "1",
+          "transform": "translateY(0) scale(1)"
+        }
+      },
+      "@keyframes lg-toast-out": {
+        "from": {
+          "opacity": "1",
+          "transform": "translateY(0) scale(1)"
+        },
+        "to": {
+          "opacity": "0",
+          "transform": "translateY(8px) scale(0.98)"
+        }
+      },
+      "@keyframes lg-toast-swipe-out": {
+        "from": {
+          "transform": "translateX(var(--radix-toast-swipe-end-x, 0))"
+        },
+        "to": {
+          "opacity": "0",
+          "transform": "translateX(calc(100% + var(--lg-toast-viewport-inset, 16px)))"
+        }
+      },
+      ".lg-toast[data-state='open']": {
+        "animation": "lg-toast-in var(--lg-toast-duration, 500ms) cubic-bezier(0.32, 0.86, 0.2, 1.02)"
+      },
+      ".lg-toast[data-state='closed']": {
+        "animation": "lg-toast-out var(--lg-toast-duration, 500ms) cubic-bezier(0.32, 0.72, 0, 1)"
+      },
+      ".lg-toast[data-swipe='move']": {
+        "transform": "translateX(var(--radix-toast-swipe-move-x))"
+      },
+      ".lg-toast[data-swipe='cancel']": {
+        "transform": "translateX(0)",
+        "transition": "transform var(--lg-toast-duration, 500ms) cubic-bezier(0.32, 0.86, 0.2, 1.02)"
+      },
+      ".lg-toast[data-swipe='end']": {
+        "animation": "lg-toast-swipe-out var(--lg-toast-duration, 500ms) cubic-bezier(0.32, 0.72, 0, 1)"
+      },
+      "@media (prefers-reduced-motion: reduce)": {
+        "@keyframes lg-toast-in": {
+          "from": {
+            "opacity": "0"
+          },
+          "to": {
+            "opacity": "1"
+          }
+        },
+        "@keyframes lg-toast-out": {
+          "from": {
+            "opacity": "1"
+          },
+          "to": {
+            "opacity": "0"
+          }
+        },
+        "@layer components": {
+          ".lg-toast[data-swipe='move'], .lg-toast[data-swipe='cancel']": {
+            "transform": "none",
+            "transition": "none"
+          },
+          ".lg-toast[data-swipe='end']": {
+            "animation": "lg-toast-out 120ms linear"
+          }
+        },
+        "[data-glass-sheet-wrapper]": {
+          "transform": "none"
+        },
+        ".lg-surface": {
+          "transition-duration": "120ms"
+        }
+      },
       ".lg-content": {
         "background-color": "var(--lg-content-regular)",
         "color": "var(--lg-label-primary)"
@@ -510,14 +588,6 @@
         "transform-origin": "top center",
         "transform": "scale(var(--lg-sheet-wrapper-scale, 1))",
         "border-radius": "var(--lg-sheet-wrapper-radius, 0px)"
-      },
-      "@media (prefers-reduced-motion: reduce)": {
-        "[data-glass-sheet-wrapper]": {
-          "transform": "none"
-        },
-        ".lg-surface": {
-          "transition-duration": "120ms"
-        }
       },
       "@media (prefers-reduced-transparency: reduce)": {
         ":root": {

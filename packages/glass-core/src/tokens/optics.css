@@ -337,3 +337,103 @@
     background-position-x: var(--lg-progress-stripe, 24px);
   }
 }
+
+/* ── Toast 的入场 / 离场 / 滑动关闭 ────────────────────────────────────
+   为什么是 CSS 而不是 motion：Radix Toast 用 data-state / data-swipe-*
+   驱动这几个状态，并且在滑动时往元素上写 --radix-toast-swipe-move-x。
+   motion 的 rAF 内联样式会和它抢同一个 transform，两边都不对。
+
+   时长由组件通过 --lg-toast-duration 传进来（取自 springs 的近似表，
+   prefers-reduced-motion 下会被压到 120ms）。 */
+@keyframes lg-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes lg-toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+@keyframes lg-toast-swipe-out {
+  from {
+    transform: translateX(var(--radix-toast-swipe-end-x, 0));
+  }
+  to {
+    opacity: 0;
+    transform: translateX(calc(100% + var(--lg-toast-viewport-inset, 16px)));
+  }
+}
+
+@layer components {
+  .lg-toast[data-state='open'] {
+    animation: lg-toast-in var(--lg-toast-duration, 500ms) cubic-bezier(0.32, 0.86, 0.2, 1.02);
+  }
+
+  .lg-toast[data-state='closed'] {
+    animation: lg-toast-out var(--lg-toast-duration, 500ms) cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  /* 跟手：滑动过程中不要有过渡，否则会拖尾 */
+  .lg-toast[data-swipe='move'] {
+    transform: translateX(var(--radix-toast-swipe-move-x));
+  }
+
+  /* 松手但没过阈值：弹回去 */
+  .lg-toast[data-swipe='cancel'] {
+    transform: translateX(0);
+    transition: transform var(--lg-toast-duration, 500ms) cubic-bezier(0.32, 0.86, 0.2, 1.02);
+  }
+
+  /* 松手且过了阈值：滑出去 */
+  .lg-toast[data-swipe='end'] {
+    animation: lg-toast-swipe-out var(--lg-toast-duration, 500ms) cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+
+/* prefers-reduced-motion：§13 只保留 ≤120ms 的透明度过渡，去掉位移与缩放。
+   ⚠️ 不能整个 animation: none —— Radix 靠 animationend 才把关闭的那条从
+   DOM 里摘掉，没有动画事件它会一直留着。所以保留一个纯透明度的短动画。 */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes lg-toast-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes lg-toast-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @layer components {
+    .lg-toast[data-swipe='move'],
+    .lg-toast[data-swipe='cancel'] {
+      transform: none;
+      transition: none;
+    }
+
+    .lg-toast[data-swipe='end'] {
+      animation: lg-toast-out 120ms linear;
+    }
+  }
+}

@@ -180,6 +180,22 @@ export const EDITORIAL: Record<string, ComponentEditorial> = {
     layerI: null,
     examples: ['input-group-demo', 'input-group-password'],
   },
+  /*
+   * ⚠️ 这两行的分层与 PROJECT_SPEC §2 速查表**不一致**，而且是有依据的：
+   * 速查表写的是「B + I(瞬时)」，那是在没有 macOS 参考时推的。
+   * macOS 27 资源里 36 个变体一个都没有玻璃 ——
+   * 见 component-inventory.md「修订三」与 apple-metrics.md §10.3。
+   */
+  checkbox: {
+    layerB: '内容层（Apple 自己就没给它玻璃，见 §10.3）',
+    layerI: null,
+    examples: ['checkbox-demo', 'checkbox-in-card'],
+  },
+  'radio-group': {
+    layerB: '内容层（同 Checkbox）',
+    layerI: null,
+    examples: ['radio-group-demo', 'radio-group-keyboard'],
+  },
 };
 
 export function getEditorial(slug: string): ComponentEditorial | undefined {
@@ -277,10 +293,21 @@ export const NO_FIDELITY: Record<string, string> = {
     '**Apple 没有 Avatar 控件。** 通讯录、信息、FaceTime 里的圆形头像是各家 App 自己画的，' +
     'HIG 里没有对应的组件规范，设计资源里也没有可量的样例。几何全部 [推定]。',
   tooltip:
-    '**只有一句 HIG 原文，没有任何图。** iOS 27 资源里没有 tooltip ——' +
-    '触屏上本来就没有 hover，这是个 macOS / iPadOS 指针场景的东西。' +
-    '几何（内边距、圆角、字号）**一个都不是量出来的**。' +
-    '面板材质与 Popover 同源，要看材质去那一张。',
+    '**有实测数据了，但仍然没有并排对照图。** 2026-09-03 在 macOS 27 设计资源里' +
+    '找到了完整的 Tooltip 组件（节点 0:2793），内边距（上 3 / 右 6 / 下 2 / 左 6）、' +
+    '字号 11 / 行高 13 都已按实测改，记录见 apple-metrics.md §10.5。' +
+    '不做对照图是因为**本库刻意没有采用实测的圆角 0**（浮层一致性 + 半透明直角会锯齿），' +
+    '并排摆出来只会让人以为哪一边画错了 —— 差异写成文字比画成图诚实。',
+  checkbox:
+    '**几何是实测的，但没有可并排的成品图。** macOS 27 资源里的 36 个变体都是' +
+    '组件画布上的孤立控件，没有「装在真实界面里」的截图，' +
+    '而本库的示例一定是坐在卡片或表单里的 —— 并排摆出来比的是背景，不是控件。' +
+    '真正值得记的一条已经写进组件头部：**Apple 自己的复选框没有玻璃**，' +
+    '36 个变体里一个模糊 / 折射 / 色散都没有。',
+  'radio-group':
+    '同 Checkbox —— 共用同一份实测数据与同一个理由。' +
+    '另外，资源里的 Radio 画了 Selection=Mixed 变体而**本库不实现**，' +
+    '对照图反而会把这处刻意的不还原说成缺陷。',
   toast:
     '**Apple 那边没有对应物。** 清单写的「接近系统通知横幅」要当真：' +
     '系统横幅是**系统级**的，App 画不出来，设计资源里当然也不会有它的样例。' +

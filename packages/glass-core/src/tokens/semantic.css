@@ -102,6 +102,18 @@
   --lg-fill-tertiary: rgb(var(--lg-fill-base-light) / 0.12);
   --lg-fill-quaternary: rgb(var(--lg-fill-base-light) / 0.08);
 
+  /* ── Checkbox / Radio 的未选中底色阶梯 ──────────────────────────────
+     [实测] macOS 27 设计资源，节点 497:3757 / 121:12141，
+     记录见 docs/research/apple-metrics.md §10.3。
+
+     ⚠️ **刻意不复用上面的 fill 家族。** 那一套是 iOS 的
+     0.20/0.16/0.12/0.08（暗色 0.36/0.32/0.24/0.18），
+     而 macOS 这三档是 0.10 / 0.19 / 0.05，且**明暗两套的 alpha 相同**
+     （亮色压黑、暗色压白）。两套阶梯的形状都不一样，硬套会两边都不像。 */
+  --lg-toggle-fill: rgb(0 0 0 / 0.1);
+  --lg-toggle-fill-pressed: rgb(0 0 0 / 0.19);
+  --lg-toggle-fill-disabled: rgb(0 0 0 / 0.05);
+
   /* ── 分组列表（Card = grouped list section，PROJECT_SPEC §10）──────
      内容层，**不是玻璃**。数值来自 iOS 27 资源里两块 Grouped List 的渲染图
      （screenshots/ios27-list-screen.png、ios27-grouped-list-rows.png）。 */
@@ -328,6 +340,13 @@
   --lg-fill-tertiary: rgb(var(--lg-fill-base-dark) / 0.24);
   --lg-fill-quaternary: rgb(var(--lg-fill-base-dark) / 0.18);
 
+  /* Checkbox / Radio：alpha 与亮色**完全相同**，只是底色从黑换成白。
+     [实测] 见 apple-metrics.md §10.3 —— 这一点与 fill 家族很不一样，
+     那边暗色是亮色的两倍多。 */
+  --lg-toggle-fill: rgb(255 255 255 / 0.1);
+  --lg-toggle-fill-pressed: rgb(255 255 255 / 0.19);
+  --lg-toggle-fill-disabled: rgb(255 255 255 / 0.05);
+
   /* ── 分组列表 · dark ───────────────────────────────────────────────
      ⚠️ **这三条都没有实测。** iOS 27 资源里我只找到亮色的 Grouped List
      渲染图，暗色版没找到。下面是 iOS 长期通行的暗色分组配色
@@ -395,6 +414,12 @@
   --lg-separator-opaque: #8e8e93;
   /* 分组列表的分隔线同样要加强 —— 黑 10% 在高对比下几乎看不见 */
   --lg-list-separator: rgb(0 0 0 / 0.3);
+  /* 未选中的复选框在高对比下必须能与背景分开 ——
+     黑 10% 压白底只有约 1.1:1，远不到「非文字对比 3:1」。
+     加到 0.34 ≈ 3.1:1，刚过线又不至于看起来像已选中。 */
+  --lg-toggle-fill: rgb(0 0 0 / 0.34);
+  --lg-toggle-fill-pressed: rgb(0 0 0 / 0.46);
+  --lg-toggle-fill-disabled: rgb(0 0 0 / 0.18);
   /* 高对比下折射与色散都要收敛 —— 畸变本身会降低可读性 */
   --lg-refract-scale: 0.5;
   --lg-disperse-scale: 0.4;
@@ -412,5 +437,9 @@
   --lg-separator-opaque: #6e6e73;
   --lg-list-separator: rgb(255 255 255 / 0.36);
   --lg-grabber-fill: rgb(255 255 255 / 0.55);
+  /* 同上，暗色一侧。白 10% 压在 #1c1c1e 上约 1.3:1，同样不够 */
+  --lg-toggle-fill: rgb(255 255 255 / 0.38);
+  --lg-toggle-fill-pressed: rgb(255 255 255 / 0.5);
+  --lg-toggle-fill-disabled: rgb(255 255 255 / 0.2);
   /* 描边同上，由 --lg-stroke-boost 统一放大，不重复写 */
 }

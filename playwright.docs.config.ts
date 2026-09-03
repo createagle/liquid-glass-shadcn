@@ -29,6 +29,17 @@ export default defineConfig({
      */
     command: 'pnpm --filter www build && pnpm --filter www start',
     url: 'http://localhost:4200',
+    /**
+     * ⚠️ **本地复用现有服务是个陷阱，踩过一次（2026-09-03）。**
+     *
+     * `pnpm docs`（= `next dev`）监听的也是 4200。它开着的时候，
+     * 这里不会去构建生产版本，而是**直接连上那个 dev server** ——
+     * 于是上面那段注释里说的「dev 下这些断言没有意义」正好成立：
+     * Materials 页的 α 滑杆那条断言就这么稳定地红了 5/5 次，
+     * 看起来像 flaky，实际是在测另一个东西。
+     *
+     * 跑 `pnpm test:docs` 之前先把本地 dev server 停掉。
+     */
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,
     stdout: 'pipe',

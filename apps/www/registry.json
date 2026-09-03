@@ -592,6 +592,50 @@
         }
       ],
       "docs": "装饰性附件渲染成 aria-hidden 的 span，不进无障碍树 ——一个「￥」符号对屏幕阅读器没有意义，输入框的 aria-label 里本来就该写清楚这是金额。\n\n可点的附件（interactive）才是真的 button，命中区用伪元素撑到 44×44（HIG [官方]），视觉尺寸不变。有两个状态的附件（比如显示/隐藏密码）记得给 aria-pressed。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "checkbox",
+      "type": "registry:ui",
+      "title": "Checkbox / 复选框",
+      "description": "三态复选框（未选 / 已选 / 半选）。⚠️ **这个组件里没有玻璃，而且这是照着 Apple 做的** —— macOS 27 设计资源里的 36 个变体一个都没有模糊、折射或色散，未选中就是一块 #000000@0.10 的 16×16 squircle，选中是一块实心蓝。几何全部实测：方框 16、圆角 5.5（cornerSmoothing 0.6）、方框↔标签 3、对勾 9.31×8.93 且矢量路径逐点取自资源。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@radix-ui/react-checkbox"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/checkbox.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "不传 children 时**必须**自己给 aria-label 或 aria-labelledby：Radix 的根节点是个没有文字内容的 <button role=\"checkbox\">，而 <button> 不从包着它的 <label> 取无障碍名（那条规则只对 input / select / textarea 成立）。传了 children 的话组件会自动补 aria-labelledby。\n\n命中区用伪元素撑到 44×44（HIG [官方]），视觉尺寸仍是 16。\n\n需要玻璃质感的多选场景请用 Card + 行尾对勾 —— 那才是 iOS 上的做法。另有一条工程理由：一组复选框常有十几个，每个都折射会撞穿 PROJECT_SPEC §5.2 的 8 实例预算。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "radio-group",
+      "type": "registry:ui",
+      "title": "Radio Group / 单选组",
+      "description": "单选组。与 Checkbox 共用同一份 macOS 27 实测数据（方框 16、间距 3、标签 SF Pro Medium 13/16、三档底色 0.10/0.19/0.05），只有形状和字形不同：圆形，圆点 4.8×4.8 居中（= 边长的 30%）。同样**不带玻璃**，理由见 Checkbox。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@radix-ui/react-radio-group"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/radio-group.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "组本身必须有名字（aria-label / aria-labelledby）—— Radix 渲染的是 role=\"radiogroup\"，没有名字时屏幕阅读器只会读出「单选组」。\n\n键盘行为与复选框不同：整组只占**一个** Tab 停靠点，方向键在组内移动且移动即选中。这套行为由 Radix 负责，本库负责的是它的皮。\n\n⚠️ 资源里的 Radio 也画了 Selection=Mixed 变体，**本库不实现** —— 单选按钮不存在「部分选中」，那是 kit 复用同一套变体矩阵的产物。"
     }
   ]
 }

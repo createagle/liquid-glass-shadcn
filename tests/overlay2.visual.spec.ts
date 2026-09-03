@@ -46,6 +46,24 @@ for (const theme of ['light', 'dark']) {
     }
   }
 
+  /**
+   * ⚠️ 气泡本体**必须单独拍**。
+   *
+   * 上面那组拍的是 `[data-testid^="row-"]`，而 `TooltipContent` 是
+   * `TooltipPrimitive.Portal` 送到 body 下面去的 —— 根本不在那个盒子里。
+   * 验证台里明明放了一个 `open` 的 tooltip 并注着「视觉回归要拍到气泡本体」，
+   * 但实际上**一直没拍到**：2026-09-03 按实测把内边距（6/3/6/2）与字号
+   * （11/13）全改了一遍，上面那 6 张快照一张都没动 —— 这才发现。
+   *
+   * 教训与 §0.63 那次同类：**注释声称覆盖了，不等于真的覆盖了。**
+   */
+  test(`tooltip 气泡本体 · ${theme}`, async ({ page }) => {
+    await open(page, 'tooltip', theme);
+    const bubble = page.locator('[data-slot="tooltip-content"]');
+    await expect(bubble).toBeVisible();
+    await expect(bubble).toHaveScreenshot(`overlay2-tooltip-bubble-${theme}.png`, SHOT);
+  });
+
   for (const tint of ['0', '1']) {
     test(`input-group · ${theme} · 材质档位 ${tint}`, async ({ page }) => {
       await open(page, 'input-group', theme, 'a', tint);

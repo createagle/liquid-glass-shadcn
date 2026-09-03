@@ -470,11 +470,149 @@ PROJECT_SPEC §6 列出的 iOS 系统色与标签色表（`#007AFF` / `#0A84FF` 
 
 → token 需要 **light / dark × 常规 / 高对比 = 4 套**，不是 2 套。
 
-## 10. 汇总：本文件的完成度
+## 10. macOS 27 —— Checkbox / Radio / 焦点环 / Tooltip
+
+**数据来源**：Figma 文件 *macOS 27 (Community)*，fileKey `dRTOe4ObAK8UGqW9CBoJPM`。
+与 §7 相同的两条可信度前提照旧适用（版本号是 27 而非 SPEC 基准的 26；
+文件标题带 "(Community)"），所以下面一律标 **`[实测]`，不升格为 `[官方]`**。
+
+### 10.1 取得方式 —— 一次「枚举不完整」的教训
+
+先后试过：`get_metadata` 不带 nodeId（**只返回一页 "Cover"**）、
+`list_file_components_for_code_connect`（要企业席位）、
+`get_variable_defs`（返回 `{}`）、对 figma.com 发 WebFetch（403）。
+四条路全断，一度判断「只能由人工提供节点链接」。
+
+真正能用的是 **`use_figma`** —— 它执行的是 Figma Plugin API 的 JavaScript。
+`figma.root.children` 一次就列出了**全部 39 个页面**：
+
+```
+131:8996 Cover        207:14470 Toggles       207:14500 Text Fields
+207:14477 Forms       207:14503 Tooltips      207:14483 Popovers   …
+```
+
+> **教训（与 STATUS §0.63 是同一类）**：
+> `get_metadata` 的「顶层页面列表」在这两个 Apple 社区文件上**只返回封面一页**，
+> 是不完整的。iOS 那边之所以能直取 `12740:*`，靠的是别处得来的节点号，
+> 不是这个列表给的。
+> **一个不完整的枚举返回空，不等于文件里没有东西。**
+> 换一个能力更强的接口（能跑代码的那个）比继续追问人要链接有效得多。
+
+### 10.2 Checkbox / Radio —— 几何
+
+节点：`497:3757`（Toggles - Checkboxes）、`121:12141`（Toggles - Radio Buttons）。
+各 **18 个变体** = `Active`(True/False) × `State`(Idle/Clicked/Disabled) × `Selection`(On/Off/Mixed)。
+
+| 项 | 值 | 可信度 | 备注 |
+|---|---|---|---|
+| 控件方框 | **16 × 16** | `[实测]` | 两者相同 |
+| Checkbox 圆角 | **5.5**，`cornerSmoothing 0.6` | `[实测]` | **squircle**，不是普通圆角 |
+| Radio 圆角 | 圆（r=8 / r=100） | `[实测]` | |
+| 控件↔标签间距 | **3** | `[实测]` | auto-layout `itemSpacing`；标签左沿恒在 x=19 = 16+3 |
+| 对勾字形 | **9.31 × 8.93** @ (3.34, 3.53) | `[实测]` | 矢量，非字体 |
+| Mixed 横杠 | **6.5 × 2** @ (4.75, 7)，全圆角 | `[实测]` | |
+| Radio 圆点 | **4.8 × 4.8** @ (5.6, 5.6) | `[实测]` | = 控件的 30% |
+| 标签 | **SF Pro Medium 13 / 行高 16 / 字距 0** | `[实测]` | 注意是 **Medium**，不是 Regular |
+
+> **Radio 也有 Mixed 变体。** 单选按钮不该有「部分选中」——
+> 这是这份 kit 复用同一套变体矩阵的产物，不是 macOS 的真实状态。
+> 本库的 RadioGroup **不实现 mixed**。
+
+### 10.3 Checkbox / Radio —— 配色矩阵
+
+`Active=False` 是「窗口失焦」态（蓝色退化成灰）。**Web 没有窗口焦点概念，本库忽略这一维**，
+只取 `Active=True`。
+
+**Light**
+
+| State | 未选中底 | 选中底 | 字形 | 标签 |
+|---|---|---|---|---|
+| Idle | `#000000 @ 0.10` | `#0088ff` | `#ffffff` | `#000000 @ 0.85` |
+| Clicked | `#000000 @ 0.19` | `#0088ff` + `#e6e6e6` LINEAR_BURN | `#ffffff` | `#000000 @ 0.85` |
+| Disabled | `#000000 @ 0.05` | 组不透明度 0.45 ×（`#0088ff` + `#f2f2f2` LINEAR_BURN） | `#ffffff @ 0.50` | `#000000 @ 0.25` |
+
+**Dark**
+
+| State | 未选中底 | 选中底 | 字形 | 标签 |
+|---|---|---|---|---|
+| Idle | `#ffffff @ 0.10` | `#0091ff` + `#0d0d0d` LINEAR_DODGE | `#ffffff` | `#ffffff @ 0.85` |
+| Clicked | `#ffffff @ 0.19` | `#0091ff` + `#141414` LINEAR_DODGE | `#ffffff` | `#ffffff @ 0.85` |
+| Disabled | `#ffffff @ 0.05` | 组不透明度 0.45 ×（`#0091ff` + `#0d0d0d @ 0.45` LINEAR_DODGE） | `#ffffff @ 0.50` | `#ffffff @ 0.25` |
+
+**混合模式算出来的等效实色**（LINEAR_BURN = `a+b−255`，LINEAR_DODGE = `a+b`，逐通道钳位）：
+
+| | Idle | Clicked |
+|---|---|---|
+| Light | `#0088ff` | `#006fe6`（−25/通道） |
+| Dark | `#0d9eff`（+13） | `#14a5ff`（+20） |
+
+> 方向是反的但都对：亮色下按下**变暗**，暗色下按下**变亮** ——
+> 两边都是朝「离背景更远」的方向走。
+
+> ⚠️ **kit 自身的两处不一致**，如实记着，不要当成规律：
+> 1. 暗色样例区里未选中的 disabled 底，有的写 `#ffffff@0.05`、有的写 `#ffffff@0.03`；
+> 2. `Active=False, Clicked, On` 的 checkbox 底是两层填充（`#000000@0.06` + `@0.13`），
+>    而同状态的 radio 是单层 `#000000@0.19`。
+
+### 10.4 焦点环 `[实测]`
+
+节点 `479:5498`（Light）/ `4336:13801`（Dark），取自 **Text Fields** 页
+（Toggles 的变体矩阵里**没有** Focused 这一维 —— 焦点环是 AppKit 画的，不在组件里）。
+
+```
+INNER_SHADOW  #0088ff  blur 0  spread 1      ← 形状内 1px
+DROP_SHADOW   #0088ff  blur 0  spread 3.5    ← 形状外 3.5px
+```
+
+两条都是**硬边**（blur = 0），明暗两套**同色**。等效 CSS：
+
+```css
+box-shadow: inset 0 0 0 1px #0088ff, 0 0 0 3.5px #0088ff;
+```
+
+承载它的那个 Frame 填充是 `#ffffff` MULTIPLY（亮）/ `#000000` SCREEN（暗）——
+两者都是恒等运算，即**填充本身不可见，只有两条阴影在画**。是 kit 的一个技巧。
+
+### 10.5 Tooltip `[实测]` —— 推翻了本库现有的全部推定值
+
+节点 `0:2793`（Tooltips 页）。Phase 7 第三批做 Tooltip 时写的是
+「只有一句 HIG 原文，几何全部 `[推定]`」—— **现在有图了，且量出来的值几乎条条不同。**
+
+| 项 | 实测 | 本库原推定 | 差 |
+|---|---|---|---|
+| 内边距 | **上 3 / 右 6 / 下 2 / 左 6** | 上下 6 / 左右 10 | 上下窄一半，且**上下不对称** |
+| 圆角 | **0** | 8 | 完全不同 |
+| 字号 / 行高 | **11 / 13** | 13 / — | 小一号 |
+| 字重 | **SF Pro Medium** | 继承 | |
+| 尺寸（"Tooltip" 一词） | 49 × 18 | — | |
+
+**圆角 = 0 这一条做了两次独立确认**，因为反直觉：
+
+1. 节点属性 `cornerRadius: 0`，四角分别读也都是 0；
+2. 逐像素量渲染图（`scripts/` 同款 PNG 解码）：面板左上角 `(0,0)` 的亮度就是
+   面板本体色 **239**，没有任何过渡像素。若半径哪怕是 2，该点必然接近白。
+
+缩略图上看着像圆角，是那圈 `#000000 @ 0.40 / blur 2` 的紧贴阴影造成的错觉。
+
+**材质**（这是本次最有价值的部分 —— macOS tooltip **确实是玻璃**）：
+
+| | Light | Dark |
+|---|---|---|
+| 面板填充 | `#333333` LINEAR_DODGE + `#ececec @ 0.88` | `#000000 @ 0.50` |
+| 背景模糊 | 外层 20 + 内层 60 | 同 |
+| 描边 | `#ffffff @ 0.00` 0.6px inside（**不可见**） | `#ffffff @ 0.15` 0.6px inside |
+| 落影 | `0 2 8 #000000@0.20` + `0 0 2 #000000@0.40` | 同 |
+| 标签 | `#1a1a1a` | `#f5f5f5` |
+
+> **反算核对**：白底上 `255 + 0x33` 钳位到 255，再 `236×0.88 + 255×0.12 = 238.3`。
+> 实测面板中心亮度 **239**。模型对上了，说明这几个填充的解析没读错。
+
+
+## 11. 汇总：本文件的完成度
 
 | PROJECT_SPEC §1.5 要求 | 状态 |
 |---|---|
-| 组件尺寸 / 圆角 / 间距表 | 🟡 **部分完成**。Tab Bar / Switch / Slider / Sheet / Alert / Menu 已有 `[实测]`（§7），Button 亦有（工具栏节点与 Alert 两处互相印证），Grouped List 已有（§8.2）；Popover / Stepper / Toolbar 变体、以及 Section header / footer **仍缺** |
+| 组件尺寸 / 圆角 / 间距表 | 🟡 **部分完成**。Tab Bar / Switch / Slider / Sheet / Alert / Menu 已有 `[实测]`（§7），Button 亦有（工具栏节点与 Alert 两处互相印证），Grouped List 已有（§8.2），Checkbox / Radio / 焦点环 / Tooltip 已有（§10，macOS 27）；Popover / Stepper / Toolbar 变体、以及 Section header / footer **仍缺** |
 | 字号表（Dynamic Type） | ❌ **仍全部 `[待核实]`**，本次未取得来源 |
 | 每个数值标注可信度 | ✅ 已做，且新增了 `[待核实]` 一档以免把社区值伪装成官方值 |
 | 严禁把推定值伪装成官方值 | ✅ 遵守。本次进一步**没有**把 iOS 27 Figma 的值升格为 `[官方]`，理由见 §7 开头两条前提 |
@@ -494,3 +632,10 @@ PROJECT_SPEC §6 列出的 iOS 系统色与标签色表（`#007AFF` / `#0A84FF` 
 | 3 | Sheet 圆角具体数值仍未取得 | Phase 4 ResponsiveOverlay 需要 |
 | 4 | `rgb(0 136 255)` vs `#007AFF` 的差异是色彩管理还是真实改值？ | 决定是否动 `--lg-blue` token |
 | 5 | 材质命名 `Liquid Glass - Regular - **Medium**` 中 Medium 的语义 | 关系到 §8 材质档位模型 |
+| 6 | macOS 27 的 16pt 控件方框，在触屏语境下该放大多少？ | 见 §10.2；本库只扩命中区不改视觉尺寸，是**推定**的取舍 |
+| 7 | Tooltip 圆角 0 是 macOS 的现状，还是这份 kit 画漏了？ | 见 §10.5；两次独立确认了「kit 里就是 0」，但没有真机截图佐证 |
+
+> **§10 顺带解答了 #4 的一半**：macOS 27 的控件强调色量到的是 `#0088ff`（亮）/ `#0091ff`（暗），
+> 与 iOS 那边量到的 `rgb(0 136 255)` **逐位相同**。
+> 两份互相独立的资源给出同一个值，说明这不是某一份文件的色彩管理误差 ——
+> `#0088ff` 就是 Liquid Glass 一代的强调蓝，`#007AFF` 是上一代的值。

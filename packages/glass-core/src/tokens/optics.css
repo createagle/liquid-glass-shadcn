@@ -304,3 +304,36 @@
   outline: 2px solid var(--lg-ring, rgb(10 132 255));
   outline-offset: 2px;
 }
+
+/* ── 骨架屏的微光 ──────────────────────────────────────────────────────
+   放在这里而不是组件文件里：组件是单文件复制给用户的，
+   而每个实例内联一个 <style> 会在 DOM 里复制 N 份同样的关键帧。
+   组件本来就依赖 theme.css 的 token（没有 token 它连底色都没有），
+   多依赖一个关键帧不增加任何新的耦合。
+
+   ⚠️ 动不动由组件决定（prefers-reduced-motion 下根本不渲染那一层），
+   这里只提供关键帧本身。 */
+@keyframes lg-skeleton-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* ── 不定态进度条的行进条纹 ────────────────────────────────────────────
+   与骨架屏的微光同一个理由放在这里，外加一条更硬的：
+   **用 motion 做无限循环会让视觉回归做不了** —— Playwright 截图前只能停 CSS 动画，
+   停不了 rAF 往内联样式上写值，元素永远达不到「连续两帧一样」，截图直接超时。
+
+   ⚠️ 动不动由组件决定（prefers-reduced-motion 下组件不挂这个 animation），
+   这里只提供关键帧本身。位移量用 CSS 变量传进来，与组件的 GEOMETRY.stripe 对齐。 */
+@keyframes lg-progress-march {
+  from {
+    background-position-x: 0;
+  }
+  to {
+    background-position-x: var(--lg-progress-stripe, 24px);
+  }
+}

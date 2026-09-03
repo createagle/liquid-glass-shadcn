@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "avatar",
+  "title": "Avatar / 头像",
+  "author": "Liquid Glass UI",
+  "description": "头像。**内容层，不用玻璃** —— 头像装的是照片，照片本身就是内容，在它上面糊材质只会把内容弄糊。⚠️ Apple 没有 Avatar 控件，HIG 里没有对应规范，设计资源里也没有可量的样例，**几何全部 [推定]**。图加载失败时回退到首字母，不会留下破图标。",
+  "dependencies": [],
+  "registryDependencies": [
+    "@glass/utils",
+    "@glass/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/glass/ui/avatar.tsx",
+      "content": "'use client';\n\n// APPLE REFERENCE: 无\n//\n// ⚠️ **Apple 没有 Avatar 控件。** 通讯录、信息、FaceTime 里的圆形头像是各家 App\n// 自己画的，HIG 里没有对应的组件规范，设计资源里也没有可量的样例。\n// **本组件的几何全部 `[推定]`**，唯一有依据的是字号阶梯（apple-metrics §7.6）。\n//\n// 分层：**内容层，不用玻璃**。头像装的是照片 —— 照片本身就是内容，\n// 在它上面糊一层材质只会把内容弄糊（PROJECT_SPEC §2）。\n\nimport * as React from 'react';\nimport { cn } from '@/lib/utils';\n\nconst GEOMETRY = {\n  /** 默认边长（px）。`[推定]` —— 取 HIG 最小触控目标 44 的下一档 */\n  size: 40,\n  /** 首字母相对边长的比例。`[推定]` */\n  initialsRatio: 0.4,\n} as const;\n\nexport interface GlassAvatarProps extends Omit<React.ComponentProps<'span'>, 'children'> {\n  /**\n   * 图片地址。加载失败或不传时显示 `fallback`。\n   *\n   * ⚠️ 类型刻意写成 `string | undefined` 而不是只写 `?:`。\n   * 本仓库开了 `exactOptionalPropertyTypes`，那种写法下\n   * `<Avatar src={user.avatarUrl} />`（值的类型是 `string | undefined`）**编译不过**，\n   * 调用方得写成 `{...(url ? { src: url } : {})}` —— 而头像地址来自数据、\n   * 天然可能是 undefined，这是最常见的用法，不该逼调用方绕。\n   */\n  src?: string | undefined;\n  /** 无障碍名称。有图时必须给 —— 头像通常代表一个人，不是装饰。 */\n  alt?: string | undefined;\n  /**\n   * 图片不可用时显示的内容，通常是姓名首字母。\n   *\n   * ⚠️ 不要在这里塞人名全称：这块地方只有 40px 宽，塞进去会被裁掉，\n   * 而屏幕阅读器读到的是 `alt`，不是它。\n   */\n  fallback?: React.ReactNode;\n  /** 边长（px）。默认 40。 */\n  size?: number;\n}\n\nfunction Avatar({\n  className,\n  src,\n  alt,\n  fallback,\n  size = GEOMETRY.size,\n  style,\n  ...props\n}: GlassAvatarProps) {\n  /**\n   * 三态：没给 src / 正在加载 / 加载失败。\n   *\n   * ⚠️ 必须用 `key={src}` 之外的方式重置状态 —— 换 src 之后如果不把 failed\n   * 清掉，第一张图失败会让后面所有图都显示不出来。这里用 effect 在 src 变化时重置。\n   */\n  const [failed, setFailed] = React.useState(false);\n  React.useEffect(() => {\n    setFailed(false);\n  }, [src]);\n\n  const showImage = Boolean(src) && !failed;\n\n  return (\n    <span\n      data-slot=\"avatar\"\n      className={cn(\n        'relative inline-flex shrink-0 items-center justify-center overflow-hidden select-none',\n        className,\n      )}\n      style={{\n        width: size,\n        height: size,\n        borderRadius: '50%',\n        // 底色只在图缺席时看得到；用 fill 家族而不是 card-fill，\n        // 因为头像常常压在列表行上，需要和行底色区分开\n        background: 'var(--lg-fill-secondary)',\n        color: 'var(--lg-label-secondary)',\n        ...style,\n      }}\n      {...props}\n    >\n      {showImage ? (\n        // eslint-disable-next-line @next/next/no-img-element -- registry 组件不依赖 next/image\n        <img\n          data-slot=\"avatar-image\"\n          src={src}\n          alt={alt ?? ''}\n          onError={() => setFailed(true)}\n          className=\"h-full w-full object-cover\"\n          draggable={false}\n        />\n      ) : (\n        <span\n          data-slot=\"avatar-fallback\"\n          /**\n           * 图缺席时，无障碍名称落在这一层。\n           * 没有 alt 也没有 fallback 时整个头像对 AT 隐藏 ——\n           * 一个既没有名字也没有内容的圆圈对屏幕阅读器只是噪音。\n           */\n          {...(alt ? { role: 'img', 'aria-label': alt } : { 'aria-hidden': 'true' })}\n          className=\"font-semibold\"\n          style={{ fontSize: Math.round(size * GEOMETRY.initialsRatio) }}\n        >\n          {fallback}\n        </span>\n      )}\n    </span>\n  );\n}\n\nexport { Avatar, GEOMETRY as AVATAR_GEOMETRY };\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "有图时 alt 必须给 —— 头像通常代表一个人，不是装饰。\n\n既没有 alt 也没有 fallback 时整个头像对辅助技术隐藏：一个既没有名字也没有内容的圆圈对屏幕阅读器只是噪音。\n\n换 src 时组件会自己把「加载失败」状态清掉 —— 否则第一张图失败会让后面所有图都显示不出来。",
+  "type": "registry:ui"
+}

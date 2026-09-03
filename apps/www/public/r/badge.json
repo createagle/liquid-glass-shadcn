@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "badge",
+  "title": "Badge / 徽章",
+  "author": "Liquid Glass UI",
+  "description": "徽章。**内容层，不用玻璃**。⚠️ 分层理由被本库自己的实测改写过：原来写的是「小尺寸玻璃看不出效果」，而 scripts/small-glass.mjs 量出来 44×20 的玻璃压在条纹上 meanΔ 有 19.5/255（压渐变上只有 2.8）——**小不等于看不见，真正的变量是背景里有没有高频内容**。结论没变，理由换了。",
+  "dependencies": [],
+  "registryDependencies": [
+    "@glass/utils",
+    "@glass/theme"
+  ],
+  "files": [
+    {
+      "path": "registry/glass/ui/badge.tsx",
+      "content": "'use client';\n\n// APPLE REFERENCE: 无直接对应\n//\n// ⚠️ **Badge 不是一个 Apple 控件。** iOS 上最接近的两样东西是：\n//   · 通知角标（红底白字的数字，贴在 App 图标或 tab 上）\n//   · 分组列表行右侧的附件文字（\"Not Connected\"、\"已打开\"）—— 那是纯文本，不是徽章\n//\n// 资源里没有 Badge 组件页，也没有可量的样例。**本组件的几何全部 `[推定]`**，\n// 字号沿用排版阶梯（apple-metrics §7.6 的 13pt = SF footnote，那一档是 [实测]）。\n//\n// ── 分层：内容层，**明确不用玻璃**。理由被实测改写过一次 ─────────────\n//\n// component-inventory 原本给的理由是「小尺寸玻璃看不出效果」。\n// 本库把这句话**量了**（`node scripts/small-glass.mjs`，同尺寸同背景只开关折射），\n// 结果**不支持它**：\n//\n//     徽章尺寸 44×20    条纹背景 meanΔ 19.5/255   渐变背景 meanΔ 2.8/255   差 6.9 倍\n//     指示器   229×104  条纹背景 meanΔ 93.9/255   渐变背景 meanΔ 2.8/255   差 33.5 倍\n//     尺寸放大作用      条纹 10.3 倍              渐变只有 1.8 倍\n//\n// 也就是说：**35×16 那么小的一块玻璃压在条纹上照样看得出在扭**。\n// 「小」并不等于「看不见」—— 真正的变量是**背景里有没有高频内容**，\n// 尺寸只是放大器。\n//\n// 结论（内容层）没变，但理由换成站得住的那个：\n//   1) 徽章通常压在**页面底色或卡片**上，那是平滑的，折射几乎无从发挥（meanΔ 2.8）；\n//   2) §5.2 的同屏折射预算只有 8 个（`[推定]`），\n//      把名额花在一个大概率看不出差别的地方，收益为负。\n\nimport * as React from 'react';\nimport { cn } from '@/lib/utils';\n\nconst GEOMETRY = {\n  /** 字号（px）。[实测] 13pt —— SF footnote，与本库其他辅助文字同一档 */\n  fontSize: 13,\n  /** 左右内边距（px）。`[推定]` */\n  paddingInline: 8,\n  /** 最小高度（px）。`[推定]` */\n  minHeight: 20,\n} as const;\n\n/**\n * `count`       通知角标：红底白字，胶囊。这是唯一有 iOS 对应物的一个。\n * `neutral`     中性填充，用在「状态」这类不需要强调的地方。\n * `accent`      主色填充。\n * `outline`     只有描边，压在复杂背景上比填充更轻。\n *\n * ⚠️ 刻意**没有** `glass` 变体，理由见文件头 —— 那个尺寸下它什么也做不到。\n */\nexport type GlassBadgeVariant = 'count' | 'neutral' | 'accent' | 'outline';\n\nexport interface GlassBadgeProps extends React.ComponentProps<'span'> {\n  variant?: GlassBadgeVariant;\n}\n\n/**\n * 四个变体的配色。全部走 token，一个裸色值都没有（§15.4）。\n *\n * `count` 与 `accent` 的前景用 `--lg-on-*`：那是本库为了让白字压在实色上\n * 也能过 AA 而**推导**出来的一组色（见 legibility.ts 的 deriveOnGlassLabel），\n * 不是随手写的白。\n */\nconst VARIANTS: Record<GlassBadgeVariant, React.CSSProperties> = {\n  count: { background: 'var(--lg-destructive-fill)', color: 'var(--lg-on-destructive)' },\n  neutral: { background: 'var(--lg-fill-secondary)', color: 'var(--lg-label-primary)' },\n  accent: { background: 'var(--lg-accent-fill)', color: 'var(--lg-on-accent)' },\n  outline: {\n    background: 'transparent',\n    color: 'var(--lg-label-primary)',\n    boxShadow: 'inset 0 0 0 1px var(--lg-separator-opaque)',\n  },\n};\n\nfunction Badge({ className, variant = 'neutral', style, ...props }: GlassBadgeProps) {\n  return (\n    <span\n      data-slot=\"badge\"\n      data-variant={variant}\n      className={cn(\n        'inline-flex items-center justify-center gap-1 font-semibold whitespace-nowrap',\n        // 胶囊：徽章总是比它高的那一半还圆，直接用足够大的半径\n        'rounded-full',\n        className,\n      )}\n      style={{\n        fontSize: GEOMETRY.fontSize,\n        minHeight: GEOMETRY.minHeight,\n        paddingInline: GEOMETRY.paddingInline,\n        ...VARIANTS[variant],\n        ...style,\n      }}\n      {...props}\n    />\n  );\n}\n\nexport { Badge, GEOMETRY as BADGE_GEOMETRY };\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "四个变体里只有 count（红底白字的通知角标）有 iOS 对应物，其余三个没有 Apple 依据。\n\n刻意没有 glass 变体：徽章通常压在平滑的页面底色或卡片上，那里折射的 meanΔ 只有 2.8/255，而 §5.2 的同屏折射预算只有 8 个（该数字本身是推定）。",
+  "type": "registry:ui"
+}

@@ -467,6 +467,22 @@
         "outline": "2px solid var(--lg-ring, rgb(10 132 255))",
         "outline-offset": "2px"
       },
+      "@keyframes lg-skeleton-shimmer": {
+        "from": {
+          "transform": "translateX(-100%)"
+        },
+        "to": {
+          "transform": "translateX(100%)"
+        }
+      },
+      "@keyframes lg-progress-march": {
+        "from": {
+          "background-position-x": "0"
+        },
+        "to": {
+          "background-position-x": "var(--lg-progress-stripe, 24px)"
+        }
+      },
       ".lg-content": {
         "background-color": "var(--lg-content-regular)",
         "color": "var(--lg-label-primary)"

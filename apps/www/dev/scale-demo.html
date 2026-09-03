@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>玻璃尺寸实验台</title>
+<link rel="stylesheet" href="./tailwind.css">
+<link rel="stylesheet" href="../../../packages/glass-core/src/tokens/theme.css">
+<style>
+  *{box-sizing:border-box} body{margin:0}
+  /* 6px 黑白条纹 —— 全库光学诊断统一的高频最坏情况。
+     折射与色散在平滑渐变上本来就看不出来，量它必须给足边缘。 */
+  #bg{position:fixed;inset:0;background:repeating-linear-gradient(90deg,#000 0 3px,#fff 3px 6px)}
+  /* 对照组：平滑渐变。真实界面里玻璃背后大多是这种东西，
+     没有边缘可扭 —— 这一档存在的意义就是让「取决于背景」这个结论有对照。 */
+  #bg[data-bg="gradient"]{background:linear-gradient(115deg,#0a84ff,#ff2d55 55%,#ffcc00)}
+  #root{position:relative;display:inline-block}
+</style></head>
+<body><div id="bg"></div><div id="root"></div>
+<script>
+  const p = new URLSearchParams(location.search);
+  if (p.get('bg')) document.getElementById('bg').dataset.bg = p.get('bg');
+</script>
+<script src="./scale-demo.js"></script></body></html>

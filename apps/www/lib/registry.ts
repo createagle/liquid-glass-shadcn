@@ -140,6 +140,31 @@ export const EDITORIAL: Record<string, ComponentEditorial> = {
     layerI: null,
     examples: ['field-demo', 'field-validation'],
   },
+  progress: {
+    layerB: '轨道',
+    layerI: null,
+    examples: ['progress-demo', 'progress-indeterminate'],
+  },
+  badge: {
+    layerB: '内容层（不堆玻璃）',
+    layerI: null,
+    examples: ['badge-variants', 'badge-in-list'],
+  },
+  separator: {
+    layerB: '内容层（不堆玻璃）',
+    layerI: null,
+    examples: ['separator-demo', 'separator-two-colors'],
+  },
+  skeleton: {
+    layerB: '内容层（不堆玻璃）',
+    layerI: null,
+    examples: ['skeleton-demo', 'skeleton-card'],
+  },
+  avatar: {
+    layerB: '内容层（不堆玻璃）',
+    layerI: null,
+    examples: ['avatar-demo', 'avatar-sizes'],
+  },
 };
 
 export function getEditorial(slug: string): ComponentEditorial | undefined {
@@ -212,4 +237,28 @@ export const NO_FIDELITY: Record<string, string> = {
     '不是像素。而且 iOS 把说明文字放在 **Section footer** 里、行内并不带说明 ——' +
     '连「四段式表单行」这个形态本身都没有 Apple 参考。' +
     '值得看的不是对照图，是下面 API 表里那几条 aria 的接法。',
+  progress:
+    '**资源里没有 Progress 的参考图。** 那三条水平轨道是 Slider —— 每条都带 knob，' +
+    '是可拖的滑杆，不是进度条；UIProgressView 一个样例都没有。' +
+    '本组件的轨道几何与两个颜色是**从 Slider 借来的**：对 Slider 是 [实测]，' +
+    '对 Progress 只能算 [推定 · 借自实测]。要比对照图，去看 Slider 那一张 ——' +
+    '但要记住那是另一个组件的图。',
+  badge:
+    '**Badge 不是 Apple 控件**，资源里没有组件页也没有可量的样例。' +
+    '不过这一条的**分层理由**被本库自己的实测改写过：原来写的是「小尺寸玻璃看不出效果」，' +
+    '而 `scripts/small-glass.mjs` 量出来 44×20 的玻璃压在 6px 条纹上 meanΔ 有 19.5/255，' +
+    '压在平滑渐变上才 2.8 —— **小不等于看不见，真正的变量是背景的频率**。' +
+    '结论（内容层）没变，理由换了。那张表比任何对照图都有用。',
+  separator:
+    '**厚度与颜色都已经在 Card 的对照图里比过了。** 分组列表行之间那条 1pt、#e6e6e6 ' +
+    '是从同一张参考图上量的（apple-metrics §8.2 / §8.3）。' +
+    '本组件用的是**通用**分隔线（--lg-separator，社区通行值，[待核实]），' +
+    '而那个值本来就没有参考图可比 —— 两者的差别有一个专门的示例并排放着看。',
+  skeleton:
+    '**Apple 没有骨架屏这个东西。** iOS 的加载态是转菊花或者直接显示占位内容，' +
+    'HIG 里找不到 skeleton / shimmer 的说法，设计资源里当然也没有。' +
+    '没有图就是没有图 —— 本组件的几何与动效全部是 [推定]，不拿别的东西充数。',
+  avatar:
+    '**Apple 没有 Avatar 控件。** 通讯录、信息、FaceTime 里的圆形头像是各家 App 自己画的，' +
+    'HIG 里没有对应的组件规范，设计资源里也没有可量的样例。几何全部 [推定]。',
 };

@@ -418,6 +418,110 @@
         }
       ],
       "docs": "autoResize 打开后 rows 只作为最小高度。实现上每次输入先把 height 归零再读 scrollHeight —— 归零这一步不能省，否则元素只会长不会缩。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "progress",
+      "type": "registry:ui",
+      "title": "Progress / 进度条",
+      "description": "进度条。⚠️ **资源里没有 Progress 自己的参考图** —— 那三条水平轨道是 Slider（都带 knob）。轨道几何与两个颜色是从 Slider 借来的：对 Slider 是 [实测]，对 Progress 只能算 [推定·借自实测]。不定态下**不写 aria-valuenow**，辅助技术靠「有 role 没有 valuenow」播报「进度未知」。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/progress.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "轨道是 Layer B，与本库 Slider 的轨道同一个决定 —— 这是为了和自家 Slider 一致，不是因为参考图证明了轨道是玻璃（那个尺寸下磨砂与浅灰实色看不出区别）。\n\nprefers-reduced-motion 下不定态完全静止，但仍保留斜条纹：它既不像空轨道也不像满轨道，视觉上还读得出「在进行」。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "badge",
+      "type": "registry:ui",
+      "title": "Badge / 徽章",
+      "description": "徽章。**内容层，不用玻璃**。⚠️ 分层理由被本库自己的实测改写过：原来写的是「小尺寸玻璃看不出效果」，而 scripts/small-glass.mjs 量出来 44×20 的玻璃压在条纹上 meanΔ 有 19.5/255（压渐变上只有 2.8）——**小不等于看不见，真正的变量是背景里有没有高频内容**。结论没变，理由换了。",
+      "author": "Liquid Glass UI",
+      "dependencies": [],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/badge.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "四个变体里只有 count（红底白字的通知角标）有 iOS 对应物，其余三个没有 Apple 依据。\n\n刻意没有 glass 变体：徽章通常压在平滑的页面底色或卡片上，那里折射的 meanΔ 只有 2.8/255，而 §5.2 的同屏折射预算只有 8 个（该数字本身是推定）。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "separator",
+      "type": "registry:ui",
+      "title": "Separator / 分隔线",
+      "description": "分隔线。**内容层**。⚠️ 本库有**两个**分隔线颜色且刻意不合并：分组列表行之间那条是 --lg-list-separator（#e6e6e6，iOS 27 实测，由 Card 自己画），本组件用的是通用的 --lg-separator（压白底 #c6c6c7，社区通行值 [待核实]）—— 后者明显深得多。",
+      "author": "Liquid Glass UI",
+      "dependencies": [],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/separator.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "decorative 默认是 true：绝大多数分隔线只是视觉分组，语义上并不分隔两段内容。给每条线都报 role=\"separator\" 会让屏幕阅读器一路念「分隔符」，是噪音不是信息。\n\n只有真的划分了两个语义区块（比如菜单里的分组界线）才传 decorative={false}。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "skeleton",
+      "type": "registry:ui",
+      "title": "Skeleton / 骨架屏",
+      "description": "骨架屏。**内容层**。⚠️ Apple 没有骨架屏这个东西 —— iOS 的加载态是转菊花或直接显示占位内容，HIG 里找不到 skeleton / shimmer 的说法。**几何与动效全部 [推定]**，它存在的理由只是 shadcn 生态里它很常用。prefers-reduced-motion 下完全静止。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/skeleton.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "骨架块自己是 aria-hidden 的 —— 一堆没有内容的方块对屏幕阅读器是噪音。「正在加载」这件事请由**外层容器**的 aria-busy 承担。\n\n微光的关键帧 lg-skeleton-shimmer 在 @glass/theme 里，不是内联在组件中（否则每个实例都会在 DOM 里复制一份）。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "avatar",
+      "type": "registry:ui",
+      "title": "Avatar / 头像",
+      "description": "头像。**内容层，不用玻璃** —— 头像装的是照片，照片本身就是内容，在它上面糊材质只会把内容弄糊。⚠️ Apple 没有 Avatar 控件，HIG 里没有对应规范，设计资源里也没有可量的样例，**几何全部 [推定]**。图加载失败时回退到首字母，不会留下破图标。",
+      "author": "Liquid Glass UI",
+      "dependencies": [],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/avatar.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "有图时 alt 必须给 —— 头像通常代表一个人，不是装饰。\n\n既没有 alt 也没有 fallback 时整个头像对辅助技术隐藏：一个既没有名字也没有内容的圆圈对屏幕阅读器只是噪音。\n\n换 src 时组件会自己把「加载失败」状态清掉 —— 否则第一张图失败会让后面所有图都显示不出来。"
     }
   ]
 }

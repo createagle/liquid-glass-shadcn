@@ -31,7 +31,7 @@ import { GlassSurface, cssApprox, useGlassOptional } from '@glass/core';
 import { cn } from '@/lib/utils';
 
 const GEOMETRY = {
-  /** 轨道高度（px）。`[推定 · 借自 Slider 实测]` —— 见文件头 */
+  /** 轨道高度（px）。`[推定]` —— 借自 Slider 的实测值，不是量 Progress 得来的。见文件头 */
   trackHeight: 6,
   /** 不定态斜条纹的周期（px）。`[推定]` —— 无参考 */
   stripe: 12,

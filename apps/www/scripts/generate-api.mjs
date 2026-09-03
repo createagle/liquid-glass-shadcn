@@ -287,4 +287,21 @@ console.log(
     `  ${Object.keys(components).length} 个组件 · ${nProps} 个 prop · ` +
     `${labelled + unlabelled} 个尺寸常量（${labelled} 个带可信度标注、${unlabelled} 个没有）`,
 );
-if (missing.length) console.log(`  未标注：${missing.join(', ')}`);
+if (missing.length) {
+  /*
+   * ⚠️ **这里必须退出非零，不能只打印。**
+   *
+   * 「每个尺寸常量都要带可信度标注」原本只有 CI 里一个独立步骤在把关 ——
+   * 于是本机怎么跑都是绿的，推上去才红。Phase 7 第二批就是这么挂的：
+   * progress 的 trackHeight 写成了 `[推定 · 借自 Slider 实测]`，
+   * 中间插了字，检测器找的完整 `[推定]` 匹配不上。
+   *
+   * 生成器是每次 build / gen 都会跑的，把闸放在这儿才是本机最早能拦住的地方。
+   * 可信度标注只认这四个**完整**的方括号词：[官方] [实测] [推定] [待核实]，
+   * 限定语请写在方括号外面。
+   */
+  console.error(`
+✗ ${unlabelled} 个尺寸常量没有可信度标注：${missing.join(', ')}`);
+  console.error('  可信度标注只认完整的 [官方] / [实测] / [推定] / [待核实]，限定语写在方括号外面。');
+  process.exit(1);
+}

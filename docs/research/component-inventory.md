@@ -65,7 +65,7 @@ PROJECT_SPEC §10 的 P0–P3 分层**恰好覆盖 64 个组件，无遗漏**：
 
 | # | 组件 | Apple 对应 | 分层 |
 |---|---|---|---|
-| 15 | **Input** | UITextField | **B**（iOS 26 输入框是玻璃控件） |
+| 15 | **Input** | UITextField | ~~**B**（iOS 26 输入框是玻璃控件）~~ → **内容层**（见下方修订） |
 | 16 | **Input Group** | UITextField + 附件视图 | **B** |
 | 17 | **Textarea** | UITextView | 内容层 / 弱 B |
 | 18 | **Checkbox** | 无 iOS 对应（iOS 用 checkmark 行）；macOS NSButton checkbox | **B + I(瞬时)** |
@@ -79,6 +79,20 @@ PROJECT_SPEC §10 的 P0–P3 分层**恰好覆盖 64 个组件，无遗漏**：
 | 26 | **Separator** | UITableView separator | 内容层（用 `separator` / `opaqueSeparator` 色） |
 | 27 | **Skeleton** | 无 Apple 对应 | 内容层 |
 | 28 | **Progress** | UIProgressView | **B**（轨道）+ 填充段 |
+
+> ⚠️ **第 15 行的分层判断已被实测推翻（2026-09-03）。**
+>
+> 逐像素量过官方资源里那四行 Text Field（节点 `12740:33850`，
+> 脚本 `scripts/measure-textfield.mjs`，记录见 `apple-metrics.md` §8.3）：
+> **iOS 的表单文本框没有自己的框** —— 没有描边、没有填充、没有玻璃，
+> 就是分组列表里的一行，行与行靠 1pt 分隔线分开。
+>
+> 「输入框是玻璃控件」成立的是**搜索栏**那个场景，不是表单行。
+> 本库因此给 Input 两个 variant，并把哪个有依据写在组件头部：
+> `list` 有实测依据，`field`（独立成框的玻璃胶囊）**没有任何 Apple 参考**。
+>
+> 同一条修订也适用于第 17 行的 Textarea —— 而且更糟：
+> **资源里连多行输入的样例都没有**，它多行特有的几何全是 `[推定]`。
 
 ## 4. P2 —— 16 个（结构与数据类，材质克制）
 

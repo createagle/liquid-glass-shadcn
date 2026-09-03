@@ -120,6 +120,26 @@ export const EDITORIAL: Record<string, ComponentEditorial> = {
     layerI: null,
     examples: ['responsive-overlay-demo', 'responsive-overlay-escape'],
   },
+  input: {
+    layerB: 'field：磨砂胶囊 / list：不画框',
+    layerI: null,
+    examples: ['input-list', 'input-field'],
+  },
+  textarea: {
+    layerB: '弱 B（field）/ 不画框（list）',
+    layerI: null,
+    examples: ['textarea-field', 'textarea-autoresize'],
+  },
+  label: {
+    layerB: '内容层（不堆玻璃）',
+    layerI: null,
+    examples: ['label-demo', 'label-required'],
+  },
+  field: {
+    layerB: '内容层（不堆玻璃）',
+    layerI: null,
+    examples: ['field-demo', 'field-validation'],
+  },
 };
 
 export function getEditorial(slug: string): ComponentEditorial | undefined {
@@ -172,4 +192,24 @@ export const NO_FIDELITY: Record<string, string> = {
   'responsive-overlay':
     '**这是一个行为原语，不是一个有外观的组件。** 它按视口决定渲染成 Popover 还是 Sheet，' +
     '外观完全由那两个组件提供 —— 对照图应该去看它们各自那一张。',
+  input:
+    '**参考图有，但并排比不了。** 官方资源里那四行 Text Field 已经逐像素量过了' +
+    '（scripts/measure-textfield.mjs），而量出来的结论是「iOS 的表单文本框没有自己的框」——' +
+    '所以 `variant="list"` 那一支能比的只有一条 1pt 分隔线和文字的左内缩，' +
+    '而 `variant="field"`（默认那个玻璃胶囊）**在参考图里根本不存在**，' +
+    '并排放会让人以为右边那个也是照着左边做的。数值对照在下面的「尺寸常量与可信度」表里，' +
+    '每一条标着是实测还是推定。',
+  textarea:
+    '**官方资源里没有多行输入。** 那几块 Grouped List 全是单行 Text Field，' +
+    '翻遍了也没找到 UITextView 的样例。与 Input 共享的部分（字号 17、占位符处理）' +
+    '沿用那边的实测值，多行特有的部分（最小高度、行高、竖向内边距）**全是推定**。' +
+    '没有图就是没有图，不拿单行的那张图充数。',
+  label:
+    '**Label 不是一个 Apple 控件**，component-inventory 里就标着「无 Apple 控件对应，属排版」。' +
+    '唯一有依据的数字是字号 17（Grouped List 行标签实测），而那个数字在 Card 的对照图里已经比过了。',
+  field:
+    '**这是一个接线组件，没有自己的外观。** 它产出的是 id / aria-describedby / aria-invalid，' +
+    '不是像素。而且 iOS 把说明文字放在 **Section footer** 里、行内并不带说明 ——' +
+    '连「四段式表单行」这个形态本身都没有 Apple 参考。' +
+    '值得看的不是对照图，是下面 API 表里那几条 aria 的接法。',
 };

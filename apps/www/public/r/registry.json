@@ -861,6 +861,91 @@
       ],
       "docs": "需要祖先节点有 <GlassProvider>（装 @glass/glass-providers）。\n\n与 shadcn 默认 Select 的差别：\n  1) `SelectContent` 的 `title` **必填** —— 移动路径走 Radix Dialog，它要求必须有可见 Title。两条路径的可访问名称在这里是**一致的**（都落到 title），与 DropdownMenu 不同（那边是 WAI-ARIA 的 menu 模式，桌面由触发器命名）。\n  2) `responsive={false}` 是逃生口，强制桌面行为。\n  3) `SelectTrigger` 自带玻璃外观（250×48 胶囊、chevron.up.chevron.down、按下升级为 Layer I 并补回底色），不需要再包 Button —— 本库禁用 asChild，包了就是 button 套 button。\n  4) **未交付**：多选、可搜索、分组的粘性标题、ScrollUpButton / ScrollDownButton（选项超出可视高度时视口本身可滚，但没有 Radix 那两个箭头按钮）。\n  5) ⚠️ `name` / `required` 只在**桌面路径**生效 —— 表单提交靠 Radix 接出的隐藏 input，移动路径是本库自己接的 listbox，没有这个。需要提交表单时请自行受控并写进自己的隐藏字段。\n  6) 前导图标列 28×20、间距 8、项内再内缩 6 是 iOS 27 实测值；**对勾画在这一列、以及对勾用 label 色，都是推定**，不是实测。",
       "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "field",
+      "title": "Field / 表单项",
+      "author": "Liquid Glass UI",
+      "description": "表单项的**接线**组件：把 id、aria-describedby、aria-invalid 三样自动接对，Label 与 Input / Textarea 放进去就自动关联。⚠️ 没有可量的 Apple 几何 —— iOS 的说明文字在 Section footer 里，行内不带说明，所以本组件的字号与间距**全部标 [推定]**。",
+      "dependencies": [],
+      "registryDependencies": [
+        "@glass/utils"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/field.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "说明与错误的 id 是**子节点挂载时登记**出来的，不是无条件拼接 —— 没渲染 FieldDescription 时 aria-describedby 不会指向一个不存在的元素（悬空引用多数屏幕阅读器会静默跳过，测试里完全看不出来）。\n\nFieldError 带 role=\"alert\"：校验失败要能在焦点还在提交按钮上时被朗读，只靠 aria-describedby 是听不见的。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "label",
+      "title": "Label",
+      "author": "Liquid Glass UI",
+      "description": "表单标签。**内容层，不套任何材质**（PROJECT_SPEC §2「材质属于控件层」）。字号 17 取自 iOS 27 Grouped List 行标签实测。放进 Field 里自动拿到 htmlFor。",
+      "dependencies": [],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/field"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/label.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "Label 几乎没有样式，它的价值是接线：点标签能聚焦到控件。手写表单最容易漏 htmlFor，而漏了在视觉上完全看不出来。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "input",
+      "title": "Input / 文本框",
+      "author": "Liquid Glass UI",
+      "description": "文本框。⚠️ **iOS 的表单文本框没有自己的框** —— 逐像素量过官方资源里那四行 Text Field：没有描边、没有填充、没有玻璃，就是分组列表里的一行。variant=\"list\" 是那个有实测依据的形态；variant=\"field\"（默认）是独立成框的玻璃胶囊，**没有 Apple 参考，几何全是推定**。占位符颜色刻意不还原 Apple 的 #c5c5c7（压白底仅 1.72:1，过不了 AA）。",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/field"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/input.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "两个 variant 的依据完全不同，选之前先读组件顶部的 APPLE REFERENCE：\n  list  —— 有实测。放进 <Card> 里配 <CardRow> 用，行高 52、左内缩 16、分隔线由 Card 提供。\n  field —— 无参考。高度取的是 HIG 的 44pt 最小触控目标，圆角取半高做胶囊，都是推定值。\n\nclearable 对应 iOS 的 clearButtonMode（清除按钮实测 18×18、右内缩 17）。它的 tabIndex 是 -1，与 Safari 原生 clear button 一致 —— 表单里每个框都多一个 Tab 停靠点会很难用。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "textarea",
+      "title": "Textarea / 多行输入",
+      "author": "Liquid Glass UI",
+      "description": "多行输入。⚠️ **官方资源里没有多行输入的参考图**，那几块 Grouped List 全是单行 Text Field —— 所以与 Input 共享的部分（字号 17、占位符处理）沿用实测值，多行特有的部分（最小高度、行高、竖向内边距）**全部标 [推定]**。内容层 / 弱 B，圆角取 14 而不是胶囊。",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/field"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/textarea.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "autoResize 打开后 rows 只作为最小高度。实现上每次输入先把 height 归零再读 scrollHeight —— 归零这一步不能省，否则元素只会长不会缩。",
+      "type": "registry:ui"
     }
   ]
 }

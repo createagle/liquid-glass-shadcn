@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "label",
+  "title": "Label",
+  "author": "Liquid Glass UI",
+  "description": "表单标签。**内容层，不套任何材质**（PROJECT_SPEC §2「材质属于控件层」）。字号 17 取自 iOS 27 Grouped List 行标签实测。放进 Field 里自动拿到 htmlFor。",
+  "dependencies": [],
+  "registryDependencies": [
+    "@glass/utils",
+    "@glass/field"
+  ],
+  "files": [
+    {
+      "path": "registry/glass/ui/label.tsx",
+      "content": "'use client';\n\n// APPLE REFERENCE: HIG Typography（SF Pro）/ Grouped List 行标签\n//\n// 尺寸来源：Apple Design Resources《iOS and iPadOS 27》Figma 文件\n// （节点 12740:33850 / 12740:33923），记录见 apple-metrics.md §7.6、§8.2。\n//\n//   行标签字号   17 pt（= SF body）   [实测] —— Alert 标题/正文、\n//                                     Grouped List 行标签、文本框值，三处同一档\n//\n// ⚠️ **Label 不是一个 Apple 控件。** component-inventory 里它被标成\n// 「无 Apple 控件对应，属排版」，这里也照这个定位实现：**内容层，不套任何材质**。\n// PROJECT_SPEC §2「材质属于控件层」—— 给一个 <label> 糊玻璃是这条规则最典型的反例。\n//\n// 所以本组件几乎没有样式，它的存在理由是**接线**：\n// 放进 <Field> 里就自动拿到 htmlFor，点标签能聚焦到控件。\n// 这件事手写时最容易漏，而漏了在视觉上完全看不出来。\n\nimport * as React from 'react';\nimport { cn } from '@/lib/utils';\nimport { useFieldControl } from '@/components/ui/field';\n\nconst GEOMETRY = {\n  /** 字号。[实测] 17pt —— 与 Grouped List 行标签同一档 */\n  fontSize: 17,\n} as const;\n\nexport interface GlassLabelProps extends React.ComponentProps<'label'> {}\n\nfunction Label({ className, htmlFor: htmlForProp, style, ...props }: GlassLabelProps) {\n  // 在 Field 外面用时 useFieldControl 返回空对象，htmlFor 就完全交给调用方\n  const field = useFieldControl();\n  const htmlFor = htmlForProp ?? field.id;\n\n  return (\n    <label\n      data-slot=\"label\"\n      {...(htmlFor ? { htmlFor } : {})}\n      className={cn(\n        'inline-flex items-center gap-2 leading-tight font-medium select-none',\n        // 控件禁用时标签跟着变灰 —— 靠 :has 从兄弟节点读状态，不用 JS 传\n        'peer-disabled:cursor-not-allowed peer-disabled:opacity-40',\n        className,\n      )}\n      style={{ fontSize: GEOMETRY.fontSize, color: 'var(--lg-label-primary)', ...style }}\n      {...props}\n    />\n  );\n}\n\nexport { Label, GEOMETRY as LABEL_GEOMETRY };\n",
+      "type": "registry:ui"
+    }
+  ],
+  "docs": "Label 几乎没有样式，它的价值是接线：点标签能聚焦到控件。手写表单最容易漏 htmlFor，而漏了在视觉上完全看不出来。",
+  "type": "registry:ui"
+}

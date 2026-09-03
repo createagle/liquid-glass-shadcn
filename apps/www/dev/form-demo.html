@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>表单一批 验证台</title>
+<link rel="stylesheet" href="./tailwind.css">
+<link rel="stylesheet" href="../../../packages/glass-core/src/tokens/theme.css">
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+  #bg{position:fixed;inset:0;
+    background:
+      radial-gradient(40% 55% at 12% 18%,#ff2d55 0,transparent 60%),
+      radial-gradient(45% 60% at 84% 14%,#ffcc00 0,transparent 60%),
+      radial-gradient(55% 50% at 78% 86%,#001133 0,transparent 62%),
+      radial-gradient(45% 55% at 18% 88%,#30d158 0,transparent 60%),
+      linear-gradient(115deg,#000 0,#fff 35%,#0a84ff 70%,#000 100%)}
+  #bg[data-bg="stripes"]{background:repeating-linear-gradient(90deg,#000 0 6px,#fff 6px 12px)}
+  /* 参考图的底色。iOS 的表单就是「白区块压在 systemGroupedBackground 上」，
+     Fidelity 对照必须用这一档，否则两边底色不同，比出来的差异全是假的。 */
+  #bg[data-bg="grouped"]{background:var(--lg-grouped-bg)}
+  #root{position:relative;padding:28px;display:inline-block}
+</style></head>
+<body><div id="bg"></div><div id="root"></div>
+<script>
+  const p = new URLSearchParams(location.search);
+  if (p.get('bg')) document.getElementById('bg').dataset.bg = p.get('bg');
+</script>
+<script src="./form-demo.js"></script></body></html>

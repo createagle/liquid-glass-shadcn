@@ -167,6 +167,10 @@
      这里给出 default 档的兜底值，保证无 JS 时也能看。 */
   --lg-tint: 0.34;
   --lg-base-alpha: 0.62;
+  /* 未加可读性地板的**美学**档位值。Provider 会以内联样式覆盖它。
+     大面积玻璃（Sidebar）按这一条加成，而不是按加过地板的 --lg-base-alpha ——
+     否则地板抬多少，侧栏就跟着多算多少，很快撞到 1 变成纯不透明。 */
+  --lg-base-alpha-raw: 0.62;
   --lg-base-blur: 14px;
   --lg-base-saturate: 1.7;
   --lg-stroke-strength: 1;
@@ -190,6 +194,39 @@
   --lg-material-elevated: rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)));
   /* 指示器本身不带底色 —— 它是「浮在磨砂板上的玻璃透镜」，靠折射与高光成形 */
   --lg-material-indicator: transparent;
+
+  /**
+   * 大面积导航层（Sidebar）的不透明度加成。
+   *
+   * HIG 只给了一句话、没给数字：
+   * > Liquid Glass … is more opaque in larger elements like sidebars.
+   *
+   * 现在有数了。iOS 27 资源节点 `10472:45236`（Sidebar 的 BG）实测：
+   * 覆盖层不透明度 **0.92**（窗口失焦那一档 0.97）。
+   * 而同一份文件里控件层的 Page Control（§12.1）只有 ≈ **0.10**。
+   * 差九倍 —— 那句话是字面属实的。
+   *
+   * 取 **0.30** 而不是直接写死 0.92，是为了让材质档位滑杆继续有效：
+   * 默认档的**美学值** `--lg-base-alpha-raw: 0.62` + 0.30 = **0.92**，
+   * 正好落在实测值上，滑杆推上去时侧栏跟着一起变厚。
+   *
+   * ⚠️ 加数必须是 `--lg-base-alpha-raw` 而**不是** `--lg-base-alpha`。
+   * 后者是加过可读性地板的值（默认档实测算出来是 0.7341，不是 0.62），
+   * 再 +0.3 就是 1.034 —— 被 min(1) 夹成纯不透明，侧栏一点玻璃都不剩。
+   * 第一版就是这么写的，测试里量到 `rgb(255,255,255)` 才发现。
+   * 规则里再对地板取 `max()`，保证「不会比可读性要求更透」。
+   *
+   * ⚠️ **只加不透明度，不加模糊。** 同一次测量里侧栏的背景模糊是 `r=80`，
+   * 反而**小于** Page Control 的 `r=100` —— 「面积越大糊得越狠」这个想当然的
+   * 推论被资源否掉了。完整记录见 docs/research/apple-metrics.md §13.1。
+   *
+   * ⚠️ 这个值必须由 `.lg-surface` 的规则去 `calc()`，**不能在这里预先合成**
+   * 成 `--lg-material-large`：自定义属性的 var() 在**声明处**求值，
+   * 预合成会把 `--lg-base-alpha` 钉死在 root 那一份，
+   * 逐元素可读性探测（`legibility: 'adaptive'`）的局部覆盖就流不进来了。
+   * 同一个坑在本文件 .dark 块与 shadcn.css 里各记过一次。
+   */
+  --lg-large-boost: 0.3;
 
   /**
    * Knob（Slider / Switch 的把手）的底色。**与上面的指示器刻意不同。**
@@ -408,6 +445,7 @@
   --lg-list-separator: rgb(255 255 255 / 0.12);
 
   --lg-base-alpha: 0.44;
+  --lg-base-alpha-raw: 0.44;
   --lg-base-color: 20 20 24;
   --lg-elevated-color: 32 32 38;
 

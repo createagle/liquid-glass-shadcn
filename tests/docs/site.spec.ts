@@ -618,6 +618,16 @@ for (const path of [
   '/docs/materials',
   '/docs/optics',
   '/docs/components/select',
+  /*
+   * P2 第三批的三页都进来了 —— 这一批**每个组件都有一处上游会闹的地方**：
+   *   Sidebar         Radix Dialog 少了 Title 会在控制台报警
+   *   Menubar         Radix Menubar 的 roving focus 在 SSR 首帧容易 warn
+   *   NavigationMenu  Viewport 的高度动画 + 自管 open，最容易出 hydration 警告
+   * STATUS 里那条「没有任何测试看过控制台」的教训，这一批不再重复。
+   */
+  '/docs/components/sidebar',
+  '/docs/components/menubar',
+  '/docs/components/navigation-menu',
 ]) {
   test(`控制台无 error / warning：${path}`, async ({ page }) => {
     const noise: string[] = [];

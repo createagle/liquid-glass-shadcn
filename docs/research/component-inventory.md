@@ -157,14 +157,14 @@ PROJECT_SPEC §10 的 P0–P3 分层**恰好覆盖 64 个组件，无遗漏**：
 | 33 | **Data Table** | 同上 | **内容层** |
 | 34 | **Pagination** | ~~无 iOS 对应~~ → **iOS 有完整的 Page Controls 页**（见修订七） | **B** ✅ |
 | 35 | **Breadcrumb** | 无 iOS 对应；~~macOS path control~~ → **macOS 也没有**（见修订七） | 内容层 ✅ |
-| 36 | **Navigation Menu** | UINavigationBar / 菜单栏 | **B**（导航层，玻璃合法） |
-| 37 | **Menubar** | iPadOS 新增的 menu bar | **B + I**（高亮项） |
+| 36 | **Navigation Menu** | ~~UINavigationBar / 菜单栏~~ → **两份资源里都没有**（见修订八） | **B**（面板；几何全部借来）✅ |
+| 37 | **Menubar** | iPadOS 新增的 menu bar，节点 `5413:10006` 实测 | ~~**B + I**~~ → **条本身无材质** + 面板 B（见修订八）✅ |
 | 38 | **Context Menu** | UIContextMenuInteraction —— 面板与 DropdownMenu **实测同源** | **B + I** ✅ |
 | 39 | **Command** | 无 iOS 对应；接近 Spotlight | **B + I**（高亮项） |
 | 40 | **Combobox** | UIPickerView + 搜索 | **B + I** |
 | 41 | **Calendar** | UICalendarView | 内容层 + **I(瞬时)**（选中日期） |
 | 42 | **Date Picker** | UIDatePicker | **B + I** |
-| 43 | **Sidebar** | HIG sidebars（**导航层，明确点名**） | **B**，且> "more opaque in larger elements like sidebars" |
+| 43 | **Sidebar** | HIG sidebars（**导航层，明确点名**）；iOS 27 `507:26013` 实测 | **B**，"more opaque…" 那句**已量化为 0.92**（见修订八）✅ |
 | 44 | **Resizable** | NSSplitView —— 资源里只有布局稿，**分隔条无规格** | 内容层（~~分隔条可用弱 B~~ → **不上玻璃**）✅ |
 
 > ⚠️ **修订五：第 29 行「无直接对应」说得太满（2026-09-04）。**
@@ -210,6 +210,32 @@ PROJECT_SPEC §10 的 P0–P3 分层**恰好覆盖 64 个组件，无遗漏**：
 
 > **Sidebar 有一条专属规则**：Apple 明说大元素（sidebar）的玻璃**更不透明**。
 > 不能和 tab bar 用同一组 alpha。
+
+> ⚠️ **修订八：第 36、37、43 行，一条量化、一条推翻、一条改错（2026-09-04）。**
+>
+> 同样是动手前先把两份资源翻一遍，三行各有各的结果：
+>
+> - **第 43 行 Sidebar —— 那句 HIG 终于有数了。** 清单从第一天就抄着
+>   "more opaque in larger elements like sidebars"，但 HIG **只给了一句话、没给数字**，
+>   所以库里一处都没实现过。iOS 27 节点 `10472:45236` 实测：侧栏背景覆盖层
+>   **0.92**（窗口失焦那一档 0.97）；同一份文件里控件层的 Page Control（§12.1）
+>   只有 ≈**0.10**。差九倍，那句话是字面属实的。
+>   ❗ 但**模糊反而更小**（80 < 100）——「面积越大糊得越狠」是想当然，被资源否掉了。
+>
+> - **第 37 行 Menubar 的「B + I」是错的。** iPadOS 菜单栏（`5413:10006`）
+>   四个变体的 `fills` / `effects` / `strokes` **全是空的** —— 条本身不是玻璃，
+>   它直接压在壁纸或内容上。有材质的只有展开中的那一项
+>   （`#767680 @ 0.12` + 投影）与弹出的面板。
+>   （变体属性里那个 `Background=Light/Dark` 说的是**背后**是亮是暗，
+>   菜单栏据此换文字颜色，正说明它自己是透的。）
+>
+> - **第 36 行 Navigation Menu 的「UINavigationBar / 菜单栏」把两样不相干的东西对上了。**
+>   UINavigationBar 是 iOS 的顶部导航栏，菜单栏是 iPadOS 的 menu bar（= 第 37 行）；
+>   而 shadcn 的 `NavigationMenu` 是「横排触发器 + 悬停展开的大内容面板」，
+>   **Apple 平台上不存在**。与 Breadcrumb 同一档：每个数字都是推定，
+>   且逐条写明借自哪个有实测的邻居。
+>
+> 记录见 `apple-metrics.md` §13。
 
 ## 5. P3 —— 20 个（补齐与扩展）
 

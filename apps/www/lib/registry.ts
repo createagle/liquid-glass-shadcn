@@ -238,6 +238,22 @@ export const EDITORIAL: Record<string, ComponentEditorial> = {
     layerI: null,
     examples: ['resizable-demo', 'resizable-vertical'],
   },
+  /* ── P2 第三批：导航层 ──────────────────────────────────────────────── */
+  sidebar: {
+    layerB: '容器（**全库唯一一块 `scale="large"` 的玻璃** —— HIG 点名「更不透明」，实测 0.92）',
+    layerI: null,
+    examples: ['sidebar-demo', 'sidebar-collapsed'],
+  },
+  menubar: {
+    layerB: '面板（与 DropdownMenu 同一块）—— ❗**条本身没有材质**，实测推翻了清单的「B + I」',
+    layerI: null,
+    examples: ['menubar-demo', 'menubar-surface'],
+  },
+  'navigation-menu': {
+    layerB: '视口面板（Apple 平台上没有这个控件，几何全部借来）',
+    layerI: null,
+    examples: ['navigation-menu-demo', 'navigation-menu-controlled'],
+  },
 };
 
 export function getEditorial(slug: string): ComponentEditorial | undefined {
@@ -393,6 +409,21 @@ export const NO_FIDELITY: Record<string, string> = {
     '内边距 14 借自 Alert 实测、最大宽 370 借自 Grouped List 实测 ——' +
     '要比对照图请去看那两个组件的，但要记住那是别人的图。' +
     '而且本组件把通知区放在**底部**（iOS 的系统横幅在顶部），这是刻意的选择，不是还原。',
+  sidebar:
+    '**材质实测，几何实测，但没有可并排的成品图。** 资源里的侧栏是组件画布上的' +
+    '一列孤立行（320 宽，背后什么都没有），而侧栏这个组件的全部看点恰恰是' +
+    '**它压在什么上面** —— 一块 0.92 不透明的玻璃摆在空白画布上，' +
+    '和摆在纯白页面上长得一模一样。真正该记住的两条已经写进尺寸表与组件头部：' +
+    '覆盖层 0.92（控件层只有 0.10），以及**模糊反而更小**（80 < 100）。',
+  menubar:
+    '**没有可并排的东西 —— 条本身是透明的。** 实测四个变体的 fills / effects / strokes ' +
+    '全是空的，菜单栏直接压在壁纸上。有材质的只有展开中的那一项和弹出的面板，' +
+    '而面板与 DropdownMenu 是同一块，要看对照图请去那一页。',
+  'navigation-menu':
+    '**Apple 两份资源里都没有这个组件。** 与 Breadcrumb 同一档：没有参照物，' +
+    '对照图无从谈起。这里每一个数字都是 [推定]，且逐条写明借自哪个有实测的邻居 ——' +
+    '触发器借 iPadOS 菜单栏项（§13.3），面板借菜单面板（§7.7）。' +
+    '**借来的实测值仍然是推定**，不因为出处可靠就升格。',
   'input-group':
     '**资源里唯一带附件的输入框样例是清除按钮**（18×18、右内缩 17），' +
     '已经在 Input 那一页的尺寸表里了。「输入框 + 前后附件」这个形态本身没有参考图，' +

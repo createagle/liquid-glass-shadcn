@@ -88,6 +88,29 @@
     var(--lg-glow);
 }
 
+/* ── 大面积导航层（Sidebar）· HIG 明文点名的那一条 ──────────────────────
+   > Liquid Glass … is more opaque in larger elements like sidebars.
+
+   实测坐实：iOS 27 侧栏背景覆盖层 0.92，控件层的 Page Control 只有 ≈0.10。
+   见 docs/research/apple-metrics.md §13.1，加成量的取值理由见 semantic.css。
+
+   ⚠️ `calc()` 必须写在这里而不是预先合成一个 token —— 这样 `var(--lg-base-alpha)`
+   才是在 `.lg-surface` **这个元素上**求值，可读性探测的局部覆盖能流进来。
+
+   ⚠️ 加数是 `--lg-base-alpha-raw`（**美学值**），外面再对 `--lg-base-alpha`
+   （**加过可读性地板的值**）取 max。写成「地板 + 0.3」的话，默认档
+   0.7341 + 0.3 = 1.034 会被夹成纯不透明，侧栏一点玻璃都不剩。
+
+   ⚠️ 只改不透明度。**没有**把 blur 一起调大：同一次测量里侧栏的模糊
+   反而比控件层小（80 < 100）。 */
+.lg-surface[data-layer='base'][data-scale='large'],
+.lg-surface[data-layer='elevated'][data-scale='large'] {
+  background-color: rgb(
+    var(--lg-base-color) /
+      min(1, max(var(--lg-base-alpha), calc(var(--lg-base-alpha-raw) + var(--lg-large-boost))))
+  );
+}
+
 /* ── Layer I · 强玻璃指示器 ────────────────────────────────────────────
    关键：指示器区域看到的背景应当比底座**更清晰**，而不是更模糊。
    所以这里不再叠加 blur（Tier A 完全不叠，Tier B 仅 1px），
@@ -238,6 +261,23 @@
 [data-glass-tier='c'] .lg-surface[data-layer='elevated'] {
   /* 不透明度拉高来补偿没有模糊 —— 否则背景内容会直接糊掉前景文字 */
   background-color: rgb(var(--lg-base-color) / min(1, calc(var(--lg-base-alpha) + 0.26)));
+}
+
+/* 大面积变体在 Tier C 下同样要盖住 —— 少了这条，`[data-glass-tier='c'] .lg-surface[data-layer='base']`
+   （特异度 0,3,0）会压过上面那条不带 tier 前缀的大面积规则（0,3,0，但顺序在前），
+   侧栏在 Tier C 会**比控件层还透明**，正好反了。 */
+[data-glass-tier='c'] .lg-surface[data-layer='base'][data-scale='large'],
+[data-glass-tier='c'] .lg-surface[data-layer='elevated'][data-scale='large'] {
+  background-color: rgb(
+    var(--lg-base-color) /
+      min(
+        1,
+        max(
+          calc(var(--lg-base-alpha) + 0.26),
+          calc(var(--lg-base-alpha-raw) + var(--lg-large-boost) + 0.26)
+        )
+      )
+  );
 }
 
 /**

@@ -25,6 +25,20 @@ import type { RefractionOptions } from '../filter/filter-factory.js';
 export type GlassLayer = 'base' | 'indicator' | 'elevated';
 
 /**
+ * 玻璃的**尺度**，不是层级。
+ *
+ * HIG 里有一条单独点名的规则，和 Layer B / I 那套分层是正交的：
+ * > Liquid Glass … is more opaque in larger elements like sidebars.
+ *
+ * `'control'`（默认）—— 按钮、tab bar、菜单面板这类控件尺度的玻璃。
+ * `'large'`         —— 侧栏这类占据一大片屏幕的导航层，**更不透明**。
+ *
+ * 实测支撑与「为什么只改不透明度、不改模糊」见 docs/research/apple-metrics.md §13.1。
+ * 对 `layer='indicator'` 无意义（指示器没有底色可加）。
+ */
+export type GlassScale = 'control' | 'large';
+
+/**
  * 宿主元素的属性。
  *
  * ⚠️ **必须让多余的属性透传下去。**
@@ -48,6 +62,8 @@ type SurfaceHostProps = Omit<
 
 export interface GlassSurfaceProps extends SurfaceHostProps {
   layer?: GlassLayer;
+  /** 玻璃尺度。大面积导航层（Sidebar）用 `'large'`，会更不透明。见 `GlassScale`。 */
+  scale?: GlassScale;
   children?: ReactNode;
   className?: string;
   style?: CSSProperties;
@@ -95,6 +111,7 @@ export interface GlassSurfaceProps extends SurfaceHostProps {
 
 export function GlassSurface({
   layer = 'base',
+  scale = 'control',
   children,
   className,
   style,
@@ -256,6 +273,7 @@ export function GlassSurface({
       ref={ref as React.Ref<HTMLDivElement & HTMLSpanElement>}
       className={['lg-surface', className].filter(Boolean).join(' ')}
       data-layer={layer}
+      data-scale={scale === 'large' ? 'large' : undefined}
       data-continuous={continuous ? 'true' : undefined}
       data-pressed={isPressed ? 'true' : undefined}
       data-refraction={refractionOff ? 'off' : undefined}

@@ -87,8 +87,20 @@ export default async function ComponentPage({ params }: { params: Promise<{ slug
         {editorial ? (
           <p className="text-[14px] text-[var(--lg-label-tertiary)]">
             <strong className="font-medium">分层（PROJECT_SPEC §2）</strong>：Layer B ={' '}
-            {editorial.layerB}
-            {editorial.layerI ? ` · Layer I = ${editorial.layerI}` : ' · 没有 Layer I'}
+            {/*
+              ⚠️ 这两段也要走 RichText。它们和 description 一样写着 `**重点**` 与
+              `` `代码` ``，直接插进 JSX 会把星号与反引号**原样露出来** ——
+              Table 那页的「**明令禁止**」就这样露了一路，直到 Sidebar 这批才发现。
+            */}
+            <RichText text={editorial.layerB} />
+            {editorial.layerI ? (
+              <>
+                {' · Layer I = '}
+                <RichText text={editorial.layerI} />
+              </>
+            ) : (
+              ' · 没有 Layer I'
+            )}
           </p>
         ) : null}
       </header>

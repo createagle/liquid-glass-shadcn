@@ -812,6 +812,79 @@
         }
       ],
       "docs": "⚠️ **这里不得不违反 HIG**：分隔条命中区只有 8pt，够不到 44 ——一条 44pt 宽的分隔条会吃掉两侧内容，而它视觉上只有 1px。代偿是**键盘路径始终可用**（分隔条可聚焦，方向键调整），并且**布局不应该依赖用户去拖它**。\n\n⚠️ react-resizable-panels v4 改了 API：PanelGroup→Group、PanelResizeHandle→Separator、direction→orientation，而且**会用自己的内部 id 覆盖调用方传的 data-testid** ——测试与样式请一律靠 data-slot 选中。\n\n清单写「分隔条可用弱 B」，本库**不给它上玻璃**：1px 宽的东西上任何模糊都看不出来，只会白占一个折射预算（§5.2 只有 8 个）。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "sidebar",
+      "type": "registry:ui",
+      "title": "Sidebar / 侧栏",
+      "description": "全库**第一次实现 HIG 里那条单独点名侧栏的规则**：\"Liquid Glass … is more opaque in larger elements like sidebars\"。HIG 只给了一句话没给数字，这次量到了 —— 侧栏背景覆盖层 **0.92**，而控件层的 Page Control 只有 ≈**0.10**，差九倍。几何全部实测：宽 320 / 内边距 10 / 行高 44 / 胶囊 / 缩进每级 20 / 区块标题 54。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-dialog",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/sidebar.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "❗ **只加了不透明度，没有加模糊。** 同一次测量里侧栏的背景模糊是 r=80，反而**小于** Page Control 的 r=100 ——「面积越大糊得越狠」是想当然，被资源否掉了。\n\n⚠️ **选中态不是 Layer I。** 资源里它是一层减色填充，没有任何位移或色散痕迹；而且侧栏可以有几十行，每行选中都上折射会瞬间撞穿 §5.2 的 8 实例红线。整个侧栏只有**一块**玻璃 —— 容器本身。\n\n⚠️ 紧凑视口**不走 SPEC §9 的底部 Drawer**：侧栏不是「从触发点弹出的浮层」，iOS 自己在紧凑宽度下的行为是 `.overlay` 显示模式，即从前缘滑出的覆盖层。这里用 Radix Dialog 实现（焦点陷阱 / Escape / 滚动锁由它提供），**没有**复用本库的 Sheet。\n\n⚠️ 与 shadcn 的差异：本库把 `SidebarMenu > SidebarMenuItem > SidebarMenuButton` 三层合成一层 `<SidebarItem>`，并且**没有做** rail / inset / cookie 持久化 / 全局快捷键 ——那些都不来自 Apple 资源，是 shadcn 自己的产品决定。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "menubar",
+      "type": "registry:ui",
+      "title": "Menubar / 菜单栏",
+      "description": "❗ **实测推翻了清单第 37 行的「B + I」**：iPadOS 的菜单栏**条本身不是玻璃** ——四个变体的 fills / effects / strokes 全是空的，它直接压在壁纸或内容上。有材质的只有展开中的那一项：`#767680 @ 0.12` + 投影（0,2,16，8% 黑）。几何实测：条高 32 / 项高 32 / 胶囊 / 字号 14 / 应用名 Bold 内边距 10、其余 Medium 10.5。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-menubar"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/menubar.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "默认渲染一条**透明**的菜单栏 —— 那是 iPadOS 的样子。想要一条可见的玻璃条请显式传 `surface`，那是**本库的扩展，不是还原**。\n\n✅ **面板直接 import DropdownMenu 的 `MENU_GEOMETRY`**，不是抄一份数字过来 ——与 ContextMenu 同一个理由：那是同一块面板（250 宽 / 圆角 34 / 项 218×40 / 分隔区 21）。\n\n✅ 选中项的 `#767680 @ 0.12` 正好落在既有的 `--lg-fill-tertiary` 上（只差 R/G 各 2），**这个组件没有新增任何颜色 token**。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "navigation-menu",
+      "type": "registry:ui",
+      "title": "Navigation Menu / 导航菜单",
+      "description": "⚠️ **Apple 平台上不存在这个控件。** 两份官方资源（iOS/iPadOS 27 与 macOS 27，各 39 页）都逐页查过：iOS 的 Menus 是弹出菜单，macOS 的 Menu Bar and Dock 是系统菜单栏（对应本库的 Menubar）——「横排触发器 + 悬停展开的大面板」是个 Web 惯例。所以这个文件里**每一个数字都是 [推定]**，且逐条写明借自哪个有实测的邻居。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-navigation-menu"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/dropdown-menu",
+        "@glass/menubar"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/navigation-menu.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **没有做移动端 Drawer 路径。** SPEC §9 点名了 NavigationMenu，但 Radix 的 Viewport 定位与本库 Sheet 的档位面板没法共存（与 DropdownMenu 那次同一个冲突）。这是本批唯一一个欠着 §9 的组件，如实记在 STATUS 里。\n\n⚠️ **没有接 `NavigationMenu.Indicator`**（面板上方那个小箭头）。Popover 的箭头刚在上一批量到（56×13，材质 Thick），那是**有实测**的形状；这里随手放一个尺寸不同的箭头只会自相矛盾。\n\n⚠️ 玻璃底是 `Viewport` 的**兄弟节点**，不是它的孩子 ——Radix 的 `NavigationMenuViewportImpl` 第一行就把 `children` 解构掉扔了，塞进去的东西会**一声不响地消失**。有一条测试专门钉住玻璃真的在。"
     }
   ]
 }

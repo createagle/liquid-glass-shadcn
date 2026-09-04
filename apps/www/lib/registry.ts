@@ -254,6 +254,22 @@ export const EDITORIAL: Record<string, ComponentEditorial> = {
     layerI: null,
     examples: ['navigation-menu-demo', 'navigation-menu-controlled'],
   },
+  /* ── P2 第四批：日期与可输入下拉 ────────────────────────────────────── */
+  calendar: {
+    layerB: '内容层 —— ✅ **这次有 Apple 自证**：资源里 `Style=Inline` 就是纯白不透明的',
+    layerI: null,
+    examples: ['calendar-demo', 'calendar-states'],
+  },
+  'date-picker': {
+    layerB: '弹层面板（`Style=Compact`，圆角 **13** 实测）；触发器是内容层填充，不是玻璃',
+    layerI: null,
+    examples: ['date-picker-demo', 'date-picker-inline'],
+  },
+  combobox: {
+    layerB: '弹出列表；文本域是内容层（结构取自 macOS，**尺度不取**）',
+    layerI: null,
+    examples: ['combobox-demo', 'combobox-filter'],
+  },
 };
 
 export function getEditorial(slug: string): ComponentEditorial | undefined {
@@ -424,6 +440,20 @@ export const NO_FIDELITY: Record<string, string> = {
     '对照图无从谈起。这里每一个数字都是 [推定]，且逐条写明借自哪个有实测的邻居 ——' +
     '触发器借 iPadOS 菜单栏项（§13.3），面板借菜单面板（§7.7）。' +
     '**借来的实测值仍然是推定**，不因为出处可靠就升格。',
+  calendar:
+    '**几何全实测，但没有可并排的成品图。** 资源里的 `Style=Inline` 是画布上的' +
+    '一块孤立面板（370×377，背后什么都没有），而本库的示例必然坐在文档站的排版里 ——' +
+    '并排比的是周围，不是控件。真正该记住的两条已经写进尺寸表与组件头部：' +
+    '**同一个日历，嵌进内容是纯白的、浮成弹层才是玻璃**；以及**选中态是黑底白字，不是主题蓝**。',
+  'date-picker':
+    '**面板的对照留给 Calendar 那一页。** 属于它自己的只有触发器 ——' +
+    '两枚 34 高的胶囊，底色正好落在既有 token 上，画成并排图没有信息量。' +
+    '⚠️ 时间那一枚点开的滚轮**本批没有量**，也就没有可比的东西。',
+  combobox:
+    '**参考是 macOS 的，尺度又刻意不跟 —— 并排图会误导。** ' +
+    '把 24 高的 NSComboBox 和本库 44 高的控件摆在一起，看起来像做错了，' +
+    '而那恰恰是刻意的（iOS 基准 + 44pt 触控下限）。' +
+    '可比的部分是**结构与三档按钮底色**，已经写进尺寸表，并逐条标了「实测 / 推定」。',
   'input-group':
     '**资源里唯一带附件的输入框样例是清除按钮**（18×18、右内缩 17），' +
     '已经在 Input 那一页的尺寸表里了。「输入框 + 前后附件」这个形态本身没有参考图，' +

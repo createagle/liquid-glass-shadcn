@@ -628,6 +628,14 @@ for (const path of [
   '/docs/components/sidebar',
   '/docs/components/menubar',
   '/docs/components/navigation-menu',
+  /*
+   * P2 第四批的三页。Calendar 的键盘网格与 Combobox 的 aria-activedescendant
+   * 都是**本库自己写的**（没有 Radix 兜底），首帧最容易出 React 的
+   * controlled/uncontrolled 与 hydration 告警。
+   */
+  '/docs/components/calendar',
+  '/docs/components/date-picker',
+  '/docs/components/combobox',
 ]) {
   test(`控制台无 error / warning：${path}`, async ({ page }) => {
     const noise: string[] = [];

@@ -885,6 +885,72 @@
         }
       ],
       "docs": "⚠️ **没有做移动端 Drawer 路径。** SPEC §9 点名了 NavigationMenu，但 Radix 的 Viewport 定位与本库 Sheet 的档位面板没法共存（与 DropdownMenu 那次同一个冲突）。这是本批唯一一个欠着 §9 的组件，如实记在 STATUS 里。\n\n⚠️ **没有接 `NavigationMenu.Indicator`**（面板上方那个小箭头）。Popover 的箭头刚在上一批量到（56×13，材质 Thick），那是**有实测**的形状；这里随手放一个尺寸不同的箭头只会自相矛盾。\n\n⚠️ 玻璃底是 `Viewport` 的**兄弟节点**，不是它的孩子 ——Radix 的 `NavigationMenuViewportImpl` 第一行就把 `children` 解构掉扔了，塞进去的东西会**一声不响地消失**。有一条测试专门钉住玻璃真的在。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "calendar",
+      "type": "registry:ui",
+      "title": "Calendar / 日历",
+      "description": "✅ **这个组件不上玻璃，而且这次有 Apple 自证。** 资源里同一个日历有两个变体，材质不一样：`Style=Inline`（嵌在内容里）是**纯白不透明**、左右内边距 16；`Style=Compact`（弹出层）才是玻璃、圆角 13、内边距 12。PROJECT_SPEC §2「内容型组件不堆玻璃」通常只能靠推理，这次资源直接给了证据。几何全部实测：格 38 正圆 / 横向节距 50 / 纵向间距 7 / 星期缩写 Semibold 13。",
+      "author": "Liquid Glass UI",
+      "dependencies": [],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/calendar.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **选中态是黑底白字，不是主题蓝。** 实测 Selected = 实心 `#000000` + 白字 Semibold；只有「今天且被选中」才是实心 `#0088ff`。多数 Web 日历把选中画成主题色，这里刻意不跟。\n\n⚠️ **没有引 react-day-picker。** 几何是全实测的，套在别人的 DOM 上够不到就得写死魔法数字；而且它自带一套 class 命名与 components 覆写协议，与本库的 data-slot 约定是两套东西。代价是键盘导航、月份切换、闰年边界全部是本库自己写的 —— 测试因此把这些逐条钉住。\n\n⚠️ `locale` **默认写死 `en-US`**，不用运行时默认语言：后者在服务端与浏览器上可能不同，`Intl` 输出跟着不同，直接就是一次 hydration mismatch。要本地化就显式传。\n\n⚠️ `today` 默认是 `new Date()`。**测试与视觉快照必须传死值**，否则会在过日期的那一晚自己红掉。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "date-picker",
+      "type": "registry:ui",
+      "title": "Date Picker / 日期选择器",
+      "description": "UIDatePicker 的 compact 形态。触发器是**两枚独立胶囊**（日期 112×34 / 时间 86×34，间距 6），底色 `#767680 @ 0.12` —— **第四次正好落在 `--lg-fill-tertiary` 上**。弹层面板圆角 **13**（实测），比菜单的 34、Popover 的 38 小得多。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/calendar",
+        "@glass/responsive-overlay"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/date-picker.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **打开时只有文字变蓝，底色不变** —— 实测就是这样，与本库多数控件「选中改底色」的直觉相反。\n\n⚠️ **不做时间选择。** 资源里时间那一枚点开是滚轮（UIDatePicker 的 wheels 形态），那是另一个控件、另一套几何，本批没有量。所以 `time` 那一枚是**只读展示**，不传就不渲染。「没做」与「没有依据」是两回事 —— 这里是前者。\n\n`<DatePickerInline>` 是 `Style=Inline` 的对应物：**纯白不透明**，左右内边距 16。两个并排看就是「材质属于控件层」那条规则的实物。\n\n本批顺手给 `PopoverContent` 加了 `radius` / `paddingBlock` / `paddingInline` 三个 prop ——不同浮层的圆角是不一样的（菜单 34、Popover 38、这里 13），不该当成一个全局常量。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "combobox",
+      "type": "registry:ui",
+      "title": "Combobox / 可输入下拉框",
+      "description": "⚠️ **iOS 没有这个控件** —— UIPickerView 是滚轮，不能打字。参考只能是 macOS NSComboBox（与 Checkbox / Radio 同一种情况）。取的是**结构与状态**（文本域 + 尾部按钮，按钮底 idle 0.08 / 按下 0.16 / 禁用 0.04，全部实测），**不取尺度**：macOS 那份是 24 高、13 号字，本库基准是 iOS 的 44 / 17。每个常量都标了它属于哪一类。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/combobox.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **ARIA 1.2 combobox 模式全部手写。** Radix 没有 combobox 原语，shadcn 是用 Popover + cmdk 拼的，本库两样都没有。关键一条：**焦点始终留在输入框上**，靠 `aria-activedescendant` 指向高亮项，而不是把焦点挪进列表 —— 焦点一旦离开输入框，用户就没法继续打字了。\n\n⚠️ 默认过滤只是**大小写不敏感的子串匹配** —— 没有拼音、没有模糊、没有权重排序。那些是 Command 的活，而 Command 本批没做。要别的规则就传 `filter`。\n\n⚠️ 点外面关闭监听的是 `pointerdown` 而不是 `click`：后者要等 mouseup，期间输入框已经失焦，列表会先闪一下再关。"
     }
   ]
 }

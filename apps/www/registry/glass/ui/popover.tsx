@@ -105,12 +105,28 @@ export interface GlassPopoverContentProps
   > {
   /** 面板宽度（px）。默认 250 = iOS Edit Menu 的实测宽度。传 `null` 则由内容撑开。 */
   width?: number | null;
+  /**
+   * 面板圆角（px）。默认 38 = Edit Menu 面板的实测值。
+   *
+   * ⚠️ **不同浮层的圆角是不一样的，别当成一个全局常量。** 已实测的三个：
+   * 菜单面板 34、Popover 38、日期选择器的 Compact 面板 **13**。
+   * 这个 prop 就是为最后那一种加的 —— 与其让调用方用 className 去盖
+   * `GlassSurface` 的内联 radius（盖不住，那是内联样式），不如开一个口子。
+   */
+  radius?: number;
+  /** 面板上下内边距（px）。默认 10（实测）。装整块自带内边距的内容时传 0。 */
+  paddingBlock?: number;
+  /** 面板左右内边距（px）。默认 16（实测）。 */
+  paddingInline?: number;
 }
 
 function PopoverContent({
   className,
   children,
   width = GEOMETRY.width,
+  radius = GEOMETRY.radius,
+  paddingBlock = GEOMETRY.paddingBlock,
+  paddingInline = GEOMETRY.paddingInline,
   sideOffset = GEOMETRY.sideOffset,
   align = 'start',
   style,
@@ -140,13 +156,11 @@ function PopoverContent({
         >
           <GlassSurface
             layer="elevated"
-            // 圆角是**推定值**，不是实测 —— 见文件头
-            radius={GEOMETRY.radius}
+            // 默认 38 是**实测**（2026-09-04 更正，原来是推定的 22）；
+            // 调用方可以覆盖 —— 日期选择器的 Compact 面板实测是 13。
+            radius={radius}
             continuous
-            style={{
-              paddingBlock: GEOMETRY.paddingBlock,
-              paddingInline: GEOMETRY.paddingInline,
-            }}
+            style={{ paddingBlock, paddingInline }}
           >
             {children}
           </GlassSurface>

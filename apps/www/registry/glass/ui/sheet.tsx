@@ -35,7 +35,21 @@
 //
 // ⚠️ **只量到了上面两个角。** 下面两个角紧贴设备圆角边框与落影，
 //    同一套方法量出来是噪声（拟合 r≈60、RMSE 2.5，明显在量影子）。
-//    实现里四个角同取 34，**下面两个角属于 `[推定]`（按对称）**。
+//
+// ✅✅ **2026-09-04 更正：下两角不是 34，是 58 —— 而且当年那个「噪声」是对的。**
+//
+//    直接读节点属性（`I12740:24130;10525:1636` 的 `Fill + Shadow` 层）：
+//    `topLeft = topRight = 34`，`bottomLeft = bottomRight = **58**`。
+//    上两角的拟合值 34.08 因此得到独立确认；
+//    而下两角当年拟合出的 **r ≈ 60** 被判成「在量影子」丢掉了 ——
+//    它其实离真值 58 只差 2，是这套方法在那个位置**唯一一次接近正确**却被否掉。
+//
+//    58 不是随便一个数：sheet 左右各内缩 6，与设备圆角**同心**
+//    （concentricRadius(64, 6) = 58）。也就是说下两角要贴着屏幕的圆角走，
+//    上两角才是 sheet 自己的圆角。四角同值是错的。
+//
+//    **教训**：拟合出的异常值被解释成噪声之前，先问一句「如果它是真的，
+//    能不能解释得通」。58 与设备圆角同心 —— 当年只要算一下就该发现。
 //
 // ── 分层 ──────────────────────────────────────────────────────────────
 // PROJECT_SPEC §2 的分层速查表：`| Sheet / Drawer | 面板 | grabber 抓手 |`
@@ -76,8 +90,15 @@ const GEOMETRY = {
   sideInset: 6,
   /** 底部边距。[实测]（真机上会被 safe-area 顶上去，见 SheetContent 的 bottom） */
   bottomInset: 6,
-  /** 圆角。[实测] 上两角拟合 34.08 / RMSE 0.376；下两角按对称 `[推定]` */
+  /** 上两角圆角。[实测] 34 —— 拟合 34.08 与节点属性两处一致 */
   radius: 34,
+  /**
+   * 下两角圆角。[实测] **58**，不是 34。
+   *
+   * 与设备圆角同心：sheet 左右各内缩 6，`concentricRadius(64, 6) = 58`。
+   * 2026-09-04 更正，原来按对称推定成 34，见文件头。
+   */
+  radiusBottom: 58,
   /** 抓手宽。[实测] —— 58 × 4，元数据与像素扫描逐位吻合 */
   grabberWidth: 58,
   /** 抓手高。[实测] —— 只有 4pt，色散在这个尺度上看不出来，见文件头 */
@@ -465,6 +486,16 @@ function SheetContentInner({
               radius={GEOMETRY.radius}
               continuous
               className="h-full w-full overflow-hidden"
+              /*
+               * ⚠️ 四个角**不同值**：上 34、下 58（都是实测，见文件头）。
+               * `GlassSurface` 的 `radius` 只接一个数，所以下两角用内联样式盖掉 ——
+               * `border-radius` 的四角写法优先级与单值相同，写在 style 上就是最后一个赢。
+               * `radius` 仍然要传：`--lg-surface-radius` 还被高光描边等内部计算用着。
+               */
+              style={{
+                borderBottomLeftRadius: GEOMETRY.radiusBottom,
+                borderBottomRightRadius: GEOMETRY.radiusBottom,
+              }}
             >
               <motion.div
                 data-slot="sheet-layout"

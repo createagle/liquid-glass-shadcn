@@ -62,9 +62,17 @@ test.describe('几何 —— 对齐 iOS 27 Edit Menu 的实测值', () => {
     expect(await styleOf(page, PANEL, 'padding-right')).toBe('16px');
   });
 
-  test('圆角 22（推定值，这条钉的是实现不漂）', async ({ page }) => {
+  test('圆角 38 —— [实测]，不再是推定值', async ({ page }) => {
+    /*
+     * ⚠️ 2026-09-04：22 → **38**。
+     *
+     * §0.52 曾把 Popover 的圆角记成「唯一一个量不出来的几何」——
+     * 那说的是**从渲染图拟合**量不出来（半透明玻璃 + 落影 + 亮描边，
+     * 边界不是干净台阶）。而节点属性上它一直写着 38：
+     * iOS 27 资源 61:65421 各变体的 `Background` 层，四角相同。
+     */
     await open(page);
-    expect(await styleOf(page, PANEL, 'border-radius')).toBe('22px');
+    expect(await styleOf(page, PANEL, 'border-radius')).toBe('38px');
   });
 
   test('width={null} 时由内容撑开', async ({ page }) => {

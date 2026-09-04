@@ -66,14 +66,20 @@ const styleOf = (p: Page, sel: string, prop: string) =>
   );
 
 test.describe('几何 —— 对齐 iOS 27 Edit Menu 的实测值', () => {
-  test('面板 250 宽、内边距 10 / 16、圆角 22', async ({ browser }) => {
+  test('面板 250 宽、内边距 10 / 16、圆角 34', async ({ browser }) => {
     await withContext(browser, { viewport: DESKTOP }, async (page) => {
       await open(page);
       const b = (await page.locator(PANEL).boundingBox())!;
       expect(Math.round(b.width)).toBe(250);
       expect(await styleOf(page, PANEL, 'padding-top')).toBe('10px');
       expect(await styleOf(page, PANEL, 'padding-left')).toBe('16px');
-      expect(await styleOf(page, PANEL, 'border-radius')).toBe('22px');
+      /*
+       * ⚠️ 2026-09-04：22 → **34**。原值是推定的（当年渲染图圆弧拟合不收敛，
+       * 退而取 --lg-radius-lg）。这次直接读节点属性 —— 还是当年那个节点
+       * 12740:24185，它内部两层材质都写着 cornerRadius: 34。
+       * iOS Context Menu 的面板同样是 34，两处独立印证。
+       */
+      expect(await styleOf(page, PANEL, 'border-radius')).toBe('34px');
     });
   });
 

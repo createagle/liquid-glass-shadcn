@@ -150,16 +150,26 @@ const grabberPoint = async (page: Page) => {
 };
 
 test.describe('几何 —— 对齐 iOS 27 实测值', () => {
-  test('左右 6、底部 6、圆角 34', async ({ page }) => {
+  test('左右 6、底部 6、上两角 34 / 下两角 58', async ({ page }) => {
     await open(page);
     const vp = page.viewportSize()!;
     const content = (await page.locator('[data-slot="sheet-content"]').boundingBox())!;
     expect(Math.round(content.x)).toBe(6);
     expect(Math.round(vp.width - (content.x + content.width))).toBe(6);
     expect(Math.round(vp.height - (content.y + content.height))).toBe(6);
-    expect(await styleOf(page, '[data-slot="sheet-panel"] .lg-surface', 'border-radius')).toBe(
-      '34px',
-    );
+    /*
+     * ⚠️ 2026-09-04：四角同值 34 是错的。
+     *
+     * 直接读节点属性：上两角 34、**下两角 58**。
+     * 58 与设备圆角同心（concentricRadius(64, 6) = 58）——
+     * sheet 左右各内缩 6，下两角要贴着屏幕的圆角走。
+     * 当年拟合下两角得到 r≈60 被判成「在量影子」丢掉了，其实只差 2。
+     */
+    const surface = '[data-slot="sheet-panel"] .lg-surface';
+    expect(await styleOf(page, surface, 'border-top-left-radius')).toBe('34px');
+    expect(await styleOf(page, surface, 'border-top-right-radius')).toBe('34px');
+    expect(await styleOf(page, surface, 'border-bottom-left-radius')).toBe('58px');
+    expect(await styleOf(page, surface, 'border-bottom-right-radius')).toBe('58px');
   });
 
   test('抓手 58×4，距面板顶 5，占位区高 16', async ({ page }) => {

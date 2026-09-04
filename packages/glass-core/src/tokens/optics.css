@@ -403,6 +403,42 @@
   }
 }
 
+/* ── Collapsible / Accordion 的高度动画 ────────────────────────────────
+   Radix 会把内容的自然高度写进 --radix-collapsible-content-height
+   （Accordion 那边是 --radix-accordion-content-height），
+   所以高度动画只能在 CSS 里做 —— React 侧拿不到那个值。
+
+   ⚠️ **刻意不用 motion。** Progress 那次的教训：rAF 驱动的动画
+   Playwright 冻不住，`toHaveScreenshot` 会一直等到超时。
+   纯 CSS keyframe 才停得下来（见 STATUS §0.71）。 */
+@keyframes lg-collapsible-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-collapsible-content-height, var(--radix-accordion-content-height, auto));
+  }
+}
+
+@keyframes lg-collapsible-up {
+  from {
+    height: var(--radix-collapsible-content-height, var(--radix-accordion-content-height, auto));
+  }
+  to {
+    height: 0;
+  }
+}
+
+@layer components {
+  .lg-collapsible-content[data-state='open'] {
+    animation: lg-collapsible-down 220ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .lg-collapsible-content[data-state='closed'] {
+    animation: lg-collapsible-up 180ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+
 /* prefers-reduced-motion：§13 只保留 ≤120ms 的透明度过渡，去掉位移与缩放。
    ⚠️ 不能整个 animation: none —— Radix 靠 animationend 才把关闭的那条从
    DOM 里摘掉，没有动画事件它会一直留着。所以保留一个纯透明度的短动画。 */
@@ -434,6 +470,14 @@
 
     .lg-toast[data-swipe='end'] {
       animation: lg-toast-out 120ms linear;
+    }
+
+    /* 高度动画整个去掉 —— 展开/收起是**位移**，§13 明确要求砍掉。
+       这里可以直接 `animation: none`：Collapsible 与 Toast 不同，
+       Radix 不靠 animationend 摘节点（收起时它自己就把内容摘了）。 */
+    .lg-collapsible-content[data-state='open'],
+    .lg-collapsible-content[data-state='closed'] {
+      animation: none;
     }
   }
 }

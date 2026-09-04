@@ -150,10 +150,10 @@ PROJECT_SPEC §10 的 P0–P3 分层**恰好覆盖 64 个组件，无遗漏**：
 
 | # | 组件 | Apple 对应 | 分层 |
 |---|---|---|---|
-| 29 | **Accordion** | 无直接对应；接近 grouped list 可折叠 section | **内容层** |
-| 30 | **Collapsible** | 同上 | **内容层** |
-| 31 | **Scroll Area** | UIScrollView | 内容层 + **滚动边缘效果** |
-| 32 | **Table** | UITableView / lists-and-tables | **内容层**（⚠️ 明令禁止堆玻璃） |
+| 29 | **Accordion** | ~~无直接对应~~ → **两个零件有实测**：macOS Disclosure Button + Group Box（见修订五） | **内容层** ✅ |
+| 30 | **Collapsible** | macOS Disclosure Control（NSButton disclosure 样式），五档尺寸全实测 | **内容层** ✅ |
+| 31 | **Scroll Area** | UIScrollView；**滚动条几何取自 macOS 27**（滑块 6 / 槽 12 / 内缩 3） | 内容层 + **滚动边缘效果** ✅ |
+| 32 | **Table** | ~~UITableView / lists-and-tables~~ → **只能是 macOS NSTableView**（见修订六） | **内容层**（⚠️ 明令禁止堆玻璃）✅ |
 | 33 | **Data Table** | 同上 | **内容层** |
 | 34 | **Pagination** | 无 iOS 对应；接近 UIPageControl | **B** |
 | 35 | **Breadcrumb** | 无 iOS 对应；macOS path control | 内容层 |
@@ -166,6 +166,32 @@ PROJECT_SPEC §10 的 P0–P3 分层**恰好覆盖 64 个组件，无遗漏**：
 | 42 | **Date Picker** | UIDatePicker | **B + I** |
 | 43 | **Sidebar** | HIG sidebars（**导航层，明确点名**） | **B**，且> "more opaque in larger elements like sidebars" |
 | 44 | **Resizable** | NSSplitView / UISplitViewController | 内容层（分隔条可用弱 B） |
+
+> ⚠️ **修订五：第 29 行「无直接对应」说得太满（2026-09-04）。**
+>
+> Apple 确实没有一个叫 Accordion 的控件 —— 这一半是对的。
+> 但 macOS 27 资源里有**两个可以拼出它的零件**，而且都能量：
+> `Disclosure Button`（节点 121:12048，五档尺寸 + 三档状态）与
+> `Group Box`（节点 121:11263，`#000000@0.03` × 0.50、圆角 12）。
+>
+> 所以正确的说法是：**零件是实测的，怎么拼是本库定的。**
+> 这两件事必须分开写，否则要么把推定值说成实测，要么把有依据的部分也一起否掉。
+> 记录见 `apple-metrics.md` §11.1 / §11.3。
+
+> ⚠️ **修订六：第 32 行的 Apple 对应写混了两样东西（2026-09-04）。**
+>
+> 原文写的是「UITableView / lists-and-tables」，但这是**两个不同的控件**：
+>
+> - **iOS 的 UITableView ≈ 分组列表** —— 本库早就有了，就是 `Card` + `CardRow`
+>   （行高 52、区块圆角 26、不透明白，全部实测）；
+> - **带列、可排序表头、交替行的数据表格**，iOS 上**根本没有**。
+>
+> 所以 `Table` 的参考只能是 macOS `NSTableView`（节点 121:12606），
+> 与 Checkbox / Radio 是同一种情况。分层结论（内容层、禁止玻璃）不变。
+>
+> **实践后果**：需要 iOS 那种列表的人如果照着「UITableView」去找 `Table`，
+> 会拿到一个 macOS 密度的数据表格。组件头部与 registry docs 两处都写了
+> 「要 iOS 列表请用 Card」。
 
 > **Sidebar 有一条专属规则**：Apple 明说大元素（sidebar）的玻璃**更不透明**。
 > 不能和 tab bar 用同一组 alpha。

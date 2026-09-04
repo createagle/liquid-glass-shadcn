@@ -114,6 +114,35 @@
   --lg-toggle-fill-pressed: rgb(0 0 0 / 0.19);
   --lg-toggle-fill-disabled: rgb(0 0 0 / 0.05);
 
+  /* ── Disclosure Button（Accordion / Collapsible 的触发器）─────────────
+     [实测] macOS 27 节点 121:12048，见 apple-metrics.md §11.1。
+
+     ⚠️ **与上面的 toggle 阶梯不是同一套**（那边 0.10/0.19/0.05）。
+     差得不多，但确实是两组数，别合并。 */
+  --lg-disclosure-fill: rgb(0 0 0 / 0.08);
+  --lg-disclosure-fill-pressed: rgb(0 0 0 / 0.16);
+  --lg-disclosure-fill-disabled: rgb(0 0 0 / 0.04);
+
+  /* ── 滚动条滑块 ───────────────────────────────────────────────────
+     [实测] macOS 27 节点 497:6481，厚 6、全圆角、#000000 @ 0.50。 */
+  --lg-scrollbar-thumb: rgb(0 0 0 / 0.5);
+
+  /* ── 表格 ─────────────────────────────────────────────────────────
+     [实测] macOS 27 节点 121:12606，见 apple-metrics.md §11.4。
+
+     ⚠️ 选中蓝 #0165e2 **不是** --lg-accent-fill（#0071eb）。
+     表格选中行用的是更深的一支，两处都实测过，不是误差。
+     白字压在 #0165e2 上是 5.29:1，过 AA 正文，可以直接用。 */
+  --lg-selection-fill: #0165e2;
+  --lg-on-selection: #ffffff;
+  --lg-selection-fill-inactive: rgb(0 0 0 / 0.14);
+  --lg-table-row-alt: rgb(0 0 0 / 0.05);
+
+  /* ── Group Box（macOS 圈一组控件的容器）───────────────────────────
+     [实测] #000000 @ 0.03 再整层 0.50 → 等效 0.015，极淡。
+     这里直接写等效值，不再叠一层 opacity（那会连内容一起变淡）。 */
+  --lg-groupbox-fill: rgb(0 0 0 / 0.015);
+
   /* ── 分组列表（Card = grouped list section，PROJECT_SPEC §10）──────
      内容层，**不是玻璃**。数值来自 iOS 27 资源里两块 Grouped List 的渲染图
      （screenshots/ios27-list-screen.png、ios27-grouped-list-rows.png）。 */
@@ -347,6 +376,26 @@
   --lg-toggle-fill-pressed: rgb(255 255 255 / 0.19);
   --lg-toggle-fill-disabled: rgb(255 255 255 / 0.05);
 
+  /* Disclosure：[实测] idle 是 0.07（**不是**亮色那边的 0.08），
+     clicked / disabled 两档与亮色逐位相同。见 apple-metrics.md §11.1。 */
+  --lg-disclosure-fill: rgb(255 255 255 / 0.07);
+  --lg-disclosure-fill-pressed: rgb(255 255 255 / 0.16);
+  --lg-disclosure-fill-disabled: rgb(255 255 255 / 0.04);
+
+  /* ⚠️ 下面这四项**全部是 `[推定]`** —— macOS 资源里 Scrollbar 页与 List 页
+     都搜不到任何暗色节点（`findAll(/dark/i)` 返回空）。
+     取值方式是「把亮色的黑换成白，alpha 照搬」，与本库其它 token 的暗色
+     处理方式一致，但**没有任何实测依据**。见 apple-metrics.md §11.2 / §11.4。 */
+  --lg-scrollbar-thumb: rgb(255 255 255 / 0.5);
+  --lg-selection-fill-inactive: rgb(255 255 255 / 0.14);
+  --lg-table-row-alt: rgb(255 255 255 / 0.05);
+  --lg-groupbox-fill: rgb(255 255 255 / 0.015);
+
+  /* ⚠️ `--lg-selection-fill` **刻意不在暗色下改**。
+     没有暗色实测，而 #0165e2 配白字在明暗两边都是 5.29:1（过 AA 正文）——
+     在没有依据的情况下换一个值，只会是另一个推定值，且更难解释。
+     与 --lg-accent-fill 明暗两套的做法不同，这是有意的。 */
+
   /* ── 分组列表 · dark ───────────────────────────────────────────────
      ⚠️ **这三条都没有实测。** iOS 27 资源里我只找到亮色的 Grouped List
      渲染图，暗色版没找到。下面是 iOS 长期通行的暗色分组配色
@@ -420,6 +469,13 @@
   --lg-toggle-fill: rgb(0 0 0 / 0.34);
   --lg-toggle-fill-pressed: rgb(0 0 0 / 0.46);
   --lg-toggle-fill-disabled: rgb(0 0 0 / 0.18);
+  /* Disclosure 同理：0.08 压白底约 1.08:1，高对比下必须能看见边界 */
+  --lg-disclosure-fill: rgb(0 0 0 / 0.3);
+  --lg-disclosure-fill-pressed: rgb(0 0 0 / 0.44);
+  /* 滚动条滑块本来就是 0.5，高对比下拉满到接近实色 */
+  --lg-scrollbar-thumb: rgb(0 0 0 / 0.8);
+  /* 交替行 0.05 在高对比下等于没有 —— 而它是**唯一**的行分隔线索 */
+  --lg-table-row-alt: rgb(0 0 0 / 0.14);
   /* 高对比下折射与色散都要收敛 —— 畸变本身会降低可读性 */
   --lg-refract-scale: 0.5;
   --lg-disperse-scale: 0.4;
@@ -441,5 +497,10 @@
   --lg-toggle-fill: rgb(255 255 255 / 0.38);
   --lg-toggle-fill-pressed: rgb(255 255 255 / 0.5);
   --lg-toggle-fill-disabled: rgb(255 255 255 / 0.2);
+  /* 同上，暗色一侧 */
+  --lg-disclosure-fill: rgb(255 255 255 / 0.34);
+  --lg-disclosure-fill-pressed: rgb(255 255 255 / 0.48);
+  --lg-scrollbar-thumb: rgb(255 255 255 / 0.85);
+  --lg-table-row-alt: rgb(255 255 255 / 0.16);
   /* 描边同上，由 --lg-stroke-boost 统一放大，不重复写 */
 }

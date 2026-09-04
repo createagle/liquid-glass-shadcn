@@ -174,6 +174,15 @@
           "lg-toggle-fill": "rgb(0 0 0 / 0.1)",
           "lg-toggle-fill-pressed": "rgb(0 0 0 / 0.19)",
           "lg-toggle-fill-disabled": "rgb(0 0 0 / 0.05)",
+          "lg-disclosure-fill": "rgb(0 0 0 / 0.08)",
+          "lg-disclosure-fill-pressed": "rgb(0 0 0 / 0.16)",
+          "lg-disclosure-fill-disabled": "rgb(0 0 0 / 0.04)",
+          "lg-scrollbar-thumb": "rgb(0 0 0 / 0.5)",
+          "lg-selection-fill": "#0165e2",
+          "lg-on-selection": "#ffffff",
+          "lg-selection-fill-inactive": "rgb(0 0 0 / 0.14)",
+          "lg-table-row-alt": "rgb(0 0 0 / 0.05)",
+          "lg-groupbox-fill": "rgb(0 0 0 / 0.015)",
           "lg-grouped-bg": "var(--lg-gray-6-light)",
           "lg-card-fill": "#ffffff",
           "lg-list-separator": "rgb(0 0 0 / 0.1)",
@@ -283,6 +292,13 @@
           "lg-toggle-fill": "rgb(255 255 255 / 0.1)",
           "lg-toggle-fill-pressed": "rgb(255 255 255 / 0.19)",
           "lg-toggle-fill-disabled": "rgb(255 255 255 / 0.05)",
+          "lg-disclosure-fill": "rgb(255 255 255 / 0.07)",
+          "lg-disclosure-fill-pressed": "rgb(255 255 255 / 0.16)",
+          "lg-disclosure-fill-disabled": "rgb(255 255 255 / 0.04)",
+          "lg-scrollbar-thumb": "rgb(255 255 255 / 0.5)",
+          "lg-selection-fill-inactive": "rgb(255 255 255 / 0.14)",
+          "lg-table-row-alt": "rgb(255 255 255 / 0.05)",
+          "lg-groupbox-fill": "rgb(255 255 255 / 0.015)",
           "lg-grouped-bg": "#000000",
           "lg-card-fill": "var(--lg-gray-6-dark)",
           "lg-list-separator": "rgb(255 255 255 / 0.12)",
@@ -355,6 +371,10 @@
             "--lg-toggle-fill": "rgb(0 0 0 / 0.34)",
             "--lg-toggle-fill-pressed": "rgb(0 0 0 / 0.46)",
             "--lg-toggle-fill-disabled": "rgb(0 0 0 / 0.18)",
+            "--lg-disclosure-fill": "rgb(0 0 0 / 0.3)",
+            "--lg-disclosure-fill-pressed": "rgb(0 0 0 / 0.44)",
+            "--lg-scrollbar-thumb": "rgb(0 0 0 / 0.8)",
+            "--lg-table-row-alt": "rgb(0 0 0 / 0.14)",
             "--lg-refract-scale": "0.5",
             "--lg-disperse-scale": "0.4",
             "--muted-foreground": "var(--lg-label-secondary)",
@@ -372,6 +392,10 @@
             "--lg-toggle-fill": "rgb(255 255 255 / 0.38)",
             "--lg-toggle-fill-pressed": "rgb(255 255 255 / 0.5)",
             "--lg-toggle-fill-disabled": "rgb(255 255 255 / 0.2)",
+            "--lg-disclosure-fill": "rgb(255 255 255 / 0.34)",
+            "--lg-disclosure-fill-pressed": "rgb(255 255 255 / 0.48)",
+            "--lg-scrollbar-thumb": "rgb(255 255 255 / 0.85)",
+            "--lg-table-row-alt": "rgb(255 255 255 / 0.16)",
             "--muted-foreground": "var(--lg-label-secondary)",
             "--border": "var(--lg-separator)",
             "--input": "var(--lg-separator)"
@@ -545,6 +569,28 @@
           ".lg-toast[data-swipe='end']": {
             "animation": "lg-toast-swipe-out var(--lg-toast-duration, 500ms) cubic-bezier(0.32, 0.72, 0, 1)"
           },
+          "@keyframes lg-collapsible-down": {
+            "from": {
+              "height": "0"
+            },
+            "to": {
+              "height": "var(--radix-collapsible-content-height, var(--radix-accordion-content-height, auto))"
+            }
+          },
+          "@keyframes lg-collapsible-up": {
+            "from": {
+              "height": "var(--radix-collapsible-content-height, var(--radix-accordion-content-height, auto))"
+            },
+            "to": {
+              "height": "0"
+            }
+          },
+          ".lg-collapsible-content[data-state='open']": {
+            "animation": "lg-collapsible-down 220ms cubic-bezier(0.32, 0.72, 0, 1)"
+          },
+          ".lg-collapsible-content[data-state='closed']": {
+            "animation": "lg-collapsible-up 180ms cubic-bezier(0.32, 0.72, 0, 1)"
+          },
           "@media (prefers-reduced-motion: reduce)": {
             "@keyframes lg-toast-in": {
               "from": {
@@ -569,6 +615,9 @@
               },
               ".lg-toast[data-swipe='end']": {
                 "animation": "lg-toast-out 120ms linear"
+              },
+              ".lg-collapsible-content[data-state='open'], .lg-collapsible-content[data-state='closed']": {
+                "animation": "none"
               }
             },
             "[data-glass-sheet-wrapper]": {
@@ -1261,6 +1310,94 @@
         }
       ],
       "docs": "组本身必须有名字（aria-label / aria-labelledby）—— Radix 渲染的是 role=\"radiogroup\"，没有名字时屏幕阅读器只会读出「单选组」。\n\n键盘行为与复选框不同：整组只占**一个** Tab 停靠点，方向键在组内移动且移动即选中。这套行为由 Radix 负责，本库负责的是它的皮。\n\n⚠️ 资源里的 Radio 也画了 Selection=Mixed 变体，**本库不实现** —— 单选按钮不存在「部分选中」，那是 kit 复用同一套变体矩阵的产物。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "collapsible",
+      "title": "Collapsible / 展开收起",
+      "author": "Liquid Glass UI",
+      "description": "单块内容的展开收起，触发器是 macOS 的 Disclosure Button。五档尺寸与圆角全部实测（16→4、20→5、24→6、28 与 36 是正圆）——⚠️ **圆角是查表不是比例算的**，用比例硬套 28 那一档会得到 7 而不是圆。底色三档 0.08 / 0.16 / 0.04 也是实测，**与 Checkbox 那套 0.10/0.19/0.05 不是同一组数**。",
+      "dependencies": [
+        "@radix-ui/react-collapsible"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/collapsible.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ 资源里的人字形是 SF Symbols 的私有区码位，网页上多数系统会渲染成豆腐块，所以本库自己画了一个 SVG —— **形状是 [推定]**，只有「是个 chevron、随字号缩放」有依据。\n\n默认尺寸 28（正圆）而不是 macOS 常见的 16：16pt 是指针尺寸，触屏上太小。命中区另用伪元素补到 44 高，视觉尺寸不变。\n\n触发器**自己就是那个按钮**，不要往里再塞 <Button>（本库禁用 asChild，那会得到嵌套按钮）。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "accordion",
+      "title": "Accordion / 手风琴",
+      "author": "Liquid Glass UI",
+      "description": "多块内容的展开收起。⚠️ **Apple 没有一个叫 Accordion 的控件** ——这个组件是用两个实测零件拼出来的：Disclosure Button（触发器）+ Group Box（区块底，#000000@0.03 × 0.50、圆角 12）。零件是实测的，**怎么拼是本库定的**，项间分隔、标题行高、内容内边距全部 [推定]。",
+      "dependencies": [
+        "@radix-ui/react-accordion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/collapsible"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/accordion.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "区块底用的是 macOS 的 Group Box，**不是** iOS 的分组列表区块（那是 Card，不透明白 + 圆角 26，两者不是一回事）。\n\n要 iOS 那种观感请用 Card 包起来，并且**必须传 boxed={false}** —— 否则两层底叠在一起。\n\n内容层，不带玻璃：Apple 的这两个零件里一个模糊 / 折射都没有，且手风琴常常一屏好几个。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "scroll-area",
+      "title": "Scroll Area / 滚动区域",
+      "author": "Liquid Glass UI",
+      "description": "自定义滚动条 + 可选的滚动边缘效果。滚动条几何全部实测：滑块厚 6、全圆角、#000000@0.50、槽宽 12（两侧各内缩 3）、最短约 8。边缘效果直接复用 @glass/core 的 useScrollEdge / GlassScrollEdge（Phase 6 做的）。",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-scroll-area"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/scroll-area.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ 默认 type=\"scroll\"（滚动时显示），不是 Radix 默认的 hover ——对应 macOS 系统设置里「显示滚动条：滚动时」那一档；hover 在触屏上等于永远不显示。要常驻请传 type=\"always\"。\n\n滚动边缘效果默认**关着**（edges={false}）：只有「内容会滑到某条栏底下」时才该打开，普通滚动容器加上去只是白白压暗上下两条边。它的方向是**把背景内容压暗模糊**，不是把栏自己变实 —— 与 PROJECT_SPEC 的字面表述相反，理由记在 core 的 scroll-edge.tsx。\n\n⚠️ 暗色滑块颜色是 [推定]：macOS 资源的 Scrollbar 页搜不到任何暗色节点。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "table",
+      "title": "Table / 表格",
+      "author": "Liquid Glass UI",
+      "description": "数据表格。⚠️ **PROJECT_SPEC §2 明令禁止在表格上堆玻璃**，这里一句 GlassSurface 都没有。几何取自 macOS NSTableView：数据行 20、表头 19、行背景左右内缩 10 且圆角 8、首列内缩 16、层级缩进 15/级，全部实测。选中行 #0165e2 配白字（5.29:1，过 AA）。",
+      "dependencies": [],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/table.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **需要 iOS 那种分组列表时请用 Card，不要用 Table。**清单把 Table 的对应物写成「UITableView / lists-and-tables」，但那是两样东西：iOS 的 UITableView 就是分组列表（本库的 Card），而带列、可排序表头、交替行的数据表格 iOS 上根本没有。\n\n⚠️ 默认行高 32 是 [推定]（为触屏放宽），density=\"compact\" 的 20 才是实测值。\n\n资源里的「选中 + 窗口失焦」那一档，本库改用在「表格自己失去焦点」上 ——Web 没有窗口焦点概念，语义相近但不是同一件事。\n\n暗色配色全部 [推定]：List 页搜不到任何暗色节点。",
       "type": "registry:ui"
     }
   ]

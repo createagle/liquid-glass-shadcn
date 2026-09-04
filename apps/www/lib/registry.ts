@@ -196,6 +196,27 @@ export const EDITORIAL: Record<string, ComponentEditorial> = {
     layerI: null,
     examples: ['radio-group-demo', 'radio-group-keyboard'],
   },
+  /* ── P2 第一批：四个结构件，全部内容层 ────────────────────────────── */
+  collapsible: {
+    layerB: '内容层（Disclosure Button 本身也没有材质）',
+    layerI: null,
+    examples: ['collapsible-demo', 'collapsible-sizes'],
+  },
+  accordion: {
+    layerB: '内容层（区块底是 macOS Group Box，不是玻璃）',
+    layerI: null,
+    examples: ['accordion-demo', 'accordion-in-card'],
+  },
+  'scroll-area': {
+    layerB: '内容层；**边缘效果那一层**才有模糊，且它属于 @glass/core',
+    layerI: null,
+    examples: ['scroll-area-demo', 'scroll-area-edges'],
+  },
+  table: {
+    layerB: '内容层 —— PROJECT_SPEC §2 **明令禁止**在这里堆玻璃',
+    layerI: null,
+    examples: ['table-demo', 'table-density'],
+  },
 };
 
 export function getEditorial(slug: string): ComponentEditorial | undefined {
@@ -308,6 +329,25 @@ export const NO_FIDELITY: Record<string, string> = {
     '同 Checkbox —— 共用同一份实测数据与同一个理由。' +
     '另外，资源里的 Radio 画了 Selection=Mixed 变体而**本库不实现**，' +
     '对照图反而会把这处刻意的不还原说成缺陷。',
+  collapsible:
+    '**触发器的几何是实测的，人字形不是。** 资源里那个 chevron 是 SF Symbols 的' +
+    '私有区码位（网页上多数系统渲染成豆腐块），只能自己画一个 SVG ——' +
+    '并排摆出来，比的其实是「我画的 chevron 像不像 Apple 的字体」，' +
+    '而那恰恰是这个组件里**唯一没有依据**的一处。尺寸与配色的回归由行为测试钉住。',
+  accordion:
+    '**Apple 没有一个叫 Accordion 的控件**，所以没有成品可以并排。' +
+    '资源里只有两个零件（Disclosure Button + Group Box），它们各自的实测值' +
+    '已经写进尺寸表；而「怎么把零件拼成手风琴」是本库定的，没有参照物。',
+  'scroll-area':
+    '**滚动条量得到，滚动边缘效果量不到。** 前者的几何全部实测（滑块 6、槽 12、内缩 3）；' +
+    '后者是个**随滚动位置连续变化**的效果，静态资源里根本不存在这种东西 ——' +
+    '它的强度曲线、带子高度、模糊半径全是 [推定]，记在 @glass/core 的 scroll-edge.tsx。' +
+    '并排一张静态图只会把「连续」这件事拍没了。',
+  table:
+    '**几何实测，但没有可并排的成品图。** 资源里的 Table Rows 是组件画布上的' +
+    '孤立行（600×20 一条条铺开），不是装在真实窗口里的表格；' +
+    '而本库的示例必然带表头、caption 和真实数据 —— 并排比的是排版，不是控件。' +
+    '真正该记住的一条已经写进组件头部：**这里一句玻璃都没有，是 SPEC 明令的。**',
   toast:
     '**Apple 那边没有对应物。** 清单写的「接近系统通知横幅」要当真：' +
     '系统横幅是**系统级**的，App 画不出来，设计资源里当然也不会有它的样例。' +

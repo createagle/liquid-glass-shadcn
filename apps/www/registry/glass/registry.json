@@ -173,6 +173,15 @@
           "lg-toggle-fill": "rgb(0 0 0 / 0.1)",
           "lg-toggle-fill-pressed": "rgb(0 0 0 / 0.19)",
           "lg-toggle-fill-disabled": "rgb(0 0 0 / 0.05)",
+          "lg-disclosure-fill": "rgb(0 0 0 / 0.08)",
+          "lg-disclosure-fill-pressed": "rgb(0 0 0 / 0.16)",
+          "lg-disclosure-fill-disabled": "rgb(0 0 0 / 0.04)",
+          "lg-scrollbar-thumb": "rgb(0 0 0 / 0.5)",
+          "lg-selection-fill": "#0165e2",
+          "lg-on-selection": "#ffffff",
+          "lg-selection-fill-inactive": "rgb(0 0 0 / 0.14)",
+          "lg-table-row-alt": "rgb(0 0 0 / 0.05)",
+          "lg-groupbox-fill": "rgb(0 0 0 / 0.015)",
           "lg-grouped-bg": "var(--lg-gray-6-light)",
           "lg-card-fill": "#ffffff",
           "lg-list-separator": "rgb(0 0 0 / 0.1)",
@@ -282,6 +291,13 @@
           "lg-toggle-fill": "rgb(255 255 255 / 0.1)",
           "lg-toggle-fill-pressed": "rgb(255 255 255 / 0.19)",
           "lg-toggle-fill-disabled": "rgb(255 255 255 / 0.05)",
+          "lg-disclosure-fill": "rgb(255 255 255 / 0.07)",
+          "lg-disclosure-fill-pressed": "rgb(255 255 255 / 0.16)",
+          "lg-disclosure-fill-disabled": "rgb(255 255 255 / 0.04)",
+          "lg-scrollbar-thumb": "rgb(255 255 255 / 0.5)",
+          "lg-selection-fill-inactive": "rgb(255 255 255 / 0.14)",
+          "lg-table-row-alt": "rgb(255 255 255 / 0.05)",
+          "lg-groupbox-fill": "rgb(255 255 255 / 0.015)",
           "lg-grouped-bg": "#000000",
           "lg-card-fill": "var(--lg-gray-6-dark)",
           "lg-list-separator": "rgb(255 255 255 / 0.12)",
@@ -354,6 +370,10 @@
             "--lg-toggle-fill": "rgb(0 0 0 / 0.34)",
             "--lg-toggle-fill-pressed": "rgb(0 0 0 / 0.46)",
             "--lg-toggle-fill-disabled": "rgb(0 0 0 / 0.18)",
+            "--lg-disclosure-fill": "rgb(0 0 0 / 0.3)",
+            "--lg-disclosure-fill-pressed": "rgb(0 0 0 / 0.44)",
+            "--lg-scrollbar-thumb": "rgb(0 0 0 / 0.8)",
+            "--lg-table-row-alt": "rgb(0 0 0 / 0.14)",
             "--lg-refract-scale": "0.5",
             "--lg-disperse-scale": "0.4",
             "--muted-foreground": "var(--lg-label-secondary)",
@@ -371,6 +391,10 @@
             "--lg-toggle-fill": "rgb(255 255 255 / 0.38)",
             "--lg-toggle-fill-pressed": "rgb(255 255 255 / 0.5)",
             "--lg-toggle-fill-disabled": "rgb(255 255 255 / 0.2)",
+            "--lg-disclosure-fill": "rgb(255 255 255 / 0.34)",
+            "--lg-disclosure-fill-pressed": "rgb(255 255 255 / 0.48)",
+            "--lg-scrollbar-thumb": "rgb(255 255 255 / 0.85)",
+            "--lg-table-row-alt": "rgb(255 255 255 / 0.16)",
             "--muted-foreground": "var(--lg-label-secondary)",
             "--border": "var(--lg-separator)",
             "--input": "var(--lg-separator)"
@@ -544,6 +568,28 @@
           ".lg-toast[data-swipe='end']": {
             "animation": "lg-toast-swipe-out var(--lg-toast-duration, 500ms) cubic-bezier(0.32, 0.72, 0, 1)"
           },
+          "@keyframes lg-collapsible-down": {
+            "from": {
+              "height": "0"
+            },
+            "to": {
+              "height": "var(--radix-collapsible-content-height, var(--radix-accordion-content-height, auto))"
+            }
+          },
+          "@keyframes lg-collapsible-up": {
+            "from": {
+              "height": "var(--radix-collapsible-content-height, var(--radix-accordion-content-height, auto))"
+            },
+            "to": {
+              "height": "0"
+            }
+          },
+          ".lg-collapsible-content[data-state='open']": {
+            "animation": "lg-collapsible-down 220ms cubic-bezier(0.32, 0.72, 0, 1)"
+          },
+          ".lg-collapsible-content[data-state='closed']": {
+            "animation": "lg-collapsible-up 180ms cubic-bezier(0.32, 0.72, 0, 1)"
+          },
           "@media (prefers-reduced-motion: reduce)": {
             "@keyframes lg-toast-in": {
               "from": {
@@ -568,6 +614,9 @@
               },
               ".lg-toast[data-swipe='end']": {
                 "animation": "lg-toast-out 120ms linear"
+              },
+              ".lg-collapsible-content[data-state='open'], .lg-collapsible-content[data-state='closed']": {
+                "animation": "none"
               }
             },
             "[data-glass-sheet-wrapper]": {

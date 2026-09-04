@@ -724,6 +724,94 @@
         }
       ],
       "docs": "⚠️ **需要 iOS 那种分组列表时请用 Card，不要用 Table。**清单把 Table 的对应物写成「UITableView / lists-and-tables」，但那是两样东西：iOS 的 UITableView 就是分组列表（本库的 Card），而带列、可排序表头、交替行的数据表格 iOS 上根本没有。\n\n⚠️ 默认行高 32 是 [推定]（为触屏放宽），density=\"compact\" 的 20 才是实测值。\n\n资源里的「选中 + 窗口失焦」那一档，本库改用在「表格自己失去焦点」上 ——Web 没有窗口焦点概念，语义相近但不是同一件事。\n\n暗色配色全部 [推定]：List 页搜不到任何暗色节点。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "pagination",
+      "type": "registry:ui",
+      "title": "Pagination / 页码指示器",
+      "description": "iOS 的 UIPageControl。几何全部实测：容器高 24 / 左右内边距 12 / 胶囊 / Ultrathin 玻璃 + 背景模糊，圆点 8、间距 8，溢出时缩成 6 与 4 两档。✅ 两个点色正好落在既有 token 上（未选中 = --lg-label-tertiary，选中 = --lg-label-primary），**这个组件没有新增任何颜色 token**。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/pagination.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "默认是**纯指示器**（不可聚焦），传了 onPageChange 才把每个点变成按钮 ——UIPageControl 点不中单个圆点（8pt 点、16pt 节距，远小于 44pt），Apple 自己也是把整条当分区处理的。\n\n⚠️ 可点时命中区**只在竖直方向**撑到 44；水平方向仍是节距 16 ——撑满会让相邻两点的命中区重叠，那比点不中更糟。这是取舍，不是还原。\n\n⚠️ 资源里「7 页」那个变体的点间距画成了 10（其余档位都是 8），本库一律取 8。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "breadcrumb",
+      "type": "registry:ui",
+      "title": "Breadcrumb / 面包屑",
+      "description": "⚠️ **两份官方设计资源里都没有面包屑。** iOS 27 搜不到任何 path 节点，macOS 27 连 Path Controls 页都没有。所以**每一个数字都是 [推定]** ——字号 17 借自 Card 行标签、行高 44 取 HIG 触控下限、间距 8 借自 Collapsible。借来的实测值不会因为借了就变成实测值。",
+      "author": "Liquid Glass UI",
+      "dependencies": [],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/breadcrumb.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "唯一对错分明的是语义：**当前页是 <span aria-current=\"page\">，不是链接** ——那是面包屑最常见的无障碍错误。分隔符与省略号一律 aria-hidden，不进无障碍树。\n\n⚠️ **本库不自动折叠。** macOS 的 path control 会在空间不够时把中间几级折成「…」菜单，但折叠阈值、折几级、点开是什么，一条依据都没有 —— 需要时请自己在数据层裁剪，把 <BreadcrumbEllipsis /> 摆进去。\n\n本库禁用 asChild，所以 BreadcrumbLink 不接受外部链接组件；要用 Next 的 <Link> 请直接替换掉它（它只有一个 className，没有隐藏行为）。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "context-menu",
+      "type": "registry:ui",
+      "title": "Context Menu / 上下文菜单",
+      "description": "右键（触屏长按）菜单。✅ **面板与 DropdownMenu 是同一块** —— 不是抄的数字，是 import 的：iOS Context Menu 与 Edit Menu 两个互不相关的节点量出同样的 250 宽 / 34 圆角 / 218×40 的项。唯一属于它自己的是**背景压暗层**：#000000 @ 0.23，实测，**没有模糊**。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-context-menu"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/context-menu.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "压暗层默认开着（iOS 就是这么做的）。关掉的唯一正当理由是「菜单开在一个已经有遮罩的浮层里」，两层压暗会叠成一片黑。\n\n⚠️ 资源里的面板顶部还有一排 Quick Actions（整排高 56、单项 72.67 宽 / 圆角 20、标签 SF Pro Medium 12、破坏性动作 #ff383c，全部已实测记在 apple-metrics §12.2）——**本批没有实现**。「没做」与「没有依据」是两回事。\n\n本库禁用 asChild，触发区渲染的是一个真实的 span，把要被右键的内容放进去即可。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "resizable",
+      "type": "registry:ui",
+      "title": "Resizable / 可调分栏",
+      "description": "⚠️ **分隔条没有任何规格。** macOS 资源里那张 Split View（节点 4361:10562）是一张对话框布局稿：左栏 210、右栏 790，两栏直接挨着，**中间没有分隔条元素**，更没有把手。所以命中宽 8 / 线 1px / 把手 20×3 **全部是 [推定]**，并写明各自借自哪里。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "react-resizable-panels"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/resizable.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **这里不得不违反 HIG**：分隔条命中区只有 8pt，够不到 44 ——一条 44pt 宽的分隔条会吃掉两侧内容，而它视觉上只有 1px。代偿是**键盘路径始终可用**（分隔条可聚焦，方向键调整），并且**布局不应该依赖用户去拖它**。\n\n⚠️ react-resizable-panels v4 改了 API：PanelGroup→Group、PanelResizeHandle→Separator、direction→orientation，而且**会用自己的内部 id 覆盖调用方传的 data-testid** ——测试与样式请一律靠 data-slot 选中。\n\n清单写「分隔条可用弱 B」，本库**不给它上玻璃**：1px 宽的东西上任何模糊都看不出来，只会白占一个折射预算（§5.2 只有 8 个）。"
     }
   ]
 }

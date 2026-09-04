@@ -2898,6 +2898,138 @@ Figma 节点上的 `cornerRadius` 是个属性，直接读就有。**
 
 ---
 
+## 0.76 P2 第二批 · Pagination / Breadcrumb / ContextMenu / Resizable —— 自查（2026-09-04）
+
+**这一批是「两有两无」，而选批次本身就是这次的一条方法**：
+上一批收尾时我建议的是 `Pagination / Breadcrumb / Resizable / Navigation Menu`。
+动手前先去两份资源里查了一遍，结果改了：
+
+| 组件 | 查到什么 | 决定 |
+|---|---|---|
+| Pagination | iOS 有完整的 **Page Controls** 页（3 变体 + 6 档指示器） | 做，几何全实测 |
+| Context Menu | iOS 有 **Contextual Menus** 页 + 一个 Dimming Overlay | **换进来**（原计划没有） |
+| Breadcrumb | 两份资源**都没有**，macOS 连 Path Controls 页都不存在 | 做，但全部 `[推定]` |
+| Resizable | macOS 那张 Split View 是**布局稿**，中间没有分隔条元素 | 做，分隔条全 `[推定]` |
+| ~~Navigation Menu~~ | 有依据，但组件体量大 | **换出去**，让位给能复用现有菜单材质的 Context Menu |
+
+> **先查资源再定批次**，比先定批次再去凑依据强。
+> 上一批那句「建议下一批做 X」是在没查之前写的，照着做会白做半批。
+
+### 一、Context Menu 是这批最划算的一个 —— 因为它几乎不需要新几何
+
+量出来 Context Menu 的菜单项是 **218 × 40**，与 §7.6 从 Edit Menu
+（另一个互不相关的节点）量到的**逐位相同**；面板宽同为 250，分隔区同为 21。
+
+所以本组件**直接 `import { MENU_GEOMETRY }`**，而不是抄一份数字过来。
+将来那边修正了，这边自动跟着走 —— 事实上**这次就发生了**：
+同一天把菜单面板圆角从推定的 22 改成实测的 34（§0.75），
+Context Menu 什么都没改就跟着对了。
+
+唯一属于它自己的是**背景压暗层**：`#000000 @ 0.23`，实测，**没有模糊**。
+「没有模糊」是量出来的，不是漏看 —— 那个节点的 effects 是空的。
+直觉上 iOS 好像会虚化背景，资源里就是一层纯色。照做。
+
+### 二、两个「没有依据」的组件，怎么做才算诚实
+
+Breadcrumb 与 Resizable 在两份资源里都查无此物。做法与 Skeleton / Toast 一致：
+
+1. **每个数字标 `[推定]`**，一个不漏；
+2. **写明借自哪里** —— 字号 17 借自 Card 行标签、行高 44 取 HIG 触控下限、
+   分隔线 1px 与 Separator 同源。这样它至少与库里其它组件自洽，
+   而不是各拍各的脑袋；
+3. **借来的实测值不因为借了就变成实测值**，这句话写进了组件头部；
+4. **明确列出不做什么**：Breadcrumb **不实现自动折叠**
+   （折叠阈值、折几级、点开是什么，四个连环推定），
+   Resizable 的分隔条**不上玻璃**（1px 宽，模糊看不出来，白占折射预算）。
+
+### 三、一处不得不违反 HIG，写在明面上
+
+Resizable 的分隔条命中区只有 **8pt**，够不到 HIG 的 44 ——
+一条 44pt 宽的分隔条会吃掉两侧内容，而它视觉上只有 1px。
+
+代偿两条，都落实了：**键盘路径始终可用**（分隔条可聚焦、方向键调整，有测试钉），
+以及在 registry docs 里写明**布局不应该依赖用户去拖它**。
+这是本库第一次明确写下「这里做不到 44，以下是替代路径」。
+
+### 四、三个真缺陷，全部来自上游 API 的变化或约束
+
+**1. Radix 的 `Portal` 只接受单个元素子节点。**
+
+第一版把压暗层和 `Content` 塞进了同一个 `Portal`，右键**毫无反应** ——
+控制台抛的是 `Primitive.div failed to slot onto its children`。
+Radix 的 Portal 内部是 `<Primitive.div asChild>`。
+
+改成两个 Portal 之后又冒出第二个问题：Radix 只替 `Content` 做挂载/卸载，
+裸 `div` 它不管 —— 菜单没开时压暗层也一直挂着。
+最后在 Root 上接 `onOpenChange` 自己存了一份 open。
+
+**2. `react-resizable-panels` v4 换了一整套 API。**
+
+`PanelGroup → Group`、`PanelResizeHandle → Separator`、`direction → orientation`，
+而且不再输出 `data-panel-group-direction`（改读 `aria-orientation`，
+语义还是反的：竖向组里的分隔条自己是 `horizontal`）。
+**shadcn 官方那份 resizable.tsx 还是 v3 的写法，照抄直接编译不过。**
+
+**3. v4 会覆盖调用方传的 `data-testid`。**
+
+它内部用 `data-testid={id}` 标自己生成的 id（`_r_0_` 这种），写在展开之后。
+实测：传 `rz-group` 进去，DOM 上是 `_r_0_`。
+
+> 这与本仓库踩过五次的 `data-slot` 覆盖是同一家族，**只是这次覆盖方是上游**。
+> 所以 Resizable 的测试与样式一律靠 `data-slot` 选中，
+> 并把这条写进了组件头部与 registry docs。
+
+### 五、一处我自己写的布局 bug
+
+把手（那个小横条）第一版留在流里，结果**分隔线被撑成 3px**：
+分隔条是 flex 项且 `flex-basis: 1px`，但 flex 项的 `min-width` 默认是 `auto`，
+3px 宽的把手成了最小内容宽。改成绝对定位。
+现在有一条断言钉着「分隔线 1px，且把手必须是 absolute」。
+
+### §14 逐条
+
+| 项 | Pagination | Breadcrumb | ContextMenu | Resizable |
+|---|---|---|---|---|
+| light / dark 各自调过 | ✅ | ✅ | ✅ | ✅ |
+| 材质档位 0/1/2/3 | ➖ 容器是 Ultrathin，不吃档位 | ➖ 无玻璃 | ➖ 与 DropdownMenu 同 | ➖ 无玻璃 |
+| Tier A / B / C | ✅ 三档快照 | ➖ | ✅ tier c 单独一张 | ➖ |
+| Layer B / Layer I 分层 | ✅ 容器是玻璃，有断言 | ✅ 内容层 | ✅ B + I | ✅ 分隔条**不上玻璃**，有断言 |
+| 交互态齐全 | ✅ 指示器 / 可点两种模式 | ✅ hover / focus | ✅ 右键 / Esc / 点外面 / 方向键 | ✅ 拖 / 聚焦 / 键盘 |
+| 移动端 | ⚠️ 见下第 2 条 | ✅ 每级 ≥44 高 | ✅ 长按由 Radix 提供 | 🔴 **8pt 拖不动**，见第三节 |
+| 三种无障碍偏好 | ✅ | ✅ | ✅ | ✅ |
+| WCAG AA | ✅ 1512 采样全绿 | ✅ | ✅ | ✅ |
+| registry item + 冒烟 | ✅ | ✅ | ✅ | ✅ |
+| 文档页四件套 | ✅ | ✅ | ✅ | ✅ |
+| APPLE REFERENCE + 可信度 | ✅ 215 个常量全部带标注 | ✅ 明写「两份资源都没有」 | ✅ | ✅ 明写「只有布局稿」 |
+| 视觉回归快照 | ✅ 6 张（含三档 Tier） | ✅ 2 张 | ✅ 3 张（整页拍，含压暗层） | ✅ 2 张 |
+
+### 我认为还没达到 Apple 水准的地方
+
+1. **Context Menu 的 Quick Actions 那一排没有做。** 值全部实测并记在 §12.2
+   （整排 56 高、单项 72.67 宽 / 圆角 20、标签 SF Pro Medium 12、破坏性 `#ff383c`），
+   但**本批没实现**。那是 iOS 上下文菜单最有辨识度的一半，缺了它就只是个普通菜单。
+2. **Pagination 在触屏上仍然点不准单个点。** 8pt 点、16pt 节距，
+   命中区只能往竖直方向撑。Apple 的做法是把整条当左右分区处理，
+   本库**没有实现那个分区行为** —— 只做了「点哪个点跳哪页」。
+3. **Resizable 的分隔条触屏上基本不可用**（8pt）。有键盘路径兜底，
+   但那对触屏用户等于没有。这是这一批唯一一处 §14「移动端」判红的。
+4. **Breadcrumb 与 Resizable 的每一个数字都是我定的。** 不是「量不准」，
+   是**根本没有可量的东西**。
+
+### 本批增量
+
+```
+组件      32 → 36（+ pagination / breadcrumb / context-menu / resizable）
+示例      60 → 68
+行为测试  332 → 352（+20）
+视觉快照  231 → 244（+13）
+尺寸常量  196 → 215，全部带可信度标注
+依赖      +@radix-ui/react-context-menu、+react-resizable-panels
+token     **没有新增** —— Pagination 的两个点色正好落在既有 label token 上
+```
+
+---
+
 ## 0.6 `pnpm dev` 从写下起就是坏的（2026-09-01）
 
 根 `dev` 脚本是 `pnpm --filter www dev`，而 **apps/www 没有 `dev` 脚本** ——
@@ -3627,10 +3759,17 @@ Checkbox / Radio Group 在 §0.73 交付。上一版这里列的三条路
 **P2 的头四个已交付**（§0.74）：`Collapsible` / `Accordion` / `Scroll Area` / `Table`。
 四个全部有 macOS 27 实测依据，Scroll Area 也如预期复用了 Hero 那批的滚动边缘效果。
 
-**P2 还剩 12 个。** 下一批建议 `Pagination` / `Breadcrumb` / `Resizable` / `Navigation Menu`：
-前两个是内容层的小件，`Resizable` 的分隔条可用弱 B，
-而 `Navigation Menu` 是这一批里第一个**玻璃合法**的（导航层）——
-一批里混一个有材质的，免得连着几批都在做内容层、把光学那条线放凉。
+**P2 第二批已交付**（§0.76）：`Pagination` / `Breadcrumb` / `ContextMenu` / `Resizable`。
+原计划里的 `Navigation Menu` 换成了 `Context Menu` —— 动手前先查资源，
+发现后者能复用已有的菜单材质，而且 iOS 有完整参考。
+
+**P2 还剩 8 个。** 下一批建议 `Navigation Menu` / `Menubar` / `Sidebar` + `Data Table`：
+前三个都是**导航层、玻璃合法**，且 macOS 有 `Menus` / `Menu Bar and Dock` /
+`Sidebars` 三页可量；`Sidebar` 还带一条 HIG 明确点名的专属规则
+（大元素的玻璃**更不透明**），那是本库目前一处都没实现过的东西。
+
+⚠️ 但 `Sidebar` 体量很大（可折叠 + 响应式 + 移动端落到 Sheet），
+真做起来可能要单独占一批。**先量再定**，这一批已经证明那样更省事。
 
 ### macOS 资源解锁之后，有几件旧事可以重做了
 

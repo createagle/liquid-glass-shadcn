@@ -217,6 +217,27 @@ export const EDITORIAL: Record<string, ComponentEditorial> = {
     layerI: null,
     examples: ['table-demo', 'table-density'],
   },
+  /* ── P2 第二批：两个玻璃 + 两个无依据 ──────────────────────────────── */
+  pagination: {
+    layerB: '容器（Ultrathin 玻璃，实测）',
+    layerI: null,
+    examples: ['pagination-demo', 'pagination-overflow'],
+  },
+  breadcrumb: {
+    layerB: '内容层（Apple 两份资源里都没有这个组件）',
+    layerI: null,
+    examples: ['breadcrumb-demo', 'breadcrumb-ellipsis'],
+  },
+  'context-menu': {
+    layerB: '面板（与 DropdownMenu 同一块）',
+    layerI: '高亮项',
+    examples: ['context-menu-demo', 'context-menu-no-scrim'],
+  },
+  resizable: {
+    layerB: '内容层 —— 分隔条**不上玻璃**（1px 宽，模糊看不出来）',
+    layerI: null,
+    examples: ['resizable-demo', 'resizable-vertical'],
+  },
 };
 
 export function getEditorial(slug: string): ComponentEditorial | undefined {
@@ -343,6 +364,24 @@ export const NO_FIDELITY: Record<string, string> = {
     '后者是个**随滚动位置连续变化**的效果，静态资源里根本不存在这种东西 ——' +
     '它的强度曲线、带子高度、模糊半径全是 [推定]，记在 @glass/core 的 scroll-edge.tsx。' +
     '并排一张静态图只会把「连续」这件事拍没了。',
+  pagination:
+    '**几何全部实测，但没有并排图。** 资源里的 Page Control 是组件画布上的三个变体'
+    + '（402×44 的孤立控件），而本库的示例必然坐在真实内容之上 ——'
+    + '并排比的是背景，不是控件。真正值得记的两条已经写进尺寸表：'
+    + '容器是 Ultrathin 玻璃，两个点色正好落在既有 token 上。',
+  breadcrumb:
+    '**Apple 两份资源里都没有这个组件。** iOS 27 搜不到任何 path 节点，'
+    + 'macOS 27 连 Path Controls 页都没有 —— 没有参照物，对照图无从谈起。'
+    + '这个组件的每一个数字都是 [推定]，与 Skeleton / Toast 同一档。',
+  'context-menu':
+    '**面板与 DropdownMenu 是同一块**，要看面板的对照图请去那一页。'
+    + '属于它自己的只有背景压暗层（#000000 @ 0.23，实测），'
+    + '而那是一层纯色 —— 画成并排图没有信息量。'
+    + '⚠️ 资源里的 Quick Actions 那一排本批没实现，值已记在 apple-metrics §12.2。',
+  resizable:
+    '**分隔条没有任何规格可比。** macOS 资源里那张 Split View 是对话框布局稿，'
+    + '两栏直接挨着，中间没有分隔条元素。命中宽 / 线宽 / 把手全是 [推定]，'
+    + '并排一张图只会把这些推定值伪装成有依据的。',
   table:
     '**几何实测，但没有可并排的成品图。** 资源里的 Table Rows 是组件画布上的' +
     '孤立行（600×20 一条条铺开），不是装在真实窗口里的表格；' +

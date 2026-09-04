@@ -155,17 +155,17 @@ PROJECT_SPEC §10 的 P0–P3 分层**恰好覆盖 64 个组件，无遗漏**：
 | 31 | **Scroll Area** | UIScrollView；**滚动条几何取自 macOS 27**（滑块 6 / 槽 12 / 内缩 3） | 内容层 + **滚动边缘效果** ✅ |
 | 32 | **Table** | ~~UITableView / lists-and-tables~~ → **只能是 macOS NSTableView**（见修订六） | **内容层**（⚠️ 明令禁止堆玻璃）✅ |
 | 33 | **Data Table** | 同上 | **内容层** |
-| 34 | **Pagination** | 无 iOS 对应；接近 UIPageControl | **B** |
-| 35 | **Breadcrumb** | 无 iOS 对应；macOS path control | 内容层 |
+| 34 | **Pagination** | ~~无 iOS 对应~~ → **iOS 有完整的 Page Controls 页**（见修订七） | **B** ✅ |
+| 35 | **Breadcrumb** | 无 iOS 对应；~~macOS path control~~ → **macOS 也没有**（见修订七） | 内容层 ✅ |
 | 36 | **Navigation Menu** | UINavigationBar / 菜单栏 | **B**（导航层，玻璃合法） |
 | 37 | **Menubar** | iPadOS 新增的 menu bar | **B + I**（高亮项） |
-| 38 | **Context Menu** | UIContextMenuInteraction | **B + I** |
+| 38 | **Context Menu** | UIContextMenuInteraction —— 面板与 DropdownMenu **实测同源** | **B + I** ✅ |
 | 39 | **Command** | 无 iOS 对应；接近 Spotlight | **B + I**（高亮项） |
 | 40 | **Combobox** | UIPickerView + 搜索 | **B + I** |
 | 41 | **Calendar** | UICalendarView | 内容层 + **I(瞬时)**（选中日期） |
 | 42 | **Date Picker** | UIDatePicker | **B + I** |
 | 43 | **Sidebar** | HIG sidebars（**导航层，明确点名**） | **B**，且> "more opaque in larger elements like sidebars" |
-| 44 | **Resizable** | NSSplitView / UISplitViewController | 内容层（分隔条可用弱 B） |
+| 44 | **Resizable** | NSSplitView —— 资源里只有布局稿，**分隔条无规格** | 内容层（~~分隔条可用弱 B~~ → **不上玻璃**）✅ |
 
 > ⚠️ **修订五：第 29 行「无直接对应」说得太满（2026-09-04）。**
 >
@@ -192,6 +192,21 @@ PROJECT_SPEC §10 的 P0–P3 分层**恰好覆盖 64 个组件，无遗漏**：
 > **实践后果**：需要 iOS 那种列表的人如果照着「UITableView」去找 `Table`，
 > 会拿到一个 macOS 密度的数据表格。组件头部与 registry docs 两处都写了
 > 「要 iOS 列表请用 Card」。
+
+> ⚠️ **修订七：第 34、35 行的「无 iOS 对应」一对一错（2026-09-04）。**
+>
+> 动手前把两份资源都翻了一遍，结论正好相反：
+>
+> - **第 34 行 Pagination 说错了。** iOS 27 有一整页 `Page Controls`
+>   （节点 10520:3448 / 10520:3260），容器材质、圆点三档尺寸、间距全部可量。
+>   它不但有对应物，还是这一批里唯一**几何全实测**的组件。
+> - **第 35 行 Breadcrumb 说得还不够。** 原文写「macOS path control」——
+>   而 macOS 27 的 kit **连 Path Controls 页都没有**，全库搜 `/path/i`
+>   只搜到矢量图层名。两份资源都查无此物，它的每一个数字都是 `[推定]`。
+>
+> **教训**：清单里的「Apple 对应」是 Phase 0 按 HIG 目录推的，
+> 不等于「设计资源里有」。做之前必须去资源里查一遍 ——
+> 这次一查就换掉了半个批次的计划。
 
 > **Sidebar 有一条专属规则**：Apple 明说大元素（sidebar）的玻璃**更不透明**。
 > 不能和 tab bar 用同一组 alpha。

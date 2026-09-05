@@ -951,6 +951,54 @@
         }
       ],
       "docs": "⚠️ **ARIA 1.2 combobox 模式全部手写。** Radix 没有 combobox 原语，shadcn 是用 Popover + cmdk 拼的，本库两样都没有。关键一条：**焦点始终留在输入框上**，靠 `aria-activedescendant` 指向高亮项，而不是把焦点挪进列表 —— 焦点一旦离开输入框，用户就没法继续打字了。\n\n⚠️ 默认过滤只是**大小写不敏感的子串匹配** —— 没有拼音、没有模糊、没有权重排序。那些是 Command 的活，而 Command 本批没做。要别的规则就传 `filter`。\n\n⚠️ 点外面关闭监听的是 `pointerdown` 而不是 `click`：后者要等 mouseup，期间输入框已经失焦，列表会先闪一下再关。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "data-table",
+      "type": "registry:ui",
+      "title": "Data Table / 数据表格",
+      "description": "❗ **这个组件一个新几何常量都没有。** 动手前又把 macOS `Lists and Tables` 翻了一遍，DataTable 需要的外观**全都已经量过并实现**在 `<Table>` 里 —— 列表头、排序指示器（Medium 9 / 13×19 / `#000000 @ 0.50`）、交替行、两档选中。**本组件的增量是行为，不是材质也不是几何**：排序状态机、行选择、分页。那三件 Apple 的设计资源里本来就不会有 —— 它们是交互，不是外观。",
+      "author": "Liquid Glass UI",
+      "dependencies": [],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/table",
+        "@glass/checkbox",
+        "@glass/pagination"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/data-table.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **不引 TanStack Table。** registry 分发的是源码，多一个依赖就是用户工程里多一个；而这里用到的只是「排序 + 选择 + 分页」三件事，`useMemo` 就够。而且它的 headless API 会接管行/列渲染，与本库靠 `data-slot` 与相邻选择器拼出来的行样式（行圆角由首尾单元格各圆一边）是两套东西。\n\n**代价，如实写在这里：没有**列可见性切换、列宽拖拽、分组、虚拟滚动、多列排序。需要那些就直接用 TanStack + 本库的 `<Table>` 原语，两者不冲突。\n\n⚠️ 排序是**三态循环**（升 → 降 → 回到原始顺序）。macOS 的表头是两态 ——这一条是本库的偏离，理由：一旦排过就再也回不到原始顺序，而原始顺序往往本身有意义。\n\n⚠️ 分页复用本库的 `<Pagination>`（iOS Page Control，几何全实测）—— 它是**圆点**，不是「上一页 / 下一页 / 页码」那种 Web 分页条。那种形态两份资源里都没有，本库不自造。\n\n⚠️ `rowKey` **必须给**：排序会打乱顺序，用下标当 key 会让选中态跟错行。"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "command",
+      "type": "registry:ui",
+      "title": "Command / 命令面板",
+      "description": "⚠️ **Apple 的设计资源里没有它，而且这一次是结构上不可能有** —— 它对应的是 **Spotlight**，那是**系统级**界面，App 画不出来（与 Toast 的「系统通知横幅」同一类）。唯一有实测依据的一半是**搜索框**（macOS `Search Field`，6 状态：胶囊、放大镜在前 0.85、清除在后 0.5、光标 2×18 `#0088ff`）。面板与列表的几何全部借自菜单面板，逐条标了 `[推定]`。",
+      "author": "Liquid Glass UI",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-dialog",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/command.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **尺度不取 macOS 的。** 那份是 24 高 / 13 号字的鼠标语境，本库基准是 iOS。取的是**结构与比例**：放大镜在前、清除在后、胶囊、光标是蓝的。\n\n⚠️ **没有模糊匹配、没有拼音、没有权重排序。** 默认过滤是对 `label` + `keywords` 的大小写不敏感子串匹配。Spotlight 有那些，本库没有 —— 那需要一套评分模型，而这里连一张参考图都没有。要就自己传 `filter`。\n\n⚠️ **全局快捷键（⌘K）不是组件自带的**，示例里自己接。要不要拦、在哪些页面拦、与其他快捷键冲不冲，属于应用层决定 ——塞进组件会让调用方没法关掉。\n\n面板竖直方向**不居中**，压在上三分之一（`top: 18vh`，`[推定]`）——Spotlight 就在那个位置，而且列表往下长时面板不会跟着往上挪。"
     }
   ]
 }

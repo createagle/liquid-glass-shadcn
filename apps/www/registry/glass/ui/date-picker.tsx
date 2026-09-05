@@ -188,7 +188,6 @@ function DatePicker({
             onSelect={pick}
             {...(today ? { today } : {})}
             locale={locale}
-            data-slot="date-picker-calendar"
             style={{
               // [实测] 弹层形态的左右内边距是 12，不是嵌入形态的 16
               paddingInline: DATE_PICKER_GEOMETRY.panelPaddingInline,

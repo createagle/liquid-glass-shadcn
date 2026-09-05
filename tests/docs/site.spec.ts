@@ -636,6 +636,13 @@ for (const path of [
   '/docs/components/calendar',
   '/docs/components/date-picker',
   '/docs/components/combobox',
+  /*
+   * P2 收尾批的两页。DataTable 的排序/选择/分页与 Command 的
+   * aria-activedescendant 都是本库自己写的状态机，首帧最容易出
+   * controlled/uncontrolled 与 hydration 告警。
+   */
+  '/docs/components/data-table',
+  '/docs/components/command',
 ]) {
   test(`控制台无 error / warning：${path}`, async ({ page }) => {
     const noise: string[] = [];

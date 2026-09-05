@@ -154,13 +154,13 @@ PROJECT_SPEC §10 的 P0–P3 分层**恰好覆盖 64 个组件，无遗漏**：
 | 30 | **Collapsible** | macOS Disclosure Control（NSButton disclosure 样式），五档尺寸全实测 | **内容层** ✅ |
 | 31 | **Scroll Area** | UIScrollView；**滚动条几何取自 macOS 27**（滑块 6 / 槽 12 / 内缩 3） | 内容层 + **滚动边缘效果** ✅ |
 | 32 | **Table** | ~~UITableView / lists-and-tables~~ → **只能是 macOS NSTableView**（见修订六） | **内容层**（⚠️ 明令禁止堆玻璃）✅ |
-| 33 | **Data Table** | 同上 | **内容层** |
+| 33 | **Data Table** | 同上（macOS NSTableView）—— **没有新几何**，增量是行为（见修订十） | **内容层** ✅ |
 | 34 | **Pagination** | ~~无 iOS 对应~~ → **iOS 有完整的 Page Controls 页**（见修订七） | **B** ✅ |
 | 35 | **Breadcrumb** | 无 iOS 对应；~~macOS path control~~ → **macOS 也没有**（见修订七） | 内容层 ✅ |
 | 36 | **Navigation Menu** | ~~UINavigationBar / 菜单栏~~ → **两份资源里都没有**（见修订八） | **B**（面板；几何全部借来）✅ |
 | 37 | **Menubar** | iPadOS 新增的 menu bar，节点 `5413:10006` 实测 | ~~**B + I**~~ → **条本身无材质** + 面板 B（见修订八）✅ |
 | 38 | **Context Menu** | UIContextMenuInteraction —— 面板与 DropdownMenu **实测同源** | **B + I** ✅ |
-| 39 | **Command** | 无对应 —— Spotlight 是**系统级**的，资源里不会有（见修订九） | **B + I**（高亮项） |
+| 39 | **Command** | 无对应 —— Spotlight 是**系统级**的，资源里不会有（见修订九/十） | **B**（面板）；高亮项是平涂 ✅ |
 | 40 | **Combobox** | ~~UIPickerView + 搜索~~ → **macOS NSComboBox**（iOS 没有，见修订九） | **B**（弹出列表）✅ |
 | 41 | **Calendar** | UICalendarView，iOS 27 `5442:1885` 实测 | **内容层**（~~+ I(瞬时)~~ → 选中是平涂，见修订九）✅ |
 | 42 | **Date Picker** | UIDatePicker `.compact`，`30:53803` / `51:60427` 实测 | **B**（弹层，圆角 13）；触发器是内容层填充 ✅ |
@@ -261,6 +261,25 @@ PROJECT_SPEC §10 的 P0–P3 分层**恰好覆盖 64 个组件，无遗漏**：
 >   与 Toast「系统通知横幅」是同一类。这一行不改，只是把理由补上。
 >
 > 记录见 `apple-metrics.md` §14。
+
+> ⚠️ **修订十：P2 收尾（2026-09-05）—— 一条「不用量」，一条「量了也没有」。**
+>
+> - **第 33 行 Data Table 不需要任何新几何。** 动手前又把 macOS
+>   `207:14499 Lists and Tables` 翻了一遍：列表头（`121:12610`）、整条表头
+>   （`4356:13469`，600×28）、排序指示器（`4356:13719`，Medium 9 / 13×19 /
+>   `#000000 @ 0.50`）、数据行与交替行与两档选中（`4356:11854`，20 变体）——
+>   **全都已经在 §11.4 量过、并且已经实现在 `<Table>` 里**。
+>   DataTable 的增量是**排序状态机 / 行选择 / 分页**，那是**交互**，不是外观，
+>   Apple 的设计资源里本来就不会有。所以这一格的正确结论是
+>   「量过了，发现没有新的可量」，不是「懒得量」。
+>
+> - **第 39 行 Command 的分层要从「B + I」改成「B」。** 高亮项是一层平涂填充，
+>   没有折射；而且命令面板一屏十几项，每项上折射会撞穿 §5.2 的 8 实例红线 ——
+>   与修订九给 Calendar 改的理由完全一样。
+>   面板与列表**没有依据**；唯一可量的是搜索框（macOS `480:760 Search Field`，
+>   6 个状态），而那是个 24 高的鼠标语境控件，**只取结构与配色，不取尺度**。
+>
+> 记录见 `apple-metrics.md` §15。
 
 ## 5. P3 —— 20 个（补齐与扩展）
 

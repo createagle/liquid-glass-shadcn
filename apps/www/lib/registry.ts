@@ -270,6 +270,17 @@ export const EDITORIAL: Record<string, ComponentEditorial> = {
     layerI: null,
     examples: ['combobox-demo', 'combobox-filter'],
   },
+  /* ── P2 收尾批 ──────────────────────────────────────────────────────── */
+  'data-table': {
+    layerB: '内容层 —— 与 `<Table>` 同，**一句玻璃都没有**；本组件也**没有新几何**',
+    layerI: null,
+    examples: ['data-table-demo', 'data-table-selection'],
+  },
+  command: {
+    layerB: '面板（Spotlight 是系统级的，Apple 资源里**结构上不可能有**）',
+    layerI: null,
+    examples: ['command-demo', 'command-shortcut'],
+  },
 };
 
 export function getEditorial(slug: string): ComponentEditorial | undefined {
@@ -454,6 +465,15 @@ export const NO_FIDELITY: Record<string, string> = {
     '把 24 高的 NSComboBox 和本库 44 高的控件摆在一起，看起来像做错了，' +
     '而那恰恰是刻意的（iOS 基准 + 44pt 触控下限）。' +
     '可比的部分是**结构与三档按钮底色**，已经写进尺寸表，并逐条标了「实测 / 推定」。',
+  'data-table':
+    '**没有对照图，因为没有新东西可对。** 外观全部来自已经实测过的 `<Table>` ——' +
+    '要看并排请去那一页。本组件的增量是**行为**（排序状态机、行选择、分页），' +
+    '而行为拍不成静态图。这一条本身就是结论：**量过了，发现没有新的可量。**',
+  command:
+    '**Apple 的资源里结构上不可能有它。** Command 对应的是 Spotlight，' +
+    '那是**系统级**界面，App 画不出来 —— 与 Toast 的「系统通知横幅」同一类。' +
+    '唯一有实测依据的是搜索框（macOS `Search Field`），而那是个 24 高的鼠标语境控件，' +
+    '与本库 44 高的实现并排只会显得像做错了。可比的部分是结构与配色，已写进尺寸表。',
   'input-group':
     '**资源里唯一带附件的输入框样例是清除按钮**（18×18、右内缩 17），' +
     '已经在 Input 那一页的尺寸表里了。「输入框 + 前后附件」这个形态本身没有参考图，' +

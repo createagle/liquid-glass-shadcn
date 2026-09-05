@@ -30,9 +30,10 @@ export default function InstallationPage() {
         </p>
         <CodeBlock lang="bash" code={'pnpm add @createagle/glass-core'} />
         <p className="text-[13px] text-[var(--lg-label-tertiary)]">
-          🔴 <strong className="font-medium">这个包目前还没发布到 npm。</strong>
-          CI 里用的是本地打包 + 一个 npm shim 顶上去的，真实用户现在装不了 ——
-          这是本项目长期挂着的第一件事，不在这一页里假装它已经能用。
+          ✅ 已发布：<code className="font-mono">@createagle/glass-core@0.1.0</code>（MIT）。
+          CI 的安装冒烟测试从此走的是{' '}
+          <strong className="font-medium">真实的 npm 安装路径</strong>，
+          此前顶着的那个本地 shim 已经删掉了。
         </p>
       </section>
 
@@ -63,15 +64,9 @@ export default function InstallationPage() {
           <strong className="font-medium">真的，现在就能取</strong> —— registry
           产物随文档站一起部署在 GitHub Pages 上，
           <code className="font-mono">/r/registry.json</code> 里是全部 45 个 item。
-          <br />
-          🔴 但{' '}
-          <strong className="font-medium">
-            端到端的安装现在还走不通
-          </strong>
-          ：每个组件都把 <code className="font-mono">@createagle/glass-core</code> 写在{' '}
-          <code className="font-mono">dependencies</code> 里，而那个包还没发到 npm，
-          <code className="font-mono">shadcn add</code> 会在装依赖这一步失败。
-          registry 本身可以取、可以读、可以照着抄，但别指望一条命令装完。
+          光学引擎也在 npm 上了，所以{' '}
+          <strong className="font-medium">这一页的四步现在是端到端通的</strong>
+          ——「registry 能取但依赖装不上」那道坎已经没有了。
         </p>
       </section>
 
@@ -125,7 +120,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           现在的默认值），CLI 会把 <code className="font-mono">{'<X asChild><Y/></X>'}</code> 改写成 Base UI 的{' '}
           <code className="font-mono">render</code> prop，而本库组件用的是{' '}
           <code className="font-mono">@radix-ui/react-*</code>，装进去直接类型报错。
-          本机 typecheck 查的是改写**前**的源码，永远发现不了 —— 这是冒烟测试真撞出来的。
+          本机 typecheck 查的是改写<strong className="font-medium">前</strong>的源码，永远发现不了
+          —— 这是冒烟测试真撞出来的。
           要自定义外观就传 <code className="font-mono">className</code>。
         </p>
       </section>

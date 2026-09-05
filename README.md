@@ -8,12 +8,11 @@
 > **当前状态：Phase 0–7 与 P1 / P2 已完成 —— 44 个 registry 组件、84 个示例。**
 > 回归：行为 421 · 视觉快照 286 · 文档站 47 · 对比度 1512 采样 · 尺寸常量 308（全部带可信度标注）。
 >
-> 🔴 **两件挂着的事，都不在代码里：**
-> 1. `@createagle/glass-core` **还没发到 npm** —— registry 现在真的能取
->    （`https://createagle.github.io/liquid-glass-shadcn/r/{name}.json`），
->    但每个组件都把 `@createagle/glass-core` 写在 dependencies 里，
->    `shadcn add` 会在装依赖那一步失败。**能取，装不上。**
-> 2. 视觉快照只在本机跑 —— Windows 与 Linux 的 blur 渲染已实测不一致。
+> 光学引擎已发布：**[`@createagle/glass-core@0.1.0`](https://www.npmjs.com/package/@createagle/glass-core)**（MIT）。
+> registry 在 `https://createagle.github.io/liquid-glass-shadcn/r/{name}.json`，
+> **安装是端到端通的** —— CI 每次 push 都在一个干净的 Next 工程里真装一遍。
+>
+> 🟡 仍然挂着的一件：视觉快照只在本机跑 —— Windows 与 Linux 的 blur 渲染已实测不一致。
 >
 > 进度、缺口与阻塞项见 [`docs/research/STATUS.md`](docs/research/STATUS.md)。
 

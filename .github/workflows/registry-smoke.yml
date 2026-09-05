@@ -75,21 +75,6 @@ jobs:
           cd apps/www && node scripts/serve-registry.mjs 4180 &
           npx --yes wait-on http://localhost:4180/r/registry.json -t 30000
 
-      # ── @createagle/glass-core 尚未发布到 npm，用本地 shim 覆盖真实依赖安装路径 ──
-      - name: 打包 @createagle/glass-core 并起 npm shim（:4181）
-        run: |
-          cd packages/glass-core
-          # ⚠️ 文件名**从 npm pack 自己的输出里拿**，不要写 glob。
-          #    原来写的是 "$RUNNER_TEMP"/glass-core-*.tgz —— 包名从
-          #    @glass/core 改成 @createagle/glass-core 之后，tarball 变成
-          #    createagle-glass-core-0.1.0.tgz，那个 glob 就再也匹配不上了，
-          #    整个 job 死在 ENOENT。（2026-09-05 真炸过一次，见 STATUS §0.84。）
-          #    --silent 时 npm pack 只打印文件名，与包名、版本都无关。
-          TGZ="$RUNNER_TEMP/$(npm pack --pack-destination "$RUNNER_TEMP" --silent | tail -1)"
-          cd "$GITHUB_WORKSPACE"
-          node scripts/npm-registry-shim.mjs "$TGZ" 4181 &
-          npx --yes wait-on http://localhost:4181/@createagle/glass-core -t 30000
-
       # ── 干净工程 ────────────────────────────────────────────────────
       - name: 创建干净的 Next.js 工程
         run: |
@@ -101,16 +86,13 @@ jobs:
       - name: shadcn init
         run: cd "$RUNNER_TEMP/smoke" && npx --yes shadcn@latest init -d --no-monorepo -f
 
-      # ⚠️ 这两个 @ 前缀是**两套互不相干的东西**，别看着像就合并：
-      #   @createagle  —— npm 的 scope，决定 `npm install` 去哪个 registry 取包
-      #   @glass       —— shadcn 的 registry **命名空间**，只是 components.json
-      #                   里的一个 key，映射到一个 URL 模板，与 npm 无关
-      # 包名从 @glass/core 改成 @createagle/glass-core 时（npm 上 @glass 拿不到），
-      # 只该动上面那一行；下面那个命名空间保持 @glass 不变。
-      - name: 配置 shadcn 命名空间与 scoped npm registry
+      # ⚠️ `@glass` 是 **shadcn 的 registry 命名空间**，不是 npm scope ——
+      # 它只是 components.json 里的一个 key，映射到一个 URL 模板，与 npm 无关。
+      # npm 那边不需要任何配置了：@createagle/glass-core 已经在官方源上
+      # （2026-09-05 发布 0.1.0），装依赖走的就是真实路径。
+      - name: 配置 shadcn 命名空间
         run: |
           cd "$RUNNER_TEMP/smoke"
-          echo "@createagle:registry=http://localhost:4181" > .npmrc
           node -e "
             const fs=require('fs');
             const j=JSON.parse(fs.readFileSync('components.json','utf8'));

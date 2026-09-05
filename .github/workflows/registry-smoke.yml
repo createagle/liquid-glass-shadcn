@@ -79,9 +79,15 @@ jobs:
       - name: 打包 @createagle/glass-core 并起 npm shim（:4181）
         run: |
           cd packages/glass-core
-          npm pack --pack-destination "$RUNNER_TEMP"
+          # ⚠️ 文件名**从 npm pack 自己的输出里拿**，不要写 glob。
+          #    原来写的是 "$RUNNER_TEMP"/glass-core-*.tgz —— 包名从
+          #    @glass/core 改成 @createagle/glass-core 之后，tarball 变成
+          #    createagle-glass-core-0.1.0.tgz，那个 glob 就再也匹配不上了，
+          #    整个 job 死在 ENOENT。（2026-09-05 真炸过一次，见 STATUS §0.84。）
+          #    --silent 时 npm pack 只打印文件名，与包名、版本都无关。
+          TGZ="$RUNNER_TEMP/$(npm pack --pack-destination "$RUNNER_TEMP" --silent | tail -1)"
           cd "$GITHUB_WORKSPACE"
-          node scripts/npm-registry-shim.mjs "$RUNNER_TEMP"/glass-core-*.tgz 4181 &
+          node scripts/npm-registry-shim.mjs "$TGZ" 4181 &
           npx --yes wait-on http://localhost:4181/@createagle/glass-core -t 30000
 
       # ── 干净工程 ────────────────────────────────────────────────────

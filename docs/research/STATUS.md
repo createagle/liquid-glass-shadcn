@@ -3947,6 +3947,33 @@ npm publish --access public --registry https://registry.npmjs.org
 真要修得能注入 motion 的时钟，那会依赖库的内部实现。
 **记下来，别再重复试这条路。**
 
+### 八、CI 第一次真的抓到了本机抓不到的东西
+
+改名推上去，`Registry 安装冒烟测试`**红了** —— 而本机全套（行为 421 / 视觉 286 /
+文档站 47 / lint / typecheck）一条没红。
+
+```
+ENOENT: /home/runner/work/_temp/glass-core-*.tgz
+```
+
+`registry-smoke.yml` 里那句 `npm pack` 之后用的是**写死的 glob**
+`"$RUNNER_TEMP"/glass-core-*.tgz`。包名从 `@glass/core` 改成
+`@createagle/glass-core` 之后，tarball 变成 `createagle-glass-core-0.1.0.tgz`，
+glob 再也匹配不上，整个 job 死在文件不存在。
+
+> 值得记两点：
+>
+> 1. **这是 CI 头一回抓到本机抓不到的东西。** §0.82 里刚说完
+>    「本机检查补得够密，CI 已经不是第一道防线」—— 那句话对，
+>    但**不等于 CI 没用**：它跑的是本机根本不跑的那条路（干净工程里真装一遍）。
+> 2. 修法不是把 glob 改成 `createagle-glass-core-*.tgz`（那只是把同一个雷
+>    往后挪一次）。改成从 `npm pack --silent` 的输出里取文件名 ——
+>    **与包名、版本都无关**，下次再改名也不会炸。
+
+本地起 shim 验过：`npm pack --silent` → `createagle-glass-core-0.1.0.tgz`，
+shim 自己从 tarball 里读出包名（`仅服务 @createagle/glass-core@0.1.0`），
+`/@createagle/glass-core` 返回 200。
+
 ## 0.6 `pnpm dev` 从写下起就是坏的（2026-09-01）
 
 根 `dev` 脚本是 `pnpm --filter www dev`，而 **apps/www 没有 `dev` 脚本** ——

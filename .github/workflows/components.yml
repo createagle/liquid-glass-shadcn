@@ -1,9 +1,12 @@
-name: 组件行为回归
+name: 组件回归（行为 + 视觉）
 
-# 只跑 behavior project。visual project **刻意不跑** ——
-# 截图快照是平台相关的（已实测 Windows 与 Linux CI 的 blur 渲染不一致，
-# 见 docs/research/STATUS.md §0.5），本机生成的基线在 CI 上必然全红。
-# 要让视觉回归在 CI 生效，需要先在 Linux 环境录一次基线，那之前不接。
+# behavior 与 visual 两个 project 都跑，各占一个 job。
+#
+# visual 曾经**刻意不跑**：截图快照是平台相关的（Windows 与 Linux CI 的
+# blur 渲染已实测不一致，见 STATUS §0.5），本机录的基线在 CI 上必然全红。
+# 2026-09-05 用 visual-baseline.yml 在 ubuntu-24.04 上录了一套 *-linux.png
+# （Playwright 按平台加后缀，两套基线共存互不干扰），
+# 并用 verify 模式独立跑过一遍确认可复现，这才接进来。
 
 on:
   pull_request:
@@ -54,5 +57,49 @@ jobs:
         if: failure()
         with:
           name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # 视觉回归。**与 behavior 分开一个 job**，这样红的时候一眼能看出是
+  # 「几何/语义坏了」还是「像素变了」——两者的处理方式完全不同。
+  #
+  # ⚠️ runner 写死 ubuntu-24.04，不能用 ubuntu-latest：
+  #    快照是按平台录的（`*-linux.png`），镜像一升级、字体或光栅一变，
+  #    286 张会集体变红，而那种红没有任何信息量。
+  #    要升镜像就用 visual-baseline.yml 的 record 模式重录一次，
+  #    那是一次有意识的动作，不该由 GitHub 替我们决定。
+  #
+  # 基线怎么来的、怎么重录：见 .github/workflows/visual-baseline.yml。
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      # 浏览器版本跟着 lockfile 走 —— 浏览器一换渲染就变，基线也就作废了
+      - name: 安装 Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: 构建验证台
+        run: |
+          pnpm --filter www dev:css
+          pnpm --filter www dev:build
+
+      - name: 视觉回归（Linux 基线）
+        run: npx playwright test --project=visual
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-visual
           path: playwright-report/
           retention-days: 7

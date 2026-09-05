@@ -4,15 +4,20 @@ import { defineConfig, devices } from '@playwright/test';
  * 测试分成两个 project，因为它们的**可移植性完全不同**：
  *
  *   behavior  几何、DOM、a11y 语义、降级分支 —— 断言的是确定性事实，
- *             哪个平台跑都一样。**CI 跑这个。**
+ *             哪个平台跑都一样。
  *
  *   visual    截图比对 —— 快照是**平台相关**的。已实测：Windows（有 GPU）
  *             与 Linux CI（headless 软件光栅）的 blur 渲染不一致，
  *             同一测点对比度能差 0.5（见 STATUS.md §0.5）。
- *             本机生成的基线推上去 CI 必红，所以**默认不在 CI 跑**。
  *
- * 视觉回归要在 CI 上真正发挥作用，需要在 Linux 环境生成一次基线。
- * 在那之前它只是本地工具，这一点在 STATUS 里如实标注，不装作已完成。
+ * 两个 project 现在**都在 CI 跑**（2026-09-05 起）。
+ * 做法不是「让两个平台渲染一致」（做不到），而是**各录各的基线**：
+ * Playwright 按平台给快照加后缀，`*-win32.png` 与 `*-linux.png` 共存，
+ * 本机比对本机那套，CI 比对 Linux 那套，互不干扰。
+ *
+ * Linux 基线由 `.github/workflows/visual-baseline.yml` 的 record 模式在
+ * **ubuntu-24.04**（写死，不用 latest）上录出。镜像或浏览器一换就要重录 ——
+ * 那是一次有意识的动作，见那个文件的注释。
  */
 export default defineConfig({
   testDir: './tests',

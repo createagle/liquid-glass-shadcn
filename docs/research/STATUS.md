@@ -4049,6 +4049,98 @@ Markdown 语法在 JSX 里不会被解析，线上就是两对星号。改成 `<
   按 §7.3（Switch 51×31）的先例不自作主张，等你点头。
 - `sheet` 甩动那条 flake 仍然没修（§0.84 七 记了修法为什么走不通）。
 
+## 0.86 视觉回归终于进 CI；发布出去的 README 写着不存在的包名（2026-09-05）
+
+### 一、🔴 npm 页面上那份 README 是错的 —— 而且是发出去之后才发现的
+
+`@createagle/glass-core@0.1.0` 在 npmjs.com 上的页面写着
+`pnpm add @glass/core` —— **一个不存在的包**，全文 9 处。
+
+怎么漏的，值得记清楚：
+
+1. README 是在**改名之前**写的，那时包名还是 `@glass/core`；
+2. 改名脚本遍历 `git ls-files` —— 而那一刻 README **还没被 git 跟踪**，整份跳过；
+3. 它带着旧名字被提交、被打包、被发布。
+
+仓库里**所有检查都是绿的**：README 不参与类型检查，不进 registry，
+`registry-lint` 不看它，冒烟测试也不看它 —— 没有任何东西会瞟它一眼。
+
+> 这一族又一次:「改动扫了一遍全仓」听起来很稳，
+> 但扫描范围一旦挂在 git 索引上，**新建还没 add 的文件就是盲区**。
+> 与 §0.79 那次 `stripComments` 吞代码、§0.80 那次产物没重建是同一形态：
+> **机制存在，但对当下这条路径不生效。**
+
+修法两步：README 9 处改对；版本提到 **0.1.1**
+（npm 的包页面只能靠发新版本更正，改仓库不会动它）。
+
+闸放在 `prepublishOnly`：`scripts/check-package-readme.mjs`，
+只在真正要发布时跑 —— 那正是「README 写错包名」唯一会造成伤害的时刻。
+两条判据：一级标题必须等于包名；README 里出现的 `@scope/name` 记号，
+要么是本包，要么是 `package.json` 里真实声明过的依赖。
+探针验过会红（把标题改回旧名，两条判据各报一次，退出码 1），
+也验过 `npm publish --dry-run` 时它确实在 `tsc` 之前跑。
+
+⚠️ **0.1.1 还没发。** 要让 npm 页面更正，得再发一次。
+
+### 二、视觉回归进 CI —— 做法不是「让两个平台一致」
+
+这条从 §0.5 挂到现在。原状：本机录的 `*-win32.png` 推上 CI 必红，
+因为 Windows（有 GPU）与 Linux CI（headless 软件光栅）的 blur 渲染不一致。
+
+解法不是去消除差异（做不到），而是**各录各的基线**：
+Playwright 按平台给快照加后缀，`*-win32.png` 与 `*-linux.png` 共存互不干扰，
+本机比对本机那套，CI 比对 Linux 那套。
+
+新增 `.github/workflows/visual-baseline.yml`，手动触发，两个模式：
+
+| 模式 | 用途 |
+|---|---|
+| `record` | 在 ubuntu-24.04 上录一遍，286 张 `*-linux.png` 作为构件上传 |
+| `verify` | 拿仓库里已有的 Linux 基线跑一遍，确认真的可复现 |
+
+流程刻意分两步做，**没有把「录」和「信」合成一步**：
+先 record → 下载 286 张提交进仓库 → 再独立 dispatch 一次 verify →
+**286 passed** → 这才把 `visual` project 接进 `components.yml`。
+一套只录过一次、从没被独立验证过的基线，不配当闸。
+
+抽查过录出来的图是正常的：玻璃面板、`backdrop-filter` 模糊、中文字形都在，
+不是缺字体缺光栅的坏图。同平台 PNG 体积差 5%–7%，与「渲染确实不同但都合理」相符。
+
+> ⚠️ **runner 镜像写死 `ubuntu-24.04`，不用 `ubuntu-latest`。**
+> latest 会随 GitHub 升级漂移，字体或光栅一变，286 张会集体变红 ——
+> 那种红没有任何信息量，还会逼人去「重录一下让它绿」，
+> 那正是视觉回归失效的开始。要升镜像就走 record 模式有意识地重录。
+>
+> 同理，Chromium 版本跟着 lockfile 走，不单独指定。
+
+代价：仓库多了约 16 MB（`tests/` 从 16 MB 到 32 MB）。
+收益：像素级回归第一次真的守在每次 push 上。
+
+`visual` 单独占一个 job，不和 `behavior` 混 —— 红的时候一眼能看出是
+「几何/语义坏了」还是「像素变了」，两者的处理方式完全不同。
+workflow 也顺势改名为「组件回归（行为 + 视觉）」。
+
+### 三、PROJECT_SPEC 的包名改了
+
+§4 / §5 共 6 处 `@glass/core` → `@createagle/glass-core`，
+并在「分发拆两层」那条决策下面加了一段**标注日期的修订说明**：
+原名保留在说明里，写清楚这是外部约束（npm 上 `@glass` 拿不到）而非设计变更，
+并提醒别把 npm scope 与 shadcn 的 registry 命名空间混为一谈。
+
+按 §7.3（Switch 51×31）的先例，规格文档不由实现顺手改 ——
+这一次是用户先定了 scope，改 SPEC 只是把已经做出的决定记进去。
+
+### 四、验证
+
+| 项 | 结果 |
+|---|---|
+| 行为测试（本机） | 421 通过 |
+| 视觉快照（本机 win32 基线） | 286 通过 |
+| 视觉快照（CI linux 基线，独立 verify） | **286 通过** |
+| `check-package-readme` | 通过；探针验过会红 |
+| registry-lint | 128 文件 · 2 规则 · 45 个 item |
+| typecheck | 干净 |
+
 ## 0.6 `pnpm dev` 从写下起就是坏的（2026-09-01）
 
 根 `dev` 脚本是 `pnpm --filter www dev`，而 **apps/www 没有 `dev` 脚本** ——
@@ -4833,6 +4925,11 @@ PROJECT_SPEC §2「材质属于控件层」此前一直只能靠推理，这次�
    （附带一条教训：新包发布后的 404 在几分钟内**不构成证据**，
    我据此判过一次「没发出去」，是错的 —— 详见 §0.85 第一节。）
 5. ✅ **线上冒烟检查已加**（`pages.yml` 的 smoke job）—— 见 §0.83。
+6. ✅ **视觉回归已进 CI**（`components.yml` 的 visual job，ubuntu-24.04）—— 见 §0.86。
+   Linux 基线 286 张已入库，record → 提交 → 独立 verify 三步走过。
+7. 🟡 **`@createagle/glass-core@0.1.1` 还没发** —— 0.1.0 的 npm 页面上那份 README
+   写着不存在的包名（`@glass/core`，9 处）。npm 页面只能靠发新版本更正。
+   `prepublishOnly` 里已经加了闸，下次发布前会自己拦。
 
 ### macOS 资源解锁之后，有几件旧事可以重做了
 

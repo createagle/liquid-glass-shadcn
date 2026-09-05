@@ -79,6 +79,24 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # 部署成功 ≠ 站点是活的。构建期那两道闸看的都是**磁盘上的文件**，
+  # 而托管层有自己的坑：Pages 默认过 Jekyll 会丢掉 _next/，
+  # 那时候 HTML 照样 200、页面照样返回，只是没样式也没脚本。
+  # 这个 job 只测本地测不出来的那部分，不重复构建期已经查过的东西。
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: 线上冒烟检查
+        run: node scripts/smoke-pages.mjs "${{ needs.deploy.outputs.page_url }}"

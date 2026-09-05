@@ -160,13 +160,28 @@ test.describe('分层 —— PROJECT_SPEC §2「静止底座，按下升级为 L
 test.describe('变体', () => {
   test('实心变体用的是 AA 安全的填充色，不是真实系统色', async ({ page }) => {
     await open(page, { only: 'prominent' });
-    const bg = await page.evaluate(() => {
+    const m = await page.evaluate(() => {
       const el = document.querySelector('[data-slot="button-fill"]') as HTMLElement;
-      return getComputedStyle(el).backgroundColor;
+      const probe = document.createElement('span');
+      probe.style.color = 'var(--lg-blue)';
+      document.body.appendChild(probe);
+      const blue = getComputedStyle(probe).color;
+      probe.remove();
+      return { bg: getComputedStyle(el).backgroundColor, blue };
     });
-    // 真实 systemBlue 是 rgb(0, 122, 255)，白字压上去只有 4.02:1
-    expect(bg).not.toBe('rgb(0, 122, 255)');
-    expect(bg).toBe('rgb(0, 113, 235)');
+    /*
+     * 三条一起才说明问题：
+     *   1. 填充**不等于** --lg-blue —— 白字压在真实强调蓝上只有 3.52:1，不过 AA；
+     *   2. --lg-blue 就是资源里量到的 #0088ff（四份互相独立的实测）；
+     *   3. 填充是 deriveProminentFill() 解出来的那个值。
+     *
+     * 第 1 条刻意写成「与 token 比」而不是抄一个字面色值 —— token 再改它还成立。
+     * 原来那行抄的是上一代的 rgb(0, 122, 255)，token 一改就变成了句空话。
+     * 第 2、3 条必须是字面值：它们要钉的正是「值本身没漂」。
+     */
+    expect(m.bg).not.toBe(m.blue);
+    expect(m.blue, '[实测] --lg-blue = #0088ff').toBe('rgb(0, 136, 255)');
+    expect(m.bg, 'deriveProminentFill(#0088ff, 白) = #0075da').toBe('rgb(0, 117, 218)');
   });
 
   test('plain 没有材质层', async ({ page }) => {

@@ -31,11 +31,15 @@
 //
 // ── 一处刻意偏离 Apple ────────────────────────────────────────────────
 //
-// **实心填充按钮的底色不是真实系统色。** 白字压在真正的 systemBlue #007AFF 上
-// 只有 4.02:1，不过 WCAG AA 正文标准（红色 3.55 更低）。Apple 自己就是这么
+// **实心填充按钮的底色不是真实系统色。** 白字压在真正的强调蓝 #0088ff 上
+// 只有 3.52:1，不过 WCAG AA 正文标准（红色 3.55 也不过）。Apple 自己就是这么
 // 发货的，但 PROJECT_SPEC §13 写明可读性「不可协商」，所以填充走
 // --lg-accent-fill / --lg-destructive-fill（由 deriveProminentFill() 解出，
-// CI 钉住漂移）。调整量很小：#007aff → #0071eb。
+// CI 钉住漂移）。调整量：#0088ff → #0075da（亮）、#0d9eff → #0a79c4（暗）。
+//
+// ⚠️ 这个偏离**比原来大**。`--lg-blue` 从上一代的 #007aff 换成 Liquid Glass
+//    一代的 #0088ff 之后，白字的起点从 4.02 掉到 3.52，暗色更是从 3.65
+//    掉到 2.86 —— 得拉得更狠才够 AA。蓝越亮，白字越吃亏。
 //
 // 顺带一条实测结论：**实心填充必须完全不透明。** 试过让它半透明以透出玻璃，
 // 但即使只有 8% 透明度，压在纯白背景上时白标签也会掉到 4.08:1 —— 低于 4.5。
@@ -113,7 +117,8 @@ const LABEL_COLOR: Record<GlassButtonVariant, string> = {
   prominent: 'var(--lg-on-accent)',
   destructive: 'var(--lg-on-destructive)',
   // plain 是「有色文字压在未知背景上」，必须用 AA 安全的那一套，
-  // 不能用 --lg-blue（4.02:1，不过标）。推导见 a11y/legibility.ts。
+  // 不能用 --lg-blue（压在最不利底座上只有 1.84:1，远不过标）。
+  // 推导见 a11y/legibility.ts。
   plain: 'var(--lg-on-glass-blue)',
 };
 

@@ -189,8 +189,9 @@ function Input({
       style={{
         fontSize: GEOMETRY.fontSize,
         color: 'var(--lg-label-primary)',
-        // 光标实测 #0088ff。用 --lg-blue 而不是 --lg-accent-fill：
-        // accent-fill 是为了让白字过 AA 而压深过的，光标不是文本，不需要那次压深。
+        // 光标实测 #0088ff —— 现在 --lg-blue 就是这个值（改动见 primitive.css）。
+        // 用 --lg-blue 而不是 --lg-accent-fill：accent-fill 是为了让白字过 AA
+        // 压深过的（#0075da），光标不是文本，不需要那次压深。
         caretColor: 'var(--lg-blue)',
         caretShape: 'bar',
       }}

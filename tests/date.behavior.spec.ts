@@ -115,13 +115,18 @@ test.describe('Calendar', () => {
     });
     expect(m.current, 'WAI-ARIA 的日期网格用 aria-current="date"').toBe('date');
     /*
-     * ⚠️ 这里断言的是「用了 `--lg-blue` 这个 token」，**不是**某个字面色值。
+     * 断言的是「用了 `--lg-blue` 这个 token」，不是把字面色值抄进组件测试。
      *
-     * 实测资源里今天那一格是 `#0088ff`，而本库的 `--lg-blue` 目前仍是
-     * 上一代的 `#007AFF` —— 那是一条**跨组件的 token 问题**（三份独立资源
-     * 都指向 #0088ff），不该由日历这一个组件顺手改掉。已记在 STATUS 里。
+     * 这条当初写下来时**是红的**：资源里今天那一格是 `#0088ff`，
+     * 而 `--lg-blue` 还是上一代的 `#007AFF`。那是一条跨组件的 token 问题，
+     * 不该由日历顺手改掉，所以当时只断言 token，把值挂在 STATUS 里。
+     *
+     * token 现在已经改了（四份互相独立的实测），于是**补一条字面值** ——
+     * 上面那条保证「日历用的是 token」，下面那条保证「token 是量到的那个值」。
+     * 两条缺一不可：只有前者，token 被改错也照样绿。
      */
     expect(m.color, '[实测] 走 --lg-blue').toBe(m.blue);
+    expect(m.blue, '[实测] --lg-blue 就是资源里量到的 #0088ff').toBe('rgb(0, 136, 255)');
     expect(m.weight, '[实测] 今天（未选中）是 Regular').toBe('400');
     // 12% 蓝底 —— 只验它确实半透明，不硬钉换算后的具体 rgb
     expect(m.bg).not.toBe('rgba(0, 0, 0, 0)');

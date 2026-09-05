@@ -188,6 +188,7 @@
           "lg-list-separator": "rgb(0 0 0 / 0.1)",
           "lg-tint": "0.34",
           "lg-base-alpha": "0.62",
+          "lg-base-alpha-raw": "0.62",
           "lg-base-blur": "14px",
           "lg-base-saturate": "1.7",
           "lg-stroke-strength": "1",
@@ -197,6 +198,7 @@
           "lg-material-base": "rgb(var(--lg-base-color) / var(--lg-base-alpha))",
           "lg-material-elevated": "rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)))",
           "lg-material-indicator": "transparent",
+          "lg-large-boost": "0.3",
           "lg-knob-fill": "rgb(255 255 255 / 0.86)",
           "lg-grabber-fill": "rgb(0 0 0 / 0.2)",
           "lg-content-ultrathin": "rgb(255 255 255 / 0.52)",
@@ -303,6 +305,7 @@
           "lg-card-fill": "var(--lg-gray-6-dark)",
           "lg-list-separator": "rgb(255 255 255 / 0.12)",
           "lg-base-alpha": "0.44",
+          "lg-base-alpha-raw": "0.44",
           "lg-base-color": "20 20 24",
           "lg-elevated-color": "32 32 38",
           "lg-knob-fill": "rgb(255 255 255 / 0.9)",
@@ -428,6 +431,9 @@
             "background-color": "rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)))",
             "box-shadow": "inset 0 1px 0 0 var(--lg-stroke-top),\n    inset 0 -1px 0 0 var(--lg-stroke-bottom),\n    var(--lg-shadow),\n    var(--lg-glow)"
           },
+          ".lg-surface[data-layer='base'][data-scale='large'], .lg-surface[data-layer='elevated'][data-scale='large']": {
+            "background-color": "rgb(\n    var(--lg-base-color) /\n      min(1, max(var(--lg-base-alpha), calc(var(--lg-base-alpha-raw) + var(--lg-large-boost))))\n  )"
+          },
           ".lg-surface[data-layer='indicator']": {
             "background-color": "transparent",
             "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\n    \n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.28),\n    \n    inset 1px 0 1px -0.5px var(--lg-stroke-side),\n    inset -1px 0 1px -0.5px var(--lg-stroke-side),\n    0 3px 10px rgb(0 0 0 / 0.26)"
@@ -486,6 +492,9 @@
           },
           "[data-glass-tier='c'] .lg-surface[data-layer='base'], [data-glass-tier='c'] .lg-surface[data-layer='elevated']": {
             "background-color": "rgb(var(--lg-base-color) / min(1, calc(var(--lg-base-alpha) + 0.26)))"
+          },
+          "[data-glass-tier='c'] .lg-surface[data-layer='base'][data-scale='large'], [data-glass-tier='c'] .lg-surface[data-layer='elevated'][data-scale='large']": {
+            "background-color": "rgb(\n    var(--lg-base-color) /\n      min(\n        1,\n        max(\n          calc(var(--lg-base-alpha) + 0.26),\n          calc(var(--lg-base-alpha-raw) + var(--lg-large-boost) + 0.26)\n        )\n      )\n  )"
           },
           "[data-glass-tier='c'] .lg-surface[data-layer='base'], [data-glass-tier='c'] .lg-surface[data-layer='elevated'], [data-glass-tier='c'] .lg-surface[data-layer='indicator']": {
             "-webkit-backdrop-filter": "none",
@@ -1486,6 +1495,193 @@
         }
       ],
       "docs": "⚠️ **这里不得不违反 HIG**：分隔条命中区只有 8pt，够不到 44 ——一条 44pt 宽的分隔条会吃掉两侧内容，而它视觉上只有 1px。代偿是**键盘路径始终可用**（分隔条可聚焦，方向键调整），并且**布局不应该依赖用户去拖它**。\n\n⚠️ react-resizable-panels v4 改了 API：PanelGroup→Group、PanelResizeHandle→Separator、direction→orientation，而且**会用自己的内部 id 覆盖调用方传的 data-testid** ——测试与样式请一律靠 data-slot 选中。\n\n清单写「分隔条可用弱 B」，本库**不给它上玻璃**：1px 宽的东西上任何模糊都看不出来，只会白占一个折射预算（§5.2 只有 8 个）。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "sidebar",
+      "title": "Sidebar / 侧栏",
+      "author": "Liquid Glass UI",
+      "description": "全库**第一次实现 HIG 里那条单独点名侧栏的规则**：\"Liquid Glass … is more opaque in larger elements like sidebars\"。HIG 只给了一句话没给数字，这次量到了 —— 侧栏背景覆盖层 **0.92**，而控件层的 Page Control 只有 ≈**0.10**，差九倍。几何全部实测：宽 320 / 内边距 10 / 行高 44 / 胶囊 / 缩进每级 20 / 区块标题 54。",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-dialog",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/sidebar.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "❗ **只加了不透明度，没有加模糊。** 同一次测量里侧栏的背景模糊是 r=80，反而**小于** Page Control 的 r=100 ——「面积越大糊得越狠」是想当然，被资源否掉了。\n\n⚠️ **选中态不是 Layer I。** 资源里它是一层减色填充，没有任何位移或色散痕迹；而且侧栏可以有几十行，每行选中都上折射会瞬间撞穿 §5.2 的 8 实例红线。整个侧栏只有**一块**玻璃 —— 容器本身。\n\n⚠️ 紧凑视口**不走 SPEC §9 的底部 Drawer**：侧栏不是「从触发点弹出的浮层」，iOS 自己在紧凑宽度下的行为是 `.overlay` 显示模式，即从前缘滑出的覆盖层。这里用 Radix Dialog 实现（焦点陷阱 / Escape / 滚动锁由它提供），**没有**复用本库的 Sheet。\n\n⚠️ 与 shadcn 的差异：本库把 `SidebarMenu > SidebarMenuItem > SidebarMenuButton` 三层合成一层 `<SidebarItem>`，并且**没有做** rail / inset / cookie 持久化 / 全局快捷键 ——那些都不来自 Apple 资源，是 shadcn 自己的产品决定。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "menubar",
+      "title": "Menubar / 菜单栏",
+      "author": "Liquid Glass UI",
+      "description": "❗ **实测推翻了清单第 37 行的「B + I」**：iPadOS 的菜单栏**条本身不是玻璃** ——四个变体的 fills / effects / strokes 全是空的，它直接压在壁纸或内容上。有材质的只有展开中的那一项：`#767680 @ 0.12` + 投影（0,2,16，8% 黑）。几何实测：条高 32 / 项高 32 / 胶囊 / 字号 14 / 应用名 Bold 内边距 10、其余 Medium 10.5。",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-menubar"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/menubar.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "默认渲染一条**透明**的菜单栏 —— 那是 iPadOS 的样子。想要一条可见的玻璃条请显式传 `surface`，那是**本库的扩展，不是还原**。\n\n✅ **面板直接 import DropdownMenu 的 `MENU_GEOMETRY`**，不是抄一份数字过来 ——与 ContextMenu 同一个理由：那是同一块面板（250 宽 / 圆角 34 / 项 218×40 / 分隔区 21）。\n\n✅ 选中项的 `#767680 @ 0.12` 正好落在既有的 `--lg-fill-tertiary` 上（只差 R/G 各 2），**这个组件没有新增任何颜色 token**。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "navigation-menu",
+      "title": "Navigation Menu / 导航菜单",
+      "author": "Liquid Glass UI",
+      "description": "⚠️ **Apple 平台上不存在这个控件。** 两份官方资源（iOS/iPadOS 27 与 macOS 27，各 39 页）都逐页查过：iOS 的 Menus 是弹出菜单，macOS 的 Menu Bar and Dock 是系统菜单栏（对应本库的 Menubar）——「横排触发器 + 悬停展开的大面板」是个 Web 惯例。所以这个文件里**每一个数字都是 [推定]**，且逐条写明借自哪个有实测的邻居。",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-navigation-menu"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/dropdown-menu",
+        "@glass/menubar"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/navigation-menu.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **没有做移动端 Drawer 路径。** SPEC §9 点名了 NavigationMenu，但 Radix 的 Viewport 定位与本库 Sheet 的档位面板没法共存（与 DropdownMenu 那次同一个冲突）。这是本批唯一一个欠着 §9 的组件，如实记在 STATUS 里。\n\n⚠️ **没有接 `NavigationMenu.Indicator`**（面板上方那个小箭头）。Popover 的箭头刚在上一批量到（56×13，材质 Thick），那是**有实测**的形状；这里随手放一个尺寸不同的箭头只会自相矛盾。\n\n⚠️ 玻璃底是 `Viewport` 的**兄弟节点**，不是它的孩子 ——Radix 的 `NavigationMenuViewportImpl` 第一行就把 `children` 解构掉扔了，塞进去的东西会**一声不响地消失**。有一条测试专门钉住玻璃真的在。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "calendar",
+      "title": "Calendar / 日历",
+      "author": "Liquid Glass UI",
+      "description": "✅ **这个组件不上玻璃，而且这次有 Apple 自证。** 资源里同一个日历有两个变体，材质不一样：`Style=Inline`（嵌在内容里）是**纯白不透明**、左右内边距 16；`Style=Compact`（弹出层）才是玻璃、圆角 13、内边距 12。PROJECT_SPEC §2「内容型组件不堆玻璃」通常只能靠推理，这次资源直接给了证据。几何全部实测：格 38 正圆 / 横向节距 50 / 纵向间距 7 / 星期缩写 Semibold 13。",
+      "dependencies": [],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/calendar.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **选中态是黑底白字，不是主题蓝。** 实测 Selected = 实心 `#000000` + 白字 Semibold；只有「今天且被选中」才是实心 `#0088ff`。多数 Web 日历把选中画成主题色，这里刻意不跟。\n\n⚠️ **没有引 react-day-picker。** 几何是全实测的，套在别人的 DOM 上够不到就得写死魔法数字；而且它自带一套 class 命名与 components 覆写协议，与本库的 data-slot 约定是两套东西。代价是键盘导航、月份切换、闰年边界全部是本库自己写的 —— 测试因此把这些逐条钉住。\n\n⚠️ `locale` **默认写死 `en-US`**，不用运行时默认语言：后者在服务端与浏览器上可能不同，`Intl` 输出跟着不同，直接就是一次 hydration mismatch。要本地化就显式传。\n\n⚠️ `today` 默认是 `new Date()`。**测试与视觉快照必须传死值**，否则会在过日期的那一晚自己红掉。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "date-picker",
+      "title": "Date Picker / 日期选择器",
+      "author": "Liquid Glass UI",
+      "description": "UIDatePicker 的 compact 形态。触发器是**两枚独立胶囊**（日期 112×34 / 时间 86×34，间距 6），底色 `#767680 @ 0.12` —— **第四次正好落在 `--lg-fill-tertiary` 上**。弹层面板圆角 **13**（实测），比菜单的 34、Popover 的 38 小得多。",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/calendar",
+        "@glass/responsive-overlay"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/date-picker.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **打开时只有文字变蓝，底色不变** —— 实测就是这样，与本库多数控件「选中改底色」的直觉相反。\n\n⚠️ **不做时间选择。** 资源里时间那一枚点开是滚轮（UIDatePicker 的 wheels 形态），那是另一个控件、另一套几何，本批没有量。所以 `time` 那一枚是**只读展示**，不传就不渲染。「没做」与「没有依据」是两回事 —— 这里是前者。\n\n`<DatePickerInline>` 是 `Style=Inline` 的对应物：**纯白不透明**，左右内边距 16。两个并排看就是「材质属于控件层」那条规则的实物。\n\n本批顺手给 `PopoverContent` 加了 `radius` / `paddingBlock` / `paddingInline` 三个 prop ——不同浮层的圆角是不一样的（菜单 34、Popover 38、这里 13），不该当成一个全局常量。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "combobox",
+      "title": "Combobox / 可输入下拉框",
+      "author": "Liquid Glass UI",
+      "description": "⚠️ **iOS 没有这个控件** —— UIPickerView 是滚轮，不能打字。参考只能是 macOS NSComboBox（与 Checkbox / Radio 同一种情况）。取的是**结构与状态**（文本域 + 尾部按钮，按钮底 idle 0.08 / 按下 0.16 / 禁用 0.04，全部实测），**不取尺度**：macOS 那份是 24 高、13 号字，本库基准是 iOS 的 44 / 17。每个常量都标了它属于哪一类。",
+      "dependencies": [
+        "@glass/core"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/combobox.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **ARIA 1.2 combobox 模式全部手写。** Radix 没有 combobox 原语，shadcn 是用 Popover + cmdk 拼的，本库两样都没有。关键一条：**焦点始终留在输入框上**，靠 `aria-activedescendant` 指向高亮项，而不是把焦点挪进列表 —— 焦点一旦离开输入框，用户就没法继续打字了。\n\n⚠️ 默认过滤只是**大小写不敏感的子串匹配** —— 没有拼音、没有模糊、没有权重排序。那些是 Command 的活，而 Command 本批没做。要别的规则就传 `filter`。\n\n⚠️ 点外面关闭监听的是 `pointerdown` 而不是 `click`：后者要等 mouseup，期间输入框已经失焦，列表会先闪一下再关。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "data-table",
+      "title": "Data Table / 数据表格",
+      "author": "Liquid Glass UI",
+      "description": "❗ **这个组件一个新几何常量都没有。** 动手前又把 macOS `Lists and Tables` 翻了一遍，DataTable 需要的外观**全都已经量过并实现**在 `<Table>` 里 —— 列表头、排序指示器（Medium 9 / 13×19 / `#000000 @ 0.50`）、交替行、两档选中。**本组件的增量是行为，不是材质也不是几何**：排序状态机、行选择、分页。那三件 Apple 的设计资源里本来就不会有 —— 它们是交互，不是外观。",
+      "dependencies": [],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/table",
+        "@glass/checkbox",
+        "@glass/pagination"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/data-table.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **不引 TanStack Table。** registry 分发的是源码，多一个依赖就是用户工程里多一个；而这里用到的只是「排序 + 选择 + 分页」三件事，`useMemo` 就够。而且它的 headless API 会接管行/列渲染，与本库靠 `data-slot` 与相邻选择器拼出来的行样式（行圆角由首尾单元格各圆一边）是两套东西。\n\n**代价，如实写在这里：没有**列可见性切换、列宽拖拽、分组、虚拟滚动、多列排序。需要那些就直接用 TanStack + 本库的 `<Table>` 原语，两者不冲突。\n\n⚠️ 排序是**三态循环**（升 → 降 → 回到原始顺序）。macOS 的表头是两态 ——这一条是本库的偏离，理由：一旦排过就再也回不到原始顺序，而原始顺序往往本身有意义。\n\n⚠️ 分页复用本库的 `<Pagination>`（iOS Page Control，几何全实测）—— 它是**圆点**，不是「上一页 / 下一页 / 页码」那种 Web 分页条。那种形态两份资源里都没有，本库不自造。\n\n⚠️ `rowKey` **必须给**：排序会打乱顺序，用下标当 key 会让选中态跟错行。",
+      "type": "registry:ui"
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "command",
+      "title": "Command / 命令面板",
+      "author": "Liquid Glass UI",
+      "description": "⚠️ **Apple 的设计资源里没有它，而且这一次是结构上不可能有** —— 它对应的是 **Spotlight**，那是**系统级**界面，App 画不出来（与 Toast 的「系统通知横幅」同一类）。唯一有实测依据的一半是**搜索框**（macOS `Search Field`，6 状态：胶囊、放大镜在前 0.85、清除在后 0.5、光标 2×18 `#0088ff`）。面板与列表的几何全部借自菜单面板，逐条标了 `[推定]`。",
+      "dependencies": [
+        "@glass/core",
+        "@radix-ui/react-dialog",
+        "motion"
+      ],
+      "registryDependencies": [
+        "@glass/utils",
+        "@glass/theme",
+        "@glass/dropdown-menu"
+      ],
+      "files": [
+        {
+          "path": "registry/glass/ui/command.tsx",
+          "type": "registry:ui"
+        }
+      ],
+      "docs": "⚠️ **尺度不取 macOS 的。** 那份是 24 高 / 13 号字的鼠标语境，本库基准是 iOS。取的是**结构与比例**：放大镜在前、清除在后、胶囊、光标是蓝的。\n\n⚠️ **没有模糊匹配、没有拼音、没有权重排序。** 默认过滤是对 `label` + `keywords` 的大小写不敏感子串匹配。Spotlight 有那些，本库没有 —— 那需要一套评分模型，而这里连一张参考图都没有。要就自己传 `filter`。\n\n⚠️ **全局快捷键（⌘K）不是组件自带的**，示例里自己接。要不要拦、在哪些页面拦、与其他快捷键冲不冲，属于应用层决定 ——塞进组件会让调用方没法关掉。\n\n面板竖直方向**不居中**，压在上三分之一（`top: 18vh`，`[推定]`）——Spotlight 就在那个位置，而且列表往下长时面板不会跟着往上挪。",
       "type": "registry:ui"
     }
   ]

@@ -8,8 +8,9 @@
  * 跑法：node scripts/registry-lint.mjs
  */
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { globSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { relative, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
@@ -205,6 +206,82 @@ const RULES = [
   },
 ];
 
+/* ══════════════════════════════════════════════════════════════════════
+   registry 产物新鲜度
+   ══════════════════════════════════════════════════════════════════════
+
+   `apps/www/public/r/*.json` 是 `shadcn build` 的产物，也是**用户
+   `shadcn add` 真正拿到的东西**。源码是源码、产物是产物，两者之间隔着
+   一条要人手动跑的命令 —— 忘了跑不会有任何报错，本机测试照样全绿。
+
+   ⚠️ **这不是假设，是 2026-09-05 查出来的事实**：P2 第三批到收尾批一共
+   8 个组件（sidebar / menubar / navigation-menu / calendar / date-picker /
+   combobox / data-table / command）连着三个提交**都没有产物**，
+   装的时候会直接失败；popover 的产物则停在改动前的旧副本。
+   同一段时间里 `--lg-large-boost` 等三处 token/规则也没进 registry。
+
+   CI 里本来就有等价的两道闸（registry-smoke.yml 的「确认生成物与源同步」
+   和「确认 public/r 与组件源同步」，都靠 `git status --porcelain`）。
+   它们没拦住，是因为**那七个提交一次都没推，CI 从来没跑过**。
+
+   所以这段检查不是「新规则」，是把同一道闸挪到**本机、秒级、不依赖 git
+   工作区干净**的位置 —— 也就是每批提交前本来就会跑的这个脚本里。
+
+   判据是**内容逐字相等**，不是时间戳：git 检出会重写 mtime，比时间戳必然误报。
+   ────────────────────────────────────────────────────────────────────── */
+function checkArtifacts() {
+  const WWW = resolve(ROOT, 'apps/www');
+  let problems = 0;
+
+  /* (a) tokens/*.css → registry/glass/registry.json（生成器自己会比对） */
+  try {
+    execFileSync(
+      process.execPath,
+      [resolve(WWW, 'scripts/generate-theme-item.mjs'), '--check'],
+      { stdio: ['ignore', 'ignore', 'inherit'], cwd: ROOT },
+    );
+  } catch {
+    problems += 1;
+  }
+
+  /* (b) 组件源码 → public/r/<name>.json */
+  const root = JSON.parse(readFileSync(resolve(WWW, 'registry.json'), 'utf8'));
+  const items = [...(root.items ?? [])];
+  for (const inc of root.include ?? []) {
+    items.push(...(JSON.parse(readFileSync(resolve(WWW, inc), 'utf8')).items ?? []));
+  }
+
+  for (const item of items) {
+    const built = resolve(WWW, 'public/r', item.name + '.json');
+    if (!existsSync(built)) {
+      console.error(
+        `✗ public/r/${item.name}.json 不存在  [registry-artifact]
+  registry 里声明了 ${item.name}，产物却没生成 ——
+  「shadcn add @glass/${item.name}」会直接失败，而本机什么都不会报。
+  跑 pnpm --filter www registry:build。
+`,
+      );
+      problems += 1;
+      continue;
+    }
+    const copy = JSON.parse(readFileSync(built, 'utf8'));
+    for (const f of item.files ?? []) {
+      const src = readFileSync(resolve(WWW, f.path), 'utf8');
+      const inBuilt = (copy.files ?? []).find((g) => g.path === f.path);
+      if (!inBuilt || inBuilt.content !== src) {
+        console.error(
+          `✗ public/r/${item.name}.json 里的 ${f.path} 是旧副本  [registry-artifact]
+  用户 shadcn add 拿到的是这一份，不是仓库里的源码。
+  跑 pnpm --filter www registry:build。
+`,
+        );
+        problems += 1;
+      }
+    }
+  }
+  return { count: items.length, problems };
+}
+
 let failed = 0;
 for (const [file, src] of SOURCES) {
   for (const rule of RULES) {
@@ -216,8 +293,14 @@ for (const [file, src] of SOURCES) {
   }
 }
 
+const artifacts = checkArtifacts();
+failed += artifacts.problems;
+
 if (failed) {
   console.error(`registry 组件检查未通过：${failed} 处`);
   process.exit(1);
 }
-console.log(`✓ registry 组件检查通过（${FILES.length} 个文件 · ${RULES.length} 条规则）`);
+console.log(
+  `✓ registry 组件检查通过（${FILES.length} 个文件 · ${RULES.length} 条规则 · ` +
+    `${artifacts.count} 个 registry item 的产物已逐字核对）`,
+);

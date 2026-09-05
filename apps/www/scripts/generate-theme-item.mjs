@@ -14,9 +14,10 @@
  *                                        → css（挂在 @layer base 下）
  *
  * 用法：node scripts/generate-theme-item.mjs
+ *       node scripts/generate-theme-item.mjs --check   只比对不写（漂移则退出码 1）
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -259,15 +260,47 @@ const item = {
 const outDir = join(WWW, 'registry', 'glass');
 mkdirSync(outDir, { recursive: true });
 const outFile = join(outDir, 'registry.json');
-writeFileSync(
-  outFile,
+const next =
   JSON.stringify(
     { $schema: 'https://ui.shadcn.com/schema/registry.json', items: [item] },
     null,
     2,
-  ) + '\n',
-  'utf8',
-);
+  ) + '\n';
+
+/**
+ * `--check`：只比对，不写。
+ *
+ * CI 里本来就有一道等价的闸（registry-smoke.yml 的「确认生成物与源同步」，
+ * 靠 `git status --porcelain` 判断）。加这个 flag 是因为那道闸有两个前提：
+ * **提交得推上去、工作区得干净**。
+ *
+ * ⚠️ 而 P2 的七个提交一次都没推 —— 于是 `--lg-base-alpha-raw` /
+ * `--lg-large-boost` 和两条 `[data-scale='large']` 规则连着三个提交没进
+ * registry：装了主题的用户拿到的 Sidebar，`scale="large"` 那条 CSS 根本不存在，
+ * 而本机跑什么都是绿的。
+ *
+ * 这个 flag 不依赖 git，也不要求工作区干净，随时能跑；
+ * `scripts/registry-lint.mjs` 会替你跑它。
+ */
+if (process.argv.includes('--check')) {
+  const current = existsSync(outFile) ? readFileSync(outFile, 'utf8') : '';
+  if (current === next) {
+    console.log('✓ registry/glass/registry.json 与 tokens/*.css 一致');
+    process.exit(0);
+  }
+  const a = current.split('\n');
+  const b = next.split('\n');
+  const i = a.findIndex((line, k) => line !== b[k]);
+  console.error('✗ registry/glass/registry.json 与 tokens/*.css 不一致。');
+  console.error(`  第一处差异在第 ${i + 1} 行：`);
+  console.error(`    磁盘上：${a[i] ?? '（文件到此为止）'}`);
+  console.error(`    应该是：${b[i] ?? '（文件到此为止）'}`);
+  console.error('  跑 node apps/www/scripts/generate-theme-item.mjs 重新生成，');
+  console.error('  再跑 pnpm --filter www registry:build 让 public/r 跟上，然后提交。');
+  process.exit(1);
+}
+
+writeFileSync(outFile, next, 'utf8');
 
 const counts = {
   theme: Object.keys(cssVars.theme).length,

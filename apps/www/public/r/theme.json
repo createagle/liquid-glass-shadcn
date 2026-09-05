@@ -183,6 +183,7 @@
       "lg-list-separator": "rgb(0 0 0 / 0.1)",
       "lg-tint": "0.34",
       "lg-base-alpha": "0.62",
+      "lg-base-alpha-raw": "0.62",
       "lg-base-blur": "14px",
       "lg-base-saturate": "1.7",
       "lg-stroke-strength": "1",
@@ -192,6 +193,7 @@
       "lg-material-base": "rgb(var(--lg-base-color) / var(--lg-base-alpha))",
       "lg-material-elevated": "rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)))",
       "lg-material-indicator": "transparent",
+      "lg-large-boost": "0.3",
       "lg-knob-fill": "rgb(255 255 255 / 0.86)",
       "lg-grabber-fill": "rgb(0 0 0 / 0.2)",
       "lg-content-ultrathin": "rgb(255 255 255 / 0.52)",
@@ -298,6 +300,7 @@
       "lg-card-fill": "var(--lg-gray-6-dark)",
       "lg-list-separator": "rgb(255 255 255 / 0.12)",
       "lg-base-alpha": "0.44",
+      "lg-base-alpha-raw": "0.44",
       "lg-base-color": "20 20 24",
       "lg-elevated-color": "32 32 38",
       "lg-knob-fill": "rgb(255 255 255 / 0.9)",
@@ -423,6 +426,9 @@
         "background-color": "rgb(var(--lg-elevated-color) / min(1, calc(var(--lg-base-alpha) + 0.12)))",
         "box-shadow": "inset 0 1px 0 0 var(--lg-stroke-top),\n    inset 0 -1px 0 0 var(--lg-stroke-bottom),\n    var(--lg-shadow),\n    var(--lg-glow)"
       },
+      ".lg-surface[data-layer='base'][data-scale='large'], .lg-surface[data-layer='elevated'][data-scale='large']": {
+        "background-color": "rgb(\n    var(--lg-base-color) /\n      min(1, max(var(--lg-base-alpha), calc(var(--lg-base-alpha-raw) + var(--lg-large-boost))))\n  )"
+      },
       ".lg-surface[data-layer='indicator']": {
         "background-color": "transparent",
         "box-shadow": "inset 0 1.5px 1px -0.5px rgb(255 255 255 / calc(0.92 * var(--lg-specular-opacity))),\n    \n    inset 0 -1px 1px -0.5px rgb(0 0 0 / 0.28),\n    \n    inset 1px 0 1px -0.5px var(--lg-stroke-side),\n    inset -1px 0 1px -0.5px var(--lg-stroke-side),\n    0 3px 10px rgb(0 0 0 / 0.26)"
@@ -481,6 +487,9 @@
       },
       "[data-glass-tier='c'] .lg-surface[data-layer='base'], [data-glass-tier='c'] .lg-surface[data-layer='elevated']": {
         "background-color": "rgb(var(--lg-base-color) / min(1, calc(var(--lg-base-alpha) + 0.26)))"
+      },
+      "[data-glass-tier='c'] .lg-surface[data-layer='base'][data-scale='large'], [data-glass-tier='c'] .lg-surface[data-layer='elevated'][data-scale='large']": {
+        "background-color": "rgb(\n    var(--lg-base-color) /\n      min(\n        1,\n        max(\n          calc(var(--lg-base-alpha) + 0.26),\n          calc(var(--lg-base-alpha-raw) + var(--lg-large-boost) + 0.26)\n        )\n      )\n  )"
       },
       "[data-glass-tier='c'] .lg-surface[data-layer='base'], [data-glass-tier='c'] .lg-surface[data-layer='elevated'], [data-glass-tier='c'] .lg-surface[data-layer='indicator']": {
         "-webkit-backdrop-filter": "none",

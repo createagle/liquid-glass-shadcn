@@ -3475,6 +3475,83 @@ harness 里补了一个 `data={[]}` 的实例，现在是真的在测空态（�
 2. 🔴 **发布 `@glass/core` 到 npm** —— 否则真实用户装不了 registry item，
    冒烟测试至今靠本地 shim 顶着。这条从 Phase 5 挂到现在。
 
+## 0.80 🔴 registry 产物停在三个提交之前 —— 8 个组件根本装不了（2026-09-05）
+
+动 `--lg-blue` 之前要重新生成 registry 的 theme item，生成器一跑就发现
+**磁盘上那份是旧的**。顺着查下去，问题比一处 token 大得多。
+
+### 一、事实
+
+| 产物 | 状态 |
+|---|---|
+| `registry/glass/registry.json` | 停在 `0b16f18`（P2 第一批）—— 少 `--lg-base-alpha-raw`（亮暗两套）、`--lg-large-boost`，以及两条 `[data-scale='large']` 规则 |
+| `public/r/<8 个组件>.json` | **根本不存在**：sidebar / menubar / navigation-menu / calendar / date-picker / combobox / data-table / command |
+| `public/r/popover.json` | 旧副本 —— 第四批给它加的 `radius` / `paddingBlock` / `paddingInline` 三个 prop 不在里面 |
+
+也就是说：从 `476c576` 起，**P2 后三批的 8 个组件，用户一个都装不了**。
+而装了主题的用户拿到的 Sidebar，`scale="large"` 那条 CSS 压根不存在 ——
+0.92 的加深会退回普通底座的 0.7341，那正是 §0.77 里花了最久才调对的东西。
+
+> 有一点要说准：`public/r/registry.json` 的索引里**也没有**列出那 8 个
+> （37 项，不是 45 项）。所以不是「索引说有、取文件 404」，
+> 而是**它们从来没被发布过**。差别只在报错信息，不在能不能装。
+
+### 二、为什么没被拦住 —— 闸是有的，只是从来没通电
+
+`registry-smoke.yml` 里本来就有两道等价的闸，而且写得没问题：
+
+- 「确认生成物与源同步」—— 跑生成器，`git status --porcelain` 一脏就 fail；
+- 「确认 public/r 与组件源同步」—— `shadcn build` 之后同样判 porcelain。
+  它的注释里甚至写着「已经发生过一次：dialog.tsx 改了注释，
+  public/r/dialog.json 停在旧版」。
+
+它们没拦住的原因很简单：
+
+> **`main` 领先 `origin/main` 七个提交 —— 整个 P2 一次都没推，
+> 四条 workflow 从 `b0b0263` 起就没跑过。**
+
+这条比 token 本身更值得记：**「CI 里有检查」不等于「检查在跑」。**
+本机全绿，是因为本机根本没有这道闸；远端有闸，但代码没到远端。
+同一形态在本仓库已经是第三次了（`.lg-surface` 未分层、lint 规则空转、这次），
+每次都是「机制存在 → 但对当下这条路径不生效」。
+
+### 三、修法：把闸挪到本机，并且用探针验它真的会红
+
+1. `generate-theme-item.mjs` 加 `--check`：只比对不写，
+   **不依赖 git、不要求工作区干净**，随时能跑，漂移就打印第一处差异的行号与两侧内容。
+2. `registry-lint.mjs` 新增一段「产物新鲜度」：先替你跑上面那个 `--check`，
+   再把 registry 里每个 item 的每个源文件与 `public/r/<name>.json` 里的副本
+   **逐字比对**。缺文件、旧副本都会报。
+
+   判据刻意用**内容相等**而不是 mtime —— git 检出会重写 mtime，比时间戳必然误报。
+
+选 `registry-lint.mjs` 落地，是因为它是**每批提交前本来就会跑的那个脚本**。
+放在一个需要额外记得跑的新命令里，等于什么都没做。
+
+**三个探针都验过会红**，然后才删掉/还原：
+删掉 `public/r/sidebar.json` → 报「不存在」；
+给 `pagination.tsx` 追加一行 → 报「是旧副本」；
+往 `primitive.css` 塞一个假 token → 报「第 84 行不一致」。
+
+> 这一步是上一批 lint 规则那次的教训直接套用：
+> **一条永远不报错的检查比没有检查更糟**，它会让人以为这类问题已经守住了。
+
+### 四、验证
+
+| 项 | 结果 |
+|---|---|
+| `registry-lint` | 128 个文件 · 2 条规则 · **45 个 item 的产物已逐字核对** |
+| `public/r` | 38 → **46** 个文件（新增 8），`registry.json` 索引 37 → 45 项 |
+| `shadcn registry validate` | 44 项 / 2 文件，有效 |
+
+### 五、没做的
+
+- **仍然没推。** 这次的修复同样只在本机 —— 四条 workflow 依旧没跑过。
+  推之前，CI 上的第一次真跑很可能还会抓出别的东西（`0.5` 那次就抓了 4 个）。
+- 没有把 `registry:build` 挂进任何自动流程。产物入库是有意为之
+  （用户直接取 `public/r`），但「什么时候重新 build」仍然靠人。
+  现在至少**忘了会被 lint 拦下**，而不是无声。
+
 ## 0.6 `pnpm dev` 从写下起就是坏的（2026-09-01）
 
 根 `dev` 脚本是 `pnpm --filter www dev`，而 **apps/www 没有 `dev` 脚本** ——

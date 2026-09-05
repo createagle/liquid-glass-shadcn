@@ -223,10 +223,25 @@ test.describe('Field —— id / htmlFor / aria 的自动接线', () => {
     // 校验失败必须能在焦点还在别处时被朗读 —— 只靠 describedby 是听不见的
     await expect(error).toHaveAttribute('role', 'alert');
 
+    /**
+     * ⚠️ 必须用会重试的断言 —— 与下面那条「摘掉」的测试是**同一个坑**。
+     * 那边把原因写下来了，这一条当初没跟上：
+     *
+     * 错误元素挂载与 `aria-describedby` 更新**不在同一次渲染里**
+     * （子节点在 effect 里 register(true)，那是一次 setState，属性要到
+     * 下一次渲染才落地）。一次性的 getAttribute 会读到上一帧的值。
+     *
+     * 这不是组件的 bug，是断言的时机不对：单独重复跑 5 次能红 3 次，
+     * 而在全量并行里偶尔才红一次 —— 看起来像 flaky，其实是稳定的竞态。
+     */
+    const errorId = await error.getAttribute('id');
+    await expect
+      .poll(async () => (await input.getAttribute('aria-describedby'))?.split(' ') ?? [])
+      .toEqual(expect.arrayContaining([before!, errorId!]));
+
     const after = await input.getAttribute('aria-describedby');
     expect(after).not.toBe(before);
     expect(after!.split(' '), '说明 + 错误 = 两个 id').toHaveLength(2);
-    const errorId = await error.getAttribute('id');
     expect(after!.split(' ')).toContain(errorId);
   });
 

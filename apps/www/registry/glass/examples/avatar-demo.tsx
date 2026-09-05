@@ -15,7 +15,14 @@ export default function AvatarDemo() {
   return (
     <div className="flex items-center gap-3">
       <Avatar src={SAMPLE} alt="有头像的用户" />
-      <Avatar src="/definitely-not-here.png" alt="图挂了的用户" fallback="WD" />
+      {/*
+        故意指向一个不存在的文件，用来演示 fallback。
+        写成**相对**路径而不是 `/definitely-not-here.png` —— 站点部署在
+        GitHub Pages 的项目页（挂在 /<repo>/ 下）时，站内绝对路径必须带
+        basePath，而这个示例是给人抄走的，不该带上本站特有的前缀。
+        相对路径在哪儿都 404，正是这里要的效果。
+      */}
+      <Avatar src="broken-on-purpose.png" alt="图挂了的用户" fallback="WD" />
       <Avatar alt="没有头像的用户" fallback="LG" />
     </div>
   );

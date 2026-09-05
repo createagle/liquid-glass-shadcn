@@ -17,6 +17,7 @@ import { GlassSurface } from '@glass/core';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { CodeBlock } from '@/components/code-block';
+import { withBase } from '@/lib/base-path';
 import { examples } from '@/__registry__/examples';
 import { cn } from '@/lib/utils';
 
@@ -54,8 +55,15 @@ export function ComponentPreview({ name, minHeight = 220, className }: Component
           <Button
             variant="plain"
             size="sm"
-            // 独立预览路由 —— 便于截图与 iframe 嵌入（SPEC §12）
-            onClick={() => window.open(`/view/${name}`, '_blank', 'noopener')}
+            /*
+             * 独立预览路由 —— 便于截图与 iframe 嵌入（SPEC §12）。
+             *
+             * ⚠️ window.open **不经过 Next**，basePath 不会自动加上去
+             * （只有 <Link> 和 Next 自己的资源有），所以走 withBase()。
+             * 少了这一截，部署到 GitHub Pages 上就是 404，
+             * 而本地 basePath 为空、怎么点都对。
+             */
+            onClick={() => window.open(withBase(`/view/${name}`), '_blank', 'noopener')}
           >
             单独打开 ↗
           </Button>

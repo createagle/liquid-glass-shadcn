@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { GlassSurface } from '@glass/core';
 import { TierLab } from '@/components/optics-lab';
 import { CodeBlock } from '@/components/code-block';
@@ -358,13 +359,13 @@ const DISPERSE_RATIO = {
       <Section id="next" title="接下来">
         <p className="max-w-[72ch] text-[15px] leading-relaxed text-[var(--lg-label-secondary)]">
           回到{' '}
-          <a href="/docs/materials" className="underline underline-offset-4">
+          <Link href="/docs/materials" className="underline underline-offset-4">
             Materials
-          </a>{' '}
+          </Link>{' '}
           看分层与可读性地板，或者直接去{' '}
-          <a href="/docs/components/tabs" className="underline underline-offset-4">
+          <Link href="/docs/components/tabs" className="underline underline-offset-4">
             Tabs
-          </a>{' '}
+          </Link>{' '}
           看这套东西在一个真实组件上长什么样 —— 那一页有与 Apple 参考图的并排对照。
         </p>
       </Section>

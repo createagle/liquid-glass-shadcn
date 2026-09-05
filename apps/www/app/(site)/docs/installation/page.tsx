@@ -54,10 +54,25 @@ export default function InstallationPage() {
           lang="json"
           code={`{
   "registries": {
-    "@glass": "https://liquid-glass-ui.dev/r/{name}.json"
+    "@glass": "https://createagle.github.io/liquid-glass-shadcn/r/{name}.json"
   }
 }`}
         />
+        <p className="text-[13px] text-[var(--lg-label-tertiary)]">
+          这个地址是{' '}
+          <strong className="font-medium">真的，现在就能取</strong> —— registry
+          产物随文档站一起部署在 GitHub Pages 上，
+          <code className="font-mono">/r/registry.json</code> 里是全部 45 个 item。
+          <br />
+          🔴 但{' '}
+          <strong className="font-medium">
+            端到端的安装现在还走不通
+          </strong>
+          ：每个组件都把 <code className="font-mono">@glass/core</code> 写在{' '}
+          <code className="font-mono">dependencies</code> 里，而那个包还没发到 npm，
+          <code className="font-mono">shadcn add</code> 会在装依赖这一步失败。
+          registry 本身可以取、可以读、可以照着抄，但别指望一条命令装完。
+        </p>
       </section>
 
       <section className="flex flex-col gap-3">

@@ -3676,6 +3676,113 @@ Playwright 的默认 `threshold: 0.2` 是 pixelmatch 的**逐像素 YIQ 距离**
   绿/红/橙等在资源里出现过，但没有系统性地采过样。
 - **暗色蓝仍然只有一份 macOS 来源。** iOS 27 的暗色样例始终没找到。
 
+## 0.82 推了第一次，并把文档站部署到 GitHub Pages（2026-09-05）
+
+### 一、四条 workflow 第一次真跑 —— 全绿
+
+`b0b0263` 之后攒了九个提交没推（§0.80 那 8 个装不了的组件就是这么漏出去的）。
+推上去之后：
+
+| workflow | 结果 |
+|---|---|
+| 组件行为回归 | ✅ |
+| Registry 安装冒烟测试 | ✅ |
+| WCAG AA 对比度审计 | ✅ |
+| 文档站 | ✅ |
+
+> §0.80 里写「CI 上的第一次真跑很可能还会抓出别的东西（§0.5 那次抓了 4 个）」——
+> **这条预测也错了**，一个都没抓到。三条预测里错了三条（另两条见 §0.81 第三节），
+> 如实记着：本仓库的本机检查这半年补得够密，CI 已经不是第一道防线了。
+
+### 二、Pages 的坑只有一个，但它是本机测不出来的那一类
+
+站点是**项目页**，挂在 `/liquid-glass-shadcn/` 下，于是要开 `basePath`。
+
+> ⚠️ **Next 的 basePath 只管两样东西：`<Link>`，和 Next 自己发出的资源。**
+> 裸 `<a href="/…">`、`<img src="/…">`、`window.open('/…')`、`fetch('/…')`
+> **一个都不带前缀**。而本地 basePath 是空的 —— 这些路径在本机全对，
+> 只有部署之后才 404，还得有人真的点到才会发现。
+
+所以先写检查再改代码：`scripts/check-export-links.mjs` 扫导出产物里的
+`href=` / `src=`，凡是以 `/` 开头又没带 basePath 前缀的一律 fail。
+
+**它第一次跑就抓到 20 处**，全是本机测不出来的：
+
+| 位置 | 数量 | 说明 |
+|---|---|---|
+| Fidelity 对照图 | 16 | 8 张图 × (`<img src>` + 下载 `<a href>`)，那些 `<img>` 是**刻意**不走 next/image 的（逐像素对照） |
+| Avatar 示例的坏图占位 | 4 | `/definitely-not-here.png` |
+
+前者改成过 `withBase()`；后者改成**相对**路径 `broken-on-purpose.png` ——
+它本来就该 404（演示 fallback），而这段源码是给人抄走的，
+不该带上本站特有的前缀。
+
+改完再扫：**134 个页面 · 4337 处 href/src，干净。**
+
+新增 `apps/www/lib/base-path.ts`（`BASE_PATH` / `withBase()`），
+两个开关都走环境变量、**默认全关** —— 本地 `next dev`、`next start`
+与 `pnpm test:docs` 完全不受影响（`output: 'export'` 下没有 `next start` 可跑）。
+
+还有一个静态托管的老坑，写进 workflow 注释了：**Pages 默认过 Jekyll，
+而 Jekyll 会丢掉所有 `_` 开头的目录** —— Next 的资源全在 `_next/` 下。
+少一个 `.nojekyll`，整站没样式没脚本。
+
+部署前本地起了个带前缀的静态服务验过一遍：首页 / 组件页 / Materials /
+`/r/registry.json` / `/r/sidebar.json` / 对照图 / `/view/tabs-demo/` 全 200，
+页面渲染正常。
+
+### 三、registry 现在真的能取了 —— 但装还是装不上
+
+`public/r/*.json` 随站点一起发出去，也就是说 components.json 里那条地址
+从此是**真的**：
+
+```
+https://createagle.github.io/liquid-glass-shadcn/r/{name}.json
+```
+
+> 🔴 安装页此前写的是 `https://liquid-glass-ui.dev/…` —— **那个域名不存在**。
+> 一个不存在的地址写在「照着做」的文档里，比写「还没有」更糟。已改掉。
+
+但**端到端安装仍然走不通**，这一条要说清楚，不能因为部署了就含糊过去：
+每个组件都把 `@glass/core` 写在 `dependencies` 里，那个包还没发到 npm，
+`shadcn add` 会在装依赖那一步失败。
+部署解决的是「registry 取不到」，**没有**解决「依赖装不上」。安装页里如实写了。
+
+### 四、顺手修掉一条稳定的竞态（不是 flaky）
+
+全量跑时 `form.behavior「切到 invalid」` 红了一次。单独重复跑 **5 次红 3 次** ——
+这不是 flaky，是稳定的竞态：
+
+错误元素挂载与 `aria-describedby` 更新**不在同一次渲染里**（子节点在 effect 里
+`register(true)`，那是一次 setState），一次性的 `getAttribute` 读到的是上一帧。
+
+> 好笑的地方在于：**这个坑的解释就写在同一个文件下面 20 行**
+> （「切回来之后…摘掉」那条测试的注释里，第一版也是这么红的）。
+> 当时把结论写下来了，却没回头看隔壁那条是不是同一个形状。
+>
+> 改成 `expect.poll` 之后单条重复 10 次全绿，全量连跑两轮 421/421。
+> **它和 §0.79 记的 sheet 甩动那条 flake 不是一回事** —— 那条至今没修。
+
+### 五、验证
+
+| 项 | 结果 |
+|---|---|
+| 行为测试 | **421 通过**（连跑两轮） |
+| 视觉快照 | **286 通过** |
+| 文档站测试 | **47 通过** |
+| 导出产物链接检查 | 134 页面 · 4337 处 href/src · 干净 |
+| registry-lint | 128 文件 · 2 规则 · 45 个 item 产物逐字核对 |
+| typecheck | 干净 |
+| GitHub Actions | 四条全绿（第一次真跑） |
+
+### 六、没做的
+
+- **视觉快照仍然只在本机跑。** Pages 部署不改变这一点（§0.5 的平台差异还在）。
+- **没有给 Pages 站点加冒烟测试。** 现在只验到「本地起服务能开」，
+  线上那份没有任何自动检查 —— 部署本身失败会红，但页面渲染坏了不会。
+- **`@glass/core` 还是没发 npm。** 这条从 Phase 5 挂到现在，
+  部署之后它反而更显眼了：registry 能取、装不上。
+
 ## 0.6 `pnpm dev` 从写下起就是坏的（2026-09-01）
 
 根 `dev` 脚本是 `pnpm --filter www dev`，而 **apps/www 没有 `dev` 脚本** ——
@@ -4451,12 +4558,17 @@ PROJECT_SPEC §2「材质属于控件层」此前一直只能靠推理，这次�
 1. ✅ **`--lg-blue` 从 `#007AFF` 改成 `#0088ff`（暗色 `#0d9eff`）** —— 已做，见 §0.81。
    四份互相独立的实测（iOS 控件 §7/§9、macOS 控件 §10、iOS 日期格 §14、
    macOS 搜索框 §15.2）；按 `e325168` 的先例单独占一个提交。
-2. 🔴 **推一次。** `main` 领先 `origin/main` 九个提交，整个 P2 加这两个修复
-   **一次都没推过**，四条 workflow 从 `b0b0263` 起没跑过 ——
-   §0.80 那 8 个装不了的组件就是这么漏出去的。
-   CI 上的第一次真跑很可能还会抓出别的东西（§0.5 那次抓了 4 个）。
-3. 🔴 **发布 `@glass/core` 到 npm** —— 否则真实用户装不了 registry item，
-   冒烟测试至今靠本地 shim 顶着。这条从 Phase 5 挂到现在。
+2. ✅ **推了，四条 workflow 第一次真跑全绿** —— 见 §0.82。
+   （这里预测「很可能还会抓出别的东西」，**也错了**，一个都没抓到。）
+3. ✅ **文档站 + registry 已部署到 GitHub Pages** —— 见 §0.82。
+   <https://createagle.github.io/liquid-glass-shadcn/>
+4. 🔴 **发布 `@glass/core` 到 npm** —— 这条从 Phase 5 挂到现在，
+   而且部署之后**更显眼了**：registry 现在真的能取
+   （`https://createagle.github.io/liquid-glass-shadcn/r/{name}.json`），
+   但每个组件都把 `@glass/core` 写在 dependencies 里，
+   `shadcn add` 会在装依赖那一步失败。**能取，装不上。**
+5. 🟡 **给线上站点加一条冒烟检查。** 现在部署失败会红，
+   但页面渲染坏了没有任何东西会发现。
 
 ### macOS 资源解锁之后，有几件旧事可以重做了
 

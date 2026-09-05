@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { GlassSurface } from '@glass/core';
 import { LayerCompare, PunchCompare, AlphaLab } from '@/components/optics-lab';
 import { CodeBlock } from '@/components/code-block';
@@ -388,9 +389,9 @@ resolveLegibleAlpha(rawAlpha, 'light', 'adaptive', samples);`}
       <Section id="next" title="接下来">
         <p className="max-w-[72ch] text-[15px] leading-relaxed text-[var(--lg-label-secondary)]">
           这一页讲的是「材质分几层、每层该长什么样」。
-          <a href="/docs/optics" className="underline underline-offset-4">
+          <Link href="/docs/optics" className="underline underline-offset-4">
             Optics
-          </a>{' '}
+          </Link>{' '}
           讲的是另一半：这些效果在浏览器里到底怎么做出来，做不出来的时候降级成什么。
         </p>
       </Section>

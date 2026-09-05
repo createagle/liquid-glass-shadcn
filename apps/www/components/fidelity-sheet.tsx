@@ -14,6 +14,7 @@
 
 import { GlassSurface } from '@glass/core';
 import { RichText } from '@/components/rich-text';
+import { withBase } from '@/lib/base-path';
 import type { FidelitySheet as Sheet } from '@/lib/registry';
 
 export function FidelitySheet({ sheet }: { sheet: Sheet }) {
@@ -25,9 +26,15 @@ export function FidelitySheet({ sheet }: { sheet: Sheet }) {
           任何自动缩放 / 重编码都会把「差 3px」这种结论抹掉。
           尺寸已知且固定，也不需要懒加载的布局保护。
         */}
+        {/*
+          ⚠️ 这两张图的路径是 `/fidelity/…` 这种站内绝对路径，**不经过 <Link>**，
+          Next 的 basePath 不会管它们 —— 部署到 GitHub Pages 上会全变成 404。
+          本地 basePath 为空，怎么看都是对的。所以过一遍 withBase()。
+          （这一处正是 scripts/check-export-links.mjs 第一次跑就抓到的。）
+        */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={sheet.image}
+          src={withBase(sheet.image)}
           alt={sheet.title}
           className="block h-auto w-full rounded-[10px]"
           loading="lazy"
@@ -46,7 +53,7 @@ export function FidelitySheet({ sheet }: { sheet: Sheet }) {
         对照图由 <code className="font-mono">scripts/fidelity-sheets.mjs</code> 渲染，
         右栏是<strong className="font-medium">真实组件</strong>而不是照着尺寸另画的 ——
         组件改了，图会跟着变。{' '}
-        <a href={sheet.fullImage} className="underline underline-offset-2" download>
+        <a href={withBase(sheet.fullImage)} className="underline underline-offset-2" download>
           下载整张（含说明）
         </a>
       </p>

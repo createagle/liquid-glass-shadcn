@@ -1,0 +1,84 @@
+name: 视觉基线（Linux）
+
+# 视觉快照是**平台相关**的：Windows（有 GPU）与 Linux CI（headless 软件光栅）
+# 的 blur 渲染不一致，同一测点对比度能差 0.5（STATUS §0.5）。
+# 所以本机录的 `*-win32.png` 推上 CI 必红，视觉回归一直只是本地工具。
+#
+# Playwright 会**按平台给快照加后缀**，`*-linux.png` 与 `*-win32.png` 可以共存 ——
+# 也就是说两套基线互不干扰，各自守各自的平台。
+#
+# 这条 workflow 只手动触发，两种用法：
+#   record  录一遍 Linux 基线，作为构件上传（下载后提交进仓库）
+#   verify  拿仓库里已有的 Linux 基线跑一遍，确认它在 CI 上真的可复现
+#
+# ⚠️ runner 镜像**写死 ubuntu-24.04，不用 ubuntu-latest**。
+#    latest 会随 GitHub 升级漂移，而字体与光栅一变，286 张快照会集体变红 ——
+#    那种红没有任何信息量。要升镜像就重录一次基线，是一次有意识的动作。
+#    components.yml 里跑视觉的那个 job 必须钉同一个镜像。
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: record = 重录基线并上传；verify = 用仓库里的基线跑一遍
+        type: choice
+        default: verify
+        options: [verify, record]
+
+jobs:
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      # 浏览器版本跟着 lockfile 里的 @playwright/test 走，不额外指定 ——
+      # 浏览器一换，渲染就变，基线也就作废了
+      - name: 安装 Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: 构建验证台
+        run: |
+          pnpm --filter www dev:css
+          pnpm --filter www dev:build
+
+      - name: 录基线
+        if: inputs.mode == 'record'
+        run: npx playwright test --project=visual --update-snapshots
+
+      - name: 用现有基线验证
+        if: inputs.mode == 'verify'
+        run: npx playwright test --project=visual
+
+      - name: 列出录到的 Linux 快照
+        if: inputs.mode == 'record'
+        run: |
+          n=$(find tests -name '*-linux.png' | wc -l)
+          echo "录到 $n 张 *-linux.png"
+          test "$n" -gt 0 || { echo "::error::一张都没录到"; exit 1; }
+
+      - uses: actions/upload-artifact@v4
+        if: inputs.mode == 'record'
+        with:
+          name: visual-baseline-linux
+          path: tests/**/*-linux.png
+          retention-days: 7
+
+      # verify 失败时把 diff 图带出来，否则只能看到「不一样」三个字
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

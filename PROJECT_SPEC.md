@@ -171,7 +171,7 @@ liquid-glass-ui/
 │       ├── public/r/             # shadcn build 产物（*.json）
 │       └── registry.json
 ├── packages/
-│   └── glass-core/               # @glass/core —— 光学引擎（发 npm）
+│   └── glass-core/               # @createagle/glass-core —— 光学引擎（发 npm）
 │       └── src/
 │           ├── filter/           # SVG 位移贴图生成 + 滤镜工厂
 │           ├── tiers/            # 三级能力检测与降级
@@ -182,12 +182,23 @@ liquid-glass-ui/
 ```
 
 **分发拆两层**（明确决策，不要合并）：
-- **光学引擎 = npm 包 `@glass/core`** —— 滤镜生成、能力检测、Provider、token CSS。用户 `pnpm add @glass/core` 安装，不进 registry。
-- **组件皮肤 = shadcn registry** —— 每个组件的 tsx 源码通过 `shadcn add` 落到用户项目里，可自由修改。组件的 `dependencies` 里声明 `@glass/core`。
+- **光学引擎 = npm 包 `@createagle/glass-core`** —— 滤镜生成、能力检测、Provider、token CSS。用户 `pnpm add @createagle/glass-core` 安装，不进 registry。
+- **组件皮肤 = shadcn registry** —— 每个组件的 tsx 源码通过 `shadcn add` 落到用户项目里，可自由修改。组件的 `dependencies` 里声明 `@createagle/glass-core`。
+
+> **📌 修订（2026-09-05）：包名 `@glass/core` → `@createagle/glass-core`。**
+>
+> npm 上的 `@glass` scope 拿不到 —— scoped 包要求拥有同名的组织或用户，
+> 而可用的 scope 是 `@createagle`。这是**外部约束，不是设计变更**：
+> 「分发拆两层」这个决策本身一个字没改。
+> 已发布 `@createagle/glass-core@0.1.0`（MIT），CI 的安装冒烟测试走真实 npm 路径。
+>
+> ⚠️ 注意别把两个 `@` 前缀混为一谈：shadcn registry 的**命名空间**仍是 `@glass`
+> （用户 `components.json` 里的一个 key → URL 模板），与 npm scope 无关。
+> 经过见 STATUS §0.84 / §0.85。
 
 ---
 
-## 5. 光学引擎规格（`@glass/core`）
+## 5. 光学引擎规格（`@createagle/glass-core`）
 
 ### 5.1 三级能力降级
 
@@ -404,7 +415,7 @@ Select、DropdownMenu、Combobox、ContextMenu、Menubar、NavigationMenu、Date
   - `registry:theme` —— **完整的 token 层**（三层变量 + light/dark + 材质档位），必须能单独 `add`
   - `registry:block` —— 组合示例（tab bar、settings 面板、播放器等）
 - **`cssVars` / `css` 字段是本项目的关键**：组件装进用户项目时，必须自动注入它依赖的玻璃 token 与 keyframes，不能要求用户手动复制 CSS。
-- 所有组件 `dependencies` 中声明 `@glass/core`，`registryDependencies` 指向本库内部的 `theme` / `lib` / `hook` item。
+- 所有组件 `dependencies` 中声明 `@createagle/glass-core`，`registryDependencies` 指向本库内部的 `theme` / `lib` / `hook` item。
 
 ### 11.2 构建与安装
 

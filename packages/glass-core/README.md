@@ -1,4 +1,4 @@
-# @glass/core
+# @createagle/glass-core
 
 **Liquid Glass UI** 的光学引擎 —— 位移贴图 / 滤镜工厂 / 能力分级 / Provider / 材质 token。
 
@@ -12,16 +12,16 @@
 ## 安装
 
 ```bash
-pnpm add @glass/core
+pnpm add @createagle/glass-core
 ```
 
 ```css
 @import 'tailwindcss';
-@import '@glass/core/theme.css';
+@import '@createagle/glass-core/theme.css';
 ```
 
 ```tsx
-import { glassSsrScript } from '@glass/core';
+import { glassSsrScript } from '@createagle/glass-core';
 
 // 根布局的 <head> 里，避免首屏闪一下暗色/材质
 <script dangerouslySetInnerHTML={{ __html: glassSsrScript() }} />;
@@ -53,13 +53,13 @@ import { glassSsrScript } from '@glass/core';
 ## Token
 
 四层结构（primitive → semantic → shadcn 兼容层），亮/暗 × 常规/高对比共四套。
-入口是 `@glass/core/theme.css`，也可以按层单独引：
+入口是 `@createagle/glass-core/theme.css`，也可以按层单独引：
 
 ```
-@glass/core/primitive.css   原始值（系统色、圆角阶梯、折射常量）
-@glass/core/semantic.css    语义层（标签色、材质、派生的 AA 安全色）
-@glass/core/shadcn.css      映射到 shadcn 既有 token 名
-@glass/core/optics.css      .lg-surface 的渲染路径与三档降级
+@createagle/glass-core/primitive.css   原始值（系统色、圆角阶梯、折射常量）
+@createagle/glass-core/semantic.css    语义层（标签色、材质、派生的 AA 安全色）
+@createagle/glass-core/shadcn.css      映射到 shadcn 既有 token 名
+@createagle/glass-core/optics.css      .lg-surface 的渲染路径与三档降级
 ```
 
 > **有色文字压在玻璃上的那一套是解出来的，不是手调的。**

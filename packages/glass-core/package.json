@@ -1,6 +1,6 @@
 {
   "name": "@createagle/glass-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Liquid Glass UI 的光学引擎：位移贴图 / 滤镜工厂 / 能力分级 / Provider / 材质 token",
   "license": "MIT",
   "keywords": [
@@ -47,7 +47,7 @@
     "access": "public"
   },
   "scripts": {
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "node ../../scripts/check-package-readme.mjs . && npm run build",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "debug:build": "esbuild src/debug-entry.ts --bundle --format=iife --global-name=GlassOptics --outfile=debug/glass-optics.js",

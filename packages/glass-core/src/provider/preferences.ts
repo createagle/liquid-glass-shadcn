@@ -1,7 +1,7 @@
 'use client';
 
 // 同 use-glass-filter.ts：导出的是 hook，必须标 'use client'，
-// 否则服务端组件 import `@glass/core` 就构建失败。
+// 否则服务端组件 import `@createagle/glass-core` 就构建失败。
 import { useSyncExternalStore } from 'react';
 
 /**

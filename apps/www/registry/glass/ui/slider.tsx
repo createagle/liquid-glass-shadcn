@@ -39,7 +39,7 @@
 import * as React from 'react';
 import * as SliderPrimitive from '@radix-ui/react-slider';
 import { motion } from 'motion/react';
-import { GlassSurface, transitionFor, useGlassOptional } from '@glass/core';
+import { GlassSurface, transitionFor, useGlassOptional } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 /**

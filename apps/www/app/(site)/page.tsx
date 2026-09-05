@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { HeroPhone } from '@/components/hero-phone';
 import { ComponentPreview } from '@/components/component-preview';
 import { CodeBlock } from '@/components/code-block';

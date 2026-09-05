@@ -33,7 +33,7 @@
 
 import * as React from 'react';
 import * as ContextMenuPrimitive from '@radix-ui/react-context-menu';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { MENU_GEOMETRY } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 

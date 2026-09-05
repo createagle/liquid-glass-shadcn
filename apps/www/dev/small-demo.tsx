@@ -6,7 +6,7 @@
  */
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import { Progress } from '../registry/glass/ui/progress';
 import { Badge } from '../registry/glass/ui/badge';
 import { Separator } from '../registry/glass/ui/separator';

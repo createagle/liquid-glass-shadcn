@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { glassSsrScript } from '@glass/core';
+import { glassSsrScript } from '@createagle/glass-core';
 import { GlassRoot } from '@/components/glass-root';
 import './globals.css';
 

@@ -48,7 +48,7 @@
 
 import * as React from 'react';
 import { motion, type MotionStyle } from 'motion/react';
-import { GlassSurface, transitionFor, useGlassOptional } from '@glass/core';
+import { GlassSurface, transitionFor, useGlassOptional } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 const GEOMETRY = {

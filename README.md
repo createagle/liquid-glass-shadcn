@@ -3,9 +3,18 @@
 以 Apple iOS 26 / macOS 26 的 **Liquid Glass** 设计语言为唯一视觉基准的 React 组件库。
 光学引擎作为 npm 包分发，组件源码通过 **shadcn registry** 分发。
 
-> **当前状态：Phase 0 / 1 / 2 / 5 已完成（研究 · 光学引擎 · Token 体系 · Registry 分发）。**
-> Phase 3（P0 组件）待开始。
-> 尚无 UI 组件 —— 这是刻意的，按 Phase 顺序推进。
+**文档站：<https://createagle.github.io/liquid-glass-shadcn/>**
+
+> **当前状态：Phase 0–7 与 P1 / P2 已完成 —— 44 个 registry 组件、84 个示例。**
+> 回归：行为 421 · 视觉快照 286 · 文档站 47 · 对比度 1512 采样 · 尺寸常量 308（全部带可信度标注）。
+>
+> 🔴 **两件挂着的事，都不在代码里：**
+> 1. `@createagle/glass-core` **还没发到 npm** —— registry 现在真的能取
+>    （`https://createagle.github.io/liquid-glass-shadcn/r/{name}.json`），
+>    但每个组件都把 `@createagle/glass-core` 写在 dependencies 里，
+>    `shadcn add` 会在装依赖那一步失败。**能取，装不上。**
+> 2. 视觉快照只在本机跑 —— Windows 与 Linux 的 blur 渲染已实测不一致。
+>
 > 进度、缺口与阻塞项见 [`docs/research/STATUS.md`](docs/research/STATUS.md)。
 
 ## 这是什么
@@ -28,7 +37,7 @@ PROJECT_SPEC.md            唯一规格来源（任何实现决策与之冲突�
 CLAUDE.md                  给 Claude 的约束入口
 LIQUID_GLASS_UI_PROMPT.md  原始提示词，含 Phase 0–7 任务卡（只读）
 docs/research/             Phase 0 研究笔记 + 光学验证页
-packages/glass-core/       @glass/core 光学引擎（npm 包，不进 registry）
+packages/glass-core/       @createagle/glass-core 光学引擎（npm 包，不进 registry）
 apps/www/                  Next.js 文档站 + registry 托管
   └── registry/glass/      组件源码的 source of truth
 ```
@@ -54,7 +63,7 @@ start packages/glass-core/debug/index.html
 **注意**：需要先构建调试包（仓库已附带产物，改了 `src/` 后要重跑）：
 
 ```bash
-pnpm --filter @glass/core debug:build
+pnpm --filter @createagle/glass-core debug:build
 ```
 
 ## Token 速查页
@@ -113,8 +122,9 @@ node scripts/contrast-audit.mjs --verbose
 采用**棘轮基线**（`scripts/contrast-baseline.json`）：达标点按 AA 卡死，
 未达标点按当前值卡死，只许变好。基线是「不许更糟」，不是豁免。
 
-> ⚠️ 当前有 11 个测点在「暗色主题 + 亮背景」下达不到 AA，
-> 根因是元素级明暗自适应未实现。详见 [STATUS.md](docs/research/STATUS.md) §1。
+> ✅ **1512 次采样全部达标**（最紧的一处 5.48:1，阈值 4.5）。
+> 这里原来写的是「11 个测点达不到 AA」—— 那是元素级明暗自适应落地之前的状态，
+> 见 [STATUS.md](docs/research/STATUS.md) §0。
 
 ## 阶段纪律
 

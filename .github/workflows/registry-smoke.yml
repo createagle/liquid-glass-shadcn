@@ -32,7 +32,7 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
-      - name: 类型检查 + 构建 @glass/core
+      - name: 类型检查 + 构建 @createagle/glass-core
         run: |
           cd packages/glass-core
           npx tsc -p tsconfig.json --noEmit
@@ -75,14 +75,14 @@ jobs:
           cd apps/www && node scripts/serve-registry.mjs 4180 &
           npx --yes wait-on http://localhost:4180/r/registry.json -t 30000
 
-      # ── @glass/core 尚未发布到 npm，用本地 shim 覆盖真实依赖安装路径 ──
-      - name: 打包 @glass/core 并起 npm shim（:4181）
+      # ── @createagle/glass-core 尚未发布到 npm，用本地 shim 覆盖真实依赖安装路径 ──
+      - name: 打包 @createagle/glass-core 并起 npm shim（:4181）
         run: |
           cd packages/glass-core
           npm pack --pack-destination "$RUNNER_TEMP"
           cd "$GITHUB_WORKSPACE"
           node scripts/npm-registry-shim.mjs "$RUNNER_TEMP"/glass-core-*.tgz 4181 &
-          npx --yes wait-on http://localhost:4181/@glass/core -t 30000
+          npx --yes wait-on http://localhost:4181/@createagle/glass-core -t 30000
 
       # ── 干净工程 ────────────────────────────────────────────────────
       - name: 创建干净的 Next.js 工程
@@ -95,10 +95,16 @@ jobs:
       - name: shadcn init
         run: cd "$RUNNER_TEMP/smoke" && npx --yes shadcn@latest init -d --no-monorepo -f
 
-      - name: 配置 @glass 命名空间与 scoped npm registry
+      # ⚠️ 这两个 @ 前缀是**两套互不相干的东西**，别看着像就合并：
+      #   @createagle  —— npm 的 scope，决定 `npm install` 去哪个 registry 取包
+      #   @glass       —— shadcn 的 registry **命名空间**，只是 components.json
+      #                   里的一个 key，映射到一个 URL 模板，与 npm 无关
+      # 包名从 @glass/core 改成 @createagle/glass-core 时（npm 上 @glass 拿不到），
+      # 只该动上面那一行；下面那个命名空间保持 @glass 不变。
+      - name: 配置 shadcn 命名空间与 scoped npm registry
         run: |
           cd "$RUNNER_TEMP/smoke"
-          echo "@glass:registry=http://localhost:4181" > .npmrc
+          echo "@createagle:registry=http://localhost:4181" > .npmrc
           node -e "
             const fs=require('fs');
             const j=JSON.parse(fs.readFileSync('components.json','utf8'));

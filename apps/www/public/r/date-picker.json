@@ -5,7 +5,7 @@
   "author": "Liquid Glass UI",
   "description": "UIDatePicker 的 compact 形态。触发器是**两枚独立胶囊**（日期 112×34 / 时间 86×34，间距 6），底色 `#767680 @ 0.12` —— **第四次正好落在 `--lg-fill-tertiary` 上**。弹层面板圆角 **13**（实测），比菜单的 34、Popover 的 38 小得多。",
   "dependencies": [
-    "@glass/core"
+    "@createagle/glass-core"
   ],
   "registryDependencies": [
     "@glass/utils",

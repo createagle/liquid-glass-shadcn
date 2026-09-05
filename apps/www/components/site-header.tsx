@@ -16,7 +16,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useGlass, tintToStep, GlassSurface } from '@glass/core';
+import { useGlass, tintToStep, GlassSurface } from '@createagle/glass-core';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';

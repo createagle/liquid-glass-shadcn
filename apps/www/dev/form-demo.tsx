@@ -7,7 +7,7 @@
  */
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import { Card, CardRow } from '../registry/glass/ui/card';
 import { Input } from '../registry/glass/ui/input';
 import { Textarea } from '../registry/glass/ui/textarea';

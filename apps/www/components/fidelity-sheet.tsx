@@ -12,7 +12,7 @@
  * 这不是免责声明，是这一整节该怎么读的前提。
  */
 
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { RichText } from '@/components/rich-text';
 import { withBase } from '@/lib/base-path';
 import type { FidelitySheet as Sheet } from '@/lib/registry';

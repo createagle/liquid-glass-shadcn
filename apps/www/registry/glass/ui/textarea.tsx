@@ -18,7 +18,7 @@
 //    改用 `--lg-label-secondary`。理由见 input.tsx 文件头。
 
 import * as React from 'react';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 import { useFieldControl } from '@/components/ui/field';
 

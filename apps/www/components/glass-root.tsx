@@ -1,6 +1,6 @@
 'use client';
 
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 
 /**
  * 全站的 GlassProvider。

@@ -11,7 +11,7 @@
  * `?side=…` `?align=…`
  */
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import {
   Select,
   SelectTrigger,

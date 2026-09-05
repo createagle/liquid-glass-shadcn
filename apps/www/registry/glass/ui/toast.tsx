@@ -25,7 +25,7 @@
 
 import * as React from 'react';
 import * as ToastPrimitive from '@radix-ui/react-toast';
-import { GlassSurface, springs, useGlassOptional } from '@glass/core';
+import { GlassSurface, springs, useGlassOptional } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 const GEOMETRY = {

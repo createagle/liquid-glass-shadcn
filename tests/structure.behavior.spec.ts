@@ -10,7 +10,7 @@
  *   Table        行高 / 内缩 / 缩进 / 三档行色全部实测，全断言
  *
  * 另有一条与 toggles2 同样的：**这四个子树里 .lg-surface 计数为 0** ——
- * 唯一的例外是 ScrollArea 打开边缘效果时，那一层属于 @glass/core。
+ * 唯一的例外是 ScrollArea 打开边缘效果时，那一层属于 @createagle/glass-core。
  */
 
 import { test, expect, type Page, type Browser } from '@playwright/test';

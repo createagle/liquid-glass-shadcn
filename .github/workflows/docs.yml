@@ -30,10 +30,10 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
-      # 文档站吃的是 @glass/core 的 **dist**（走 package.json 的 exports），
+      # 文档站吃的是 @createagle/glass-core 的 **dist**（走 package.json 的 exports），
       # 不是源码 —— 少映射一条路径，多验证一层发布表面。所以必须先构建。
-      - name: 构建 @glass/core
-        run: pnpm --filter @glass/core build
+      - name: 构建 @createagle/glass-core
+        run: pnpm --filter @createagle/glass-core build
 
       # 生成物（API 表 / 示例表）不进库，这里现生成，顺带验证生成脚本本身没坏
       - name: 生成 API 与示例数据

@@ -20,7 +20,7 @@ export function InstallTabs({ item }: { item: RegistryItem }) {
 
   const manual = [
     '# 1) 光学引擎（npm 包，不进 registry）',
-    `pnpm add ${npmDeps || '@glass/core'}`,
+    `pnpm add ${npmDeps || '@createagle/glass-core'}`,
     '',
     '# 2) 依赖的 registry item',
     registryDeps.length

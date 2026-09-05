@@ -11,7 +11,7 @@
  * 由 scripts/small-glass.mjs 驱动，扫一遍尺寸。
  */
 import { createRoot } from 'react-dom/client';
-import { GlassProvider, GlassSurface } from '@glass/core';
+import { GlassProvider, GlassSurface } from '@createagle/glass-core';
 
 const params = new URLSearchParams(location.search);
 const theme = (params.get('theme') ?? 'light') as 'light' | 'dark';

@@ -13,7 +13,7 @@
  */
 
 import * as React from 'react';
-import { GlassSurface, useGlass, measurePunch, usePunchState } from '@glass/core';
+import { GlassSurface, useGlass, measurePunch, usePunchState } from '@createagle/glass-core';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
@@ -159,7 +159,7 @@ export function PunchCompare() {
       const sync = () => {
         const target = indicatorRef.current;
         // 基准必须是 `.lg-surface` 本体 —— node 在底座的内边距里面。
-        // 组件里都是这么取的，理由见 @glass/core 的 punch.ts。
+        // 组件里都是这么取的，理由见 @createagle/glass-core 的 punch.ts。
         const surface = node.closest<HTMLElement>('.lg-surface');
         if (!target || !surface) return;
         setPunch(measurePunch(surface, target, 27));

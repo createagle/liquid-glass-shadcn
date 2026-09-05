@@ -22,7 +22,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { GlassSurface, transitionFor, useGlassOptional } from '@glass/core';
+import { GlassSurface, transitionFor, useGlassOptional } from '@createagle/glass-core';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardRow } from '@/components/ui/card';
 import { cn } from '@/lib/utils';

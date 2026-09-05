@@ -1,6 +1,6 @@
 'use client';
 
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import type { ReactNode } from 'react';
 
 /**
@@ -10,7 +10,7 @@ import type { ReactNode } from 'react';
  *
  * ```tsx
  * import { GlassProviders } from "@/components/glass-providers";
- * import { glassSsrScript } from "@glass/core";
+ * import { glassSsrScript } from "@createagle/glass-core";
  *
  * export default function RootLayout({ children }) {
  *   return (

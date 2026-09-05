@@ -10,7 +10,7 @@
  * 这是服务端组件：数据是构建期产物，没有任何交互，不进客户端包。
  */
 
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { RichText } from '@/components/rich-text';
 import type { ApiComponent } from '@/lib/registry';
 

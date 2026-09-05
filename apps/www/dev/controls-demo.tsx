@@ -5,7 +5,7 @@
  * 以及 PROJECT_SPEC §14 里那些「必须看得见才算数」的验收项。
  */
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import { Slider } from '../registry/glass/ui/slider';
 import { Switch } from '../registry/glass/ui/switch';
 

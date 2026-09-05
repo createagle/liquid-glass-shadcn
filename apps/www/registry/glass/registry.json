@@ -9,7 +9,7 @@
       "description": "Liquid Glass UI 的完整 token 体系：Layer 1 原始值、Layer 2 材质与角色（明暗 × 常规/高对比 共四套）、Layer 3 shadcn 兼容层，以及 Tier A/B/C 三档渲染路径。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core"
+        "@createagle/glass-core"
       ],
       "files": [],
       "cssVars": {
@@ -682,7 +682,7 @@
           }
         }
       },
-      "docs": "已安装 Liquid Glass 主题。\n\n还需要两步：\n1) 安装光学引擎：pnpm add @glass/core\n2) 确认你的 globals.css 里有 shadcn 默认的暗色变体声明：\n   @custom-variant dark (&:is(.dark *));\n   （shadcn init 会自动写入。缺了它，dark: 工具类不会跟随 .dark 类。）\n\n在应用根组件挂上 <GlassProvider>，并在 <head> 注入 glassSsrScript() 以避免首屏闪烁。",
+      "docs": "已安装 Liquid Glass 主题。\n\n还需要两步：\n1) 安装光学引擎：pnpm add @createagle/glass-core\n2) 确认你的 globals.css 里有 shadcn 默认的暗色变体声明：\n   @custom-variant dark (&:is(.dark *));\n   （shadcn init 会自动写入。缺了它，dark: 工具类不会跟随 .dark 类。）\n\n在应用根组件挂上 <GlassProvider>，并在 <head> 注入 glassSsrScript() 以避免首屏闪烁。",
       "categories": [
         "theme",
         "liquid-glass"

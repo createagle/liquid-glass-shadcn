@@ -28,7 +28,7 @@
 // 参考图里轨道压在白色列表上，那个尺寸下磨砂与浅灰实色看不出区别。
 
 import * as React from 'react';
-import { GlassSurface, cssApprox, useGlassOptional } from '@glass/core';
+import { GlassSurface, cssApprox, useGlassOptional } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 const GEOMETRY = {

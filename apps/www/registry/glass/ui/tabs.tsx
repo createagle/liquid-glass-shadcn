@@ -32,7 +32,7 @@ import {
   useGlassOptional,
   usePunchState,
   type GlassPunch,
-} from '@glass/core';
+} from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 /**

@@ -10,7 +10,7 @@
  */
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import { Checkbox } from '../registry/glass/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '../registry/glass/ui/radio-group';
 import { Card, CardRow } from '../registry/glass/ui/card';

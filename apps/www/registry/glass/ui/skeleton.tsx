@@ -15,7 +15,7 @@
 //   完全可以由静止的灰块 + `aria-busy` 承担，不需要动。
 
 import * as React from 'react';
-import { useGlassOptional } from '@glass/core';
+import { useGlassOptional } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 const GEOMETRY = {

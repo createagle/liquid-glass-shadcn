@@ -39,7 +39,7 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { AnimatePresence, motion } from 'motion/react';
-import { GlassSurface, transitionFor, useGlassOptional } from '@glass/core';
+import { GlassSurface, transitionFor, useGlassOptional } from '@createagle/glass-core';
 import { Button, type GlassButtonProps } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 

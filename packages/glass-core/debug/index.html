@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>@glass/core 光学调试台</title>
+<title>@createagle/glass-core 光学调试台</title>
 <link rel="stylesheet" href="../src/tokens/theme.css">
 <style>
   *{box-sizing:border-box}
@@ -84,7 +84,7 @@
 </div>
 
 <div id="panel">
-  <h1>@glass/core 光学调试台</h1>
+  <h1>@createagle/glass-core 光学调试台</h1>
   <p class="sub">Phase 1 视觉标定用。所有滤镜参数均可拖拽。</p>
 
   <fieldset>
@@ -255,7 +255,7 @@ function render(){
   $('mapPreview').src = map.href;
 
   $('out').value =
-`# @glass/core 标定参数  ${new Date().toISOString().slice(0,19)}
+`# @createagle/glass-core 标定参数  ${new Date().toISOString().slice(0,19)}
 tier      = ${root.getAttribute('data-glass-tier')}
 theme     = ${root.getAttribute('data-glass-theme')}
 tint      = ${state.tint}

@@ -50,7 +50,7 @@
 
 import * as React from 'react';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
-import { GlassSurface, transitionFor, useGlassOptional } from '@glass/core';
+import { GlassSurface, transitionFor, useGlassOptional } from '@createagle/glass-core';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 

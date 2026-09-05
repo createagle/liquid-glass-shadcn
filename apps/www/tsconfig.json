@@ -16,12 +16,12 @@
     "baseUrl": ".",
     "plugins": [{ "name": "next" }],
     "paths": {
-      // ⚠️ **刻意没有把 @glass/core 映射到源码。**
+      // ⚠️ **刻意没有把 @createagle/glass-core 映射到源码。**
       //
       // 让它走 node_modules → package.json 的 exports → dist/index.d.ts，
       // 于是文档站与类型检查吃到的是**发布出去的那个表面**，
       // 而不是内部源码。少映射一条，多验证一层。
-      // （代价：跑 typecheck / build 之前要先 `pnpm --filter @glass/core build`，
+      // （代价：跑 typecheck / build 之前要先 `pnpm --filter @createagle/glass-core build`，
       //   两个脚本里都串好了。）
       //
       // 验证台那边不受影响 —— dev:build 的 esbuild --alias 指向源码，

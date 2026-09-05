@@ -43,7 +43,7 @@
 //   (b) 文件标题带 "(Community)"，发布者是否为 Apple 未经验证。
 
 import * as React from 'react';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 import { useFieldControl } from '@/components/ui/field';
 

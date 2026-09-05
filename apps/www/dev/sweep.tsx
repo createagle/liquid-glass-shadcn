@@ -1,6 +1,6 @@
 /** 折射参数扫描 —— 定位 Tier A 伪影由哪个参数驱动 */
 import { createRoot } from 'react-dom/client';
-import { GlassProvider, GlassSurface } from '@glass/core';
+import { GlassProvider, GlassSurface } from '@createagle/glass-core';
 
 const params = new URLSearchParams(location.search);
 const vary = params.get('vary') ?? 'distortionScale';

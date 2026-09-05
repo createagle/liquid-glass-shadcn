@@ -11,7 +11,7 @@
  */
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
-import { GlassProvider, GlassSurface } from '@glass/core';
+import { GlassProvider, GlassSurface } from '@createagle/glass-core';
 import {
   SidebarProvider,
   Sidebar,

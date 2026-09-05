@@ -11,7 +11,7 @@
 // ── 判定 ──────────────────────────────────────────────────────────────
 //
 // SPEC 写死了规则：`(max-width: 768px) || (pointer: coarse)`，
-// 实现在 `@glass/core` 的 `useIsCompact()`。**两条都要**：只看宽度会漏掉
+// 实现在 `@createagle/glass-core` 的 `useIsCompact()`。**两条都要**：只看宽度会漏掉
 // 横屏手机与平板，只看指针会漏掉触屏笔记本上被缩窄的窗口。
 //
 // 订阅走 `useSyncExternalStore`，不是 `useEffect + useState`。后者在 SSR 下
@@ -37,7 +37,7 @@
 // `responsive={false}` 强制桌面行为（SPEC §9 明确要求提供）。
 
 import * as React from 'react';
-import { useIsCompact } from '@glass/core';
+import { useIsCompact } from '@createagle/glass-core';
 import {
   Popover,
   PopoverTrigger,

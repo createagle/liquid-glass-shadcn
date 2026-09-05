@@ -208,7 +208,7 @@ export const EDITORIAL: Record<string, ComponentEditorial> = {
     examples: ['accordion-demo', 'accordion-in-card'],
   },
   'scroll-area': {
-    layerB: '内容层；**边缘效果那一层**才有模糊，且它属于 @glass/core',
+    layerB: '内容层；**边缘效果那一层**才有模糊，且它属于 @createagle/glass-core',
     layerI: null,
     examples: ['scroll-area-demo', 'scroll-area-edges'],
   },
@@ -405,7 +405,7 @@ export const NO_FIDELITY: Record<string, string> = {
   'scroll-area':
     '**滚动条量得到，滚动边缘效果量不到。** 前者的几何全部实测（滑块 6、槽 12、内缩 3）；' +
     '后者是个**随滚动位置连续变化**的效果，静态资源里根本不存在这种东西 ——' +
-    '它的强度曲线、带子高度、模糊半径全是 [推定]，记在 @glass/core 的 scroll-edge.tsx。' +
+    '它的强度曲线、带子高度、模糊半径全是 [推定]，记在 @createagle/glass-core 的 scroll-edge.tsx。' +
     '并排一张静态图只会把「连续」这件事拍没了。',
   pagination:
     '**几何全部实测，但没有并排图。** 资源里的 Page Control 是组件画布上的三个变体'

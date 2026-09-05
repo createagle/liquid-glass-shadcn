@@ -16,7 +16,7 @@
 //     侧栏背景覆盖层    **0.92**（窗口失焦那一档 0.97）   [实测]
 //     控件层 Page Control  ≈ **0.10**（§12.1，Ultrathin）  [实测]
 //
-//   差九倍。落成 `@glass/core` 的 `<GlassSurface scale="large">`，
+//   差九倍。落成 `@createagle/glass-core` 的 `<GlassSurface scale="large">`，
 //   加成量 `--lg-large-boost: 0.3` —— 默认档 0.62 + 0.3 = 0.92，正好命中实测值，
 //   且材质档位滑杆继续有效。
 //
@@ -58,7 +58,7 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { AnimatePresence, motion } from 'motion/react';
-import { GlassSurface, transitionFor, useGlassOptional, useIsCompact } from '@glass/core';
+import { GlassSurface, transitionFor, useGlassOptional, useIsCompact } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 export const SIDEBAR_GEOMETRY = {

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { registryItems, apiStats } from '@/lib/registry';
 
 export const metadata = { title: '介绍' };
@@ -52,7 +52,7 @@ export default function DocsIndexPage() {
       <section className="flex flex-col gap-3">
         <h2 className="text-[22px] font-semibold">分发方式</h2>
         <p className="text-[15px] leading-relaxed text-[var(--lg-label-secondary)]">
-          光学引擎 <code className="font-mono">@glass/core</code> 走 npm（滤镜工厂、
+          光学引擎 <code className="font-mono">@createagle/glass-core</code> 走 npm（滤镜工厂、
           能力分级、Provider、token），组件源码走 shadcn registry
           —— 装进你的工程后可以随便改。两者刻意不合并：引擎要能升级，皮肤要能定制。
         </p>

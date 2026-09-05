@@ -2,7 +2,7 @@
  * Button 渲染验证台（不是文档站 —— 文档站是 Phase 6）。
  */
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import { Button, type GlassButtonVariant, type GlassButtonSize } from '../registry/glass/ui/button';
 import { Toggle } from '../registry/glass/ui/toggle';
 

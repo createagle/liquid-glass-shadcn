@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { TierLab } from '@/components/optics-lab';
 import { CodeBlock } from '@/components/code-block';
 import { RichText } from '@/components/rich-text';

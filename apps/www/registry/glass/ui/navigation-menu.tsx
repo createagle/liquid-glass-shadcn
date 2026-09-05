@@ -37,7 +37,7 @@
 
 import * as React from 'react';
 import * as NavigationMenuPrimitive from '@radix-ui/react-navigation-menu';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { MENU_GEOMETRY } from '@/components/ui/dropdown-menu';
 import { MENUBAR_GEOMETRY } from '@/components/ui/menubar';
 import { cn } from '@/lib/utils';

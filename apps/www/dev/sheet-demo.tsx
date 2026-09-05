@@ -7,7 +7,7 @@
  * `?nograbber=1`   关掉抓手，验证「没有抓手时其余部分照常工作」
  */
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import {
   Sheet,
   SheetTrigger,

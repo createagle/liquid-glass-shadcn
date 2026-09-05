@@ -20,7 +20,7 @@ importers:
 
   apps/www:
     dependencies:
-      '@glass/core':
+      '@createagle/glass-core':
         specifier: workspace:*
         version: link:../../packages/glass-core
       '@radix-ui/react-accordion':

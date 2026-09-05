@@ -32,7 +32,7 @@
       "description": "应用级 GlassProvider 封装：主题、材质档位、tier 覆写与无障碍偏好订阅。挂在应用根部。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core"
+        "@createagle/glass-core"
       ],
       "registryDependencies": [
         "@glass/theme"
@@ -53,7 +53,7 @@
       "description": "分段控件。Layer B 磨砂底座 + Layer I 强玻璃指示器，底座按指示器位置挖洞，让指示器看到未被模糊过的背景。尺寸取自 iOS 27 官方设计资源。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-tabs",
         "motion"
       ],
@@ -77,7 +77,7 @@
       "description": "滑杆。Layer B 磨砂轨道 + 已填充段，Layer I 强玻璃 knob；拖动时折射、色散、高光与缩放同时上扬。尺寸取自 iOS 27 官方设计资源（轨道 250×6、knob 38×24 胶囊）。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-slider",
         "motion"
       ],
@@ -101,7 +101,7 @@
       "description": "开关。Layer B 磨砂轨道按 knob 位置挖洞，让 Layer I 的强玻璃 knob 看到未被模糊过的背景。尺寸取自 iOS 27 官方设计资源（轨道 64×28、knob 38×24 胶囊、行程 22）。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-switch",
         "motion"
       ],
@@ -125,7 +125,7 @@
       "description": "按钮。静止是 Layer B 磨砂胶囊，按下升级为 Layer I 真玻璃（PROJECT_SPEC §2 对 Button 的专门规定）。尺寸取自 iOS 27 官方设计资源（高 48、内边距 12、胶囊）。实心变体的底色是 AA 安全解，不是真实系统色。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "motion"
       ],
       "registryDependencies": [
@@ -148,7 +148,7 @@
       "description": "弹窗。PROJECT_SPEC §2 给 Dialog 的分层只有「面板」——没有 Layer I，所以不折射、不挖洞。尺寸取自 iOS 27 官方设计资源（面板 300 宽、圆角 34、内边距 14、按钮 132×48 间距 8）。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-dialog",
         "motion"
       ],
@@ -173,7 +173,7 @@
       "description": "双态按钮。未选中无材质，选中升级为 Layer I 强玻璃并补回材质以保住可读性地板。几何继承自 Button（本组件没有独立的 Apple 参考图，这一点在源码里写明了）。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "motion"
       ],
       "registryDependencies": [
@@ -196,7 +196,7 @@
       "description": "内容层组件，**不用玻璃**（PROJECT_SPEC §2/§15）。几何取自 iOS 27 官方设计资源里的 Grouped List：区块圆角 26（亚像素拟合，两块列表独立得到 26.27 / 26.33）、行高 52、行内左右内缩 16、分隔线 1pt 且两侧各内缩 16。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "motion"
       ],
       "registryDependencies": [
@@ -219,7 +219,7 @@
       "description": "底部浮出面板，对应 UISheetPresentationController。档位（detents）、拖拽抓手、速度感应的甩动关闭、背后页面层叠后退、safe-area 适配都在。几何取自 iOS 27 官方设计资源：左右/底部边距 6、圆角 34（轮廓拟合 34.08 / RMSE 0.376）、抓手 58×4、medium 档 = 视口高的 0.525。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-dialog",
         "motion"
       ],
@@ -244,7 +244,7 @@
       "description": "锚定浮层的面板，对应 iOS 的 UIMenu 底板。几何取自 iOS 27 官方设计资源的 Edit Menu：面板 250 宽、上下内边距 10、左右 16。⚠️ 圆角 22 是**推定值**——菜单面板是半透明玻璃压在中灰背景上，轮廓拟合不收敛（圆弧 RMSE 1.5–2.2px），详见组件注释。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-popover",
         "motion"
       ],
@@ -268,7 +268,7 @@
       "description": "PROJECT_SPEC §9 的核心原语：桌面端渲染 Popover，紧凑视口下渲染底部 Drawer，外部调用方式完全一致。判定规则 (max-width:768px) || (pointer:coarse)，走 useSyncExternalStore 订阅，杜绝 SSR hydration mismatch。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core"
+        "@createagle/glass-core"
       ],
       "registryDependencies": [
         "@glass/utils",
@@ -292,7 +292,7 @@
       "description": "下拉菜单。桌面端是 Radix 的锚定菜单，紧凑视口下按 PROJECT_SPEC §9 换成底部 Drawer。几何取自 iOS 27 官方设计资源的 Edit Menu：面板 250、内边距 10/16、项高 40（双行 60）、分隔区 21（1pt 线在区顶 +2、左右各内缩 24）。**高亮项是 Layer I** —— 强玻璃、有折射与色散，面板会为它挖洞。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-dropdown-menu",
         "motion"
       ],
@@ -317,7 +317,7 @@
       "description": "下拉选择。桌面端是 Radix 的锚定 listbox，紧凑视口下按 PROJECT_SPEC §9 换成底部 Drawer（自带 typeahead）。面板几何与 iOS 27 菜单同源：250 宽、内边距 10/16、项高 40、分隔区 21；前导图标列 28×20、间距 8 是本批新测。**高亮项是 Layer I**（折射 + 色散，面板为它挖洞），**选中项用对勾**，两者互不替代。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-select",
         "motion"
       ],
@@ -381,7 +381,7 @@
       "description": "文本框。⚠️ **iOS 的表单文本框没有自己的框** —— 逐像素量过官方资源里那四行 Text Field：没有描边、没有填充、没有玻璃，就是分组列表里的一行。variant=\"list\" 是那个有实测依据的形态；variant=\"field\"（默认）是独立成框的玻璃胶囊，**没有 Apple 参考，几何全是推定**。占位符颜色刻意不还原 Apple 的 #c5c5c7（压白底仅 1.72:1，过不了 AA）。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core"
+        "@createagle/glass-core"
       ],
       "registryDependencies": [
         "@glass/utils",
@@ -404,7 +404,7 @@
       "description": "多行输入。⚠️ **官方资源里没有多行输入的参考图**，那几块 Grouped List 全是单行 Text Field —— 所以与 Input 共享的部分（字号 17、占位符处理）沿用实测值，多行特有的部分（最小高度、行高、竖向内边距）**全部标 [推定]**。内容层 / 弱 B，圆角取 14 而不是胶囊。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core"
+        "@createagle/glass-core"
       ],
       "registryDependencies": [
         "@glass/utils",
@@ -427,7 +427,7 @@
       "description": "进度条。⚠️ **资源里没有 Progress 自己的参考图** —— 那三条水平轨道是 Slider（都带 knob）。轨道几何与两个颜色是从 Slider 借来的：对 Slider 是 [实测]，对 Progress 只能算 [推定·借自实测]。不定态下**不写 aria-valuenow**，辅助技术靠「有 role 没有 valuenow」播报「进度未知」。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core"
+        "@createagle/glass-core"
       ],
       "registryDependencies": [
         "@glass/utils",
@@ -489,7 +489,7 @@
       "description": "骨架屏。**内容层**。⚠️ Apple 没有骨架屏这个东西 —— iOS 的加载态是转菊花或直接显示占位内容，HIG 里找不到 skeleton / shimmer 的说法。**几何与动效全部 [推定]**，它存在的理由只是 shadcn 生态里它很常用。prefers-reduced-motion 下完全静止。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core"
+        "@createagle/glass-core"
       ],
       "registryDependencies": [
         "@glass/utils",
@@ -531,7 +531,7 @@
       "description": "提示气泡。⚠️ **只有一句 HIG 原文，没有任何图** —— iOS 27 资源里没有 tooltip（触屏上本来就没有 hover，这是 macOS / iPadOS 指针场景的东西）。几何全部 [推定]，面板材质与 Popover 同源。触发器**自己就是那个按钮**，不要再往里塞 Button —— 本库禁用 asChild。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-tooltip",
         "motion"
       ],
@@ -555,7 +555,7 @@
       "description": "临时通知。⚠️ **Apple 那边没有对应物，参考图一张都没有** —— 清单写的「接近系统通知横幅」要当真：系统横幅是系统级的，App 画不出来，资源里也不会有。内边距 14 借自 Alert 实测、最大宽 370 借自 Grouped List 实测，其余（圆角、停留时长、滑动阈值）纯推定。位置定在**底部**是刻意选择，不是还原。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-toast"
       ],
       "registryDependencies": [
@@ -578,7 +578,7 @@
       "description": "输入框 + 前后附件。⚠️ 没有自己的参考图 —— 资源里唯一带附件的样例是清除按钮（18×18、右内缩 17，已实测）。**框由 group 画，输入框自己不画**，所以里面的 Input 必须传 variant=\"list\"（那一支才有实测依据）；忘了传会变成两层玻璃叠在一起，dev 模式会警告。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core"
+        "@createagle/glass-core"
       ],
       "registryDependencies": [
         "@glass/utils",
@@ -687,10 +687,10 @@
       "name": "scroll-area",
       "type": "registry:ui",
       "title": "Scroll Area / 滚动区域",
-      "description": "自定义滚动条 + 可选的滚动边缘效果。滚动条几何全部实测：滑块厚 6、全圆角、#000000@0.50、槽宽 12（两侧各内缩 3）、最短约 8。边缘效果直接复用 @glass/core 的 useScrollEdge / GlassScrollEdge（Phase 6 做的）。",
+      "description": "自定义滚动条 + 可选的滚动边缘效果。滚动条几何全部实测：滑块厚 6、全圆角、#000000@0.50、槽宽 12（两侧各内缩 3）、最短约 8。边缘效果直接复用 @createagle/glass-core 的 useScrollEdge / GlassScrollEdge（Phase 6 做的）。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-scroll-area"
       ],
       "registryDependencies": [
@@ -733,7 +733,7 @@
       "description": "iOS 的 UIPageControl。几何全部实测：容器高 24 / 左右内边距 12 / 胶囊 / Ultrathin 玻璃 + 背景模糊，圆点 8、间距 8，溢出时缩成 6 与 4 两档。✅ 两个点色正好落在既有 token 上（未选中 = --lg-label-tertiary，选中 = --lg-label-primary），**这个组件没有新增任何颜色 token**。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core"
+        "@createagle/glass-core"
       ],
       "registryDependencies": [
         "@glass/utils",
@@ -775,7 +775,7 @@
       "description": "右键（触屏长按）菜单。✅ **面板与 DropdownMenu 是同一块** —— 不是抄的数字，是 import 的：iOS Context Menu 与 Edit Menu 两个互不相关的节点量出同样的 250 宽 / 34 圆角 / 218×40 的项。唯一属于它自己的是**背景压暗层**：#000000 @ 0.23，实测，**没有模糊**。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-context-menu"
       ],
       "registryDependencies": [
@@ -821,7 +821,7 @@
       "description": "全库**第一次实现 HIG 里那条单独点名侧栏的规则**：\"Liquid Glass … is more opaque in larger elements like sidebars\"。HIG 只给了一句话没给数字，这次量到了 —— 侧栏背景覆盖层 **0.92**，而控件层的 Page Control 只有 ≈**0.10**，差九倍。几何全部实测：宽 320 / 内边距 10 / 行高 44 / 胶囊 / 缩进每级 20 / 区块标题 54。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-dialog",
         "motion"
       ],
@@ -845,7 +845,7 @@
       "description": "❗ **实测推翻了清单第 37 行的「B + I」**：iPadOS 的菜单栏**条本身不是玻璃** ——四个变体的 fills / effects / strokes 全是空的，它直接压在壁纸或内容上。有材质的只有展开中的那一项：`#767680 @ 0.12` + 投影（0,2,16，8% 黑）。几何实测：条高 32 / 项高 32 / 胶囊 / 字号 14 / 应用名 Bold 内边距 10、其余 Medium 10.5。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-menubar"
       ],
       "registryDependencies": [
@@ -869,7 +869,7 @@
       "description": "⚠️ **Apple 平台上不存在这个控件。** 两份官方资源（iOS/iPadOS 27 与 macOS 27，各 39 页）都逐页查过：iOS 的 Menus 是弹出菜单，macOS 的 Menu Bar and Dock 是系统菜单栏（对应本库的 Menubar）——「横排触发器 + 悬停展开的大面板」是个 Web 惯例。所以这个文件里**每一个数字都是 [推定]**，且逐条写明借自哪个有实测的邻居。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-navigation-menu"
       ],
       "registryDependencies": [
@@ -914,7 +914,7 @@
       "description": "UIDatePicker 的 compact 形态。触发器是**两枚独立胶囊**（日期 112×34 / 时间 86×34，间距 6），底色 `#767680 @ 0.12` —— **第四次正好落在 `--lg-fill-tertiary` 上**。弹层面板圆角 **13**（实测），比菜单的 34、Popover 的 38 小得多。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core"
+        "@createagle/glass-core"
       ],
       "registryDependencies": [
         "@glass/utils",
@@ -938,7 +938,7 @@
       "description": "⚠️ **iOS 没有这个控件** —— UIPickerView 是滚轮，不能打字。参考只能是 macOS NSComboBox（与 Checkbox / Radio 同一种情况）。取的是**结构与状态**（文本域 + 尾部按钮，按钮底 idle 0.08 / 按下 0.16 / 禁用 0.04，全部实测），**不取尺度**：macOS 那份是 24 高、13 号字，本库基准是 iOS 的 44 / 17。每个常量都标了它属于哪一类。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core"
+        "@createagle/glass-core"
       ],
       "registryDependencies": [
         "@glass/utils",
@@ -983,7 +983,7 @@
       "description": "⚠️ **Apple 的设计资源里没有它，而且这一次是结构上不可能有** —— 它对应的是 **Spotlight**，那是**系统级**界面，App 画不出来（与 Toast 的「系统通知横幅」同一类）。唯一有实测依据的一半是**搜索框**（macOS `Search Field`，6 状态：胶囊、放大镜在前 0.85、清除在后 0.5、光标 2×18 `#0088ff`）。面板与列表的几何全部借自菜单面板，逐条标了 `[推定]`。",
       "author": "Liquid Glass UI",
       "dependencies": [
-        "@glass/core",
+        "@createagle/glass-core",
         "@radix-ui/react-dialog",
         "motion"
       ],

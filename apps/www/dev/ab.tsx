@@ -1,6 +1,6 @@
 /** 折射参数 A/B：当前默认 vs 候选 */
 import { createRoot } from 'react-dom/client';
-import { GlassProvider, GlassSurface } from '@glass/core';
+import { GlassProvider, GlassSurface } from '@createagle/glass-core';
 
 const W = 85, H = 54;
 const CASES: Array<[string, Record<string, number>]> = [

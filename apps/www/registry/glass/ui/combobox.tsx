@@ -38,7 +38,7 @@
 // ⚠️ 分层：文本域 = 内容层（与 Input 的 field 一致）；弹出列表 = **Layer B**。
 
 import * as React from 'react';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 export const COMBOBOX_GEOMETRY = {

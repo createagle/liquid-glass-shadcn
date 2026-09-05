@@ -12,7 +12,7 @@ React 组件库，通过 shadcn registry 分发组件源码，光学引擎作为
 - `PROJECT_SPEC.md` —— 唯一规格来源（源自 `LIQUID_GLASS_UI_PROMPT.md` 第一部分）
 - `LIQUID_GLASS_UI_PROMPT.md` —— 原始提示词，含第二部分的 Phase 0–7 任务卡（**只读，不要修改**）
 - `docs/research/` —— Phase 0 研究笔记
-- `packages/glass-core/` —— `@glass/core` 光学引擎（npm 包，不进 registry）
+- `packages/glass-core/` —— `@createagle/glass-core` 光学引擎（npm 包，不进 registry）
 - `apps/www/` —— Next.js 文档站 + registry 托管；`apps/www/registry/glass/` 是组件源码的 source of truth
 
 ## 阶段纪律

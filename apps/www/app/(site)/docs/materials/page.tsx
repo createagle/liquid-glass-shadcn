@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { LayerCompare, PunchCompare, AlphaLab } from '@/components/optics-lab';
 import { CodeBlock } from '@/components/code-block';
 import { RichText } from '@/components/rich-text';
@@ -250,7 +250,7 @@ export default function MaterialsPage() {
 
         <CodeBlock
           lang="tsx"
-          code={`import { GlassSurface, measurePunch, usePunchState } from '@glass/core';
+          code={`import { GlassSurface, measurePunch, usePunchState } from '@createagle/glass-core';
 
 // 值没变就不重渲染 —— 观察器每次触发都会产生新对象
 const [punch, setPunch] = usePunchState();
@@ -372,7 +372,7 @@ setPunch(measurePunch(surface, highlightedItem, radius));
         </p>
         <CodeBlock
           lang="ts"
-          code={`import { minBaseAlphaFor, resolveLegibleAlpha } from '@glass/core';
+          code={`import { minBaseAlphaFor, resolveLegibleAlpha } from '@createagle/glass-core';
 
 // 保证模式：不知道背后是什么，按最不利算
 minBaseAlphaFor({ baseColor: [255, 255, 255], labelColor: [0, 0, 0], labelAlpha: 1 });

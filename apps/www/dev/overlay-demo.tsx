@@ -8,7 +8,7 @@
  * `?side=top|right|bottom|left` · `?align=start|center|end`
  */
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import { Popover, PopoverTrigger, PopoverContent } from '../registry/glass/ui/popover';
 import {
   ResponsiveOverlay,

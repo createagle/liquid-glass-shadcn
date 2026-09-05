@@ -1,5 +1,5 @@
 /**
- * 从 @glass/core 的 CSS 源**单向生成** registry 的 theme item。
+ * 从 @createagle/glass-core 的 CSS 源**单向生成** registry 的 theme item。
  *
  * 为什么要生成而不是手写：
  * token 的唯一真相在 packages/glass-core/src/tokens/*.css。
@@ -204,7 +204,7 @@ for (const file of FILES) {
        * 源码里**已经**分好层的，拆开并进去，不要再套一层。
        *
        * optics.css 里的 .lg-surface 现在自己写在 @layer components 里
-       * （给直接 `@import '@glass/core/optics.css'` 的消费方用 —— 无层规则
+       * （给直接 `@import '@createagle/glass-core/optics.css'` 的消费方用 —— 无层规则
        *  会压过 Tailwind 的工具类，见那条规则上面的注释）。
        * 而这里本来就要把组件类归到 components 层，照搬就成了
        * `@layer components { @layer components { … } }` —— 一个多余的子层。
@@ -230,7 +230,7 @@ const item = {
   description:
     'Liquid Glass UI 的完整 token 体系：Layer 1 原始值、Layer 2 材质与角色（明暗 × 常规/高对比 共四套）、Layer 3 shadcn 兼容层，以及 Tier A/B/C 三档渲染路径。',
   author: 'Liquid Glass UI',
-  dependencies: ['@glass/core'],
+  dependencies: ['@createagle/glass-core'],
   files: [],
   cssVars,
   css: {
@@ -241,7 +241,7 @@ const item = {
     '已安装 Liquid Glass 主题。',
     '',
     '还需要两步：',
-    '1) 安装光学引擎：pnpm add @glass/core',
+    '1) 安装光学引擎：pnpm add @createagle/glass-core',
     '2) 确认你的 globals.css 里有 shadcn 默认的暗色变体声明：',
     '   @custom-variant dark (&:is(.dark *));',
     '   （shadcn init 会自动写入。缺了它，dark: 工具类不会跟随 .dark 类。）',

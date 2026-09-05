@@ -8,7 +8,7 @@
  */
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import { DataTable, type DataTableColumn } from '../registry/glass/ui/data-table';
 import { Command, type CommandItem } from '../registry/glass/ui/command';
 

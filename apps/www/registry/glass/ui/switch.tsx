@@ -45,7 +45,7 @@ import {
   transitionFor,
   useGlassOptional,
   type GlassPunch,
-} from '@glass/core';
+} from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 /** 几何 —— iOS 27 实测值，按轨道高度成比例缩放。 */

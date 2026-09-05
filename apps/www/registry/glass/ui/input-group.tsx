@@ -23,7 +23,7 @@
 // 组件会在 dev 模式下对这种用法发一次警告。
 
 import * as React from 'react';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 const GEOMETRY = {

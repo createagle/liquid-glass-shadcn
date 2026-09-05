@@ -13,7 +13,7 @@
  */
 
 import * as React from 'react';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 

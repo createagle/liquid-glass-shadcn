@@ -7,7 +7,7 @@
  */
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import { Pagination } from '../registry/glass/ui/pagination';
 import {
   Breadcrumb,

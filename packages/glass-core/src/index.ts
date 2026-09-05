@@ -1,13 +1,13 @@
 /**
- * `@glass/core` —— Liquid Glass UI 的光学引擎。
+ * `@createagle/glass-core` —— Liquid Glass UI 的光学引擎。
  *
  * 分发边界（PROJECT_SPEC §4 的明确决策，不要合并）：
- *   - **光学引擎**（本包）走 npm，用户 `pnpm add @glass/core`，**不进 registry**
+ *   - **光学引擎**（本包）走 npm，用户 `pnpm add @createagle/glass-core`，**不进 registry**
  *   - **组件皮肤**走 shadcn registry，源码落到用户项目里，可自由修改
  *
  * 样式需要单独引入：
  * ```ts
- * import '@glass/core/optics.css';
+ * import '@createagle/glass-core/optics.css';
  * ```
  */
 

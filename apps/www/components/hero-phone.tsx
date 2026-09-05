@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { GlassScrollEdge, useScrollEdge } from '@glass/core';
+import { GlassScrollEdge, useScrollEdge } from '@createagle/glass-core';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -132,7 +132,7 @@ export function HeroPhone({ className }: { className?: string }) {
 
   /**
    * 滚动边缘效果（§13）。三个面板共用一套 —— Radix 会卸载未选中的面板，
-   * 所以 `scrollRef` 是 callback ref，理由见 @glass/core 的 scroll-edge.tsx。
+   * 所以 `scrollRef` 是 callback ref，理由见 @createagle/glass-core 的 scroll-edge.tsx。
    */
   const { scrollRef, topRef, bottomRef } = useScrollEdge<HTMLDivElement>();
 
@@ -261,7 +261,7 @@ export function HeroPhone({ className }: { className?: string }) {
 
         {/*
           滚动边缘效果 —— 作用在**背后的内容**上（模糊 + 压雾），栏自身一点不变。
-          方向按 Apple，不按 SPEC §13 的字面写法，理由见 @glass/core/scroll-edge.tsx。
+          方向按 Apple，不按 SPEC §13 的字面写法，理由见 @createagle/glass-core/scroll-edge.tsx。
           写在 TabsList 之前：它该压住内容，不该压住 Tab Bar。
         */}
         <GlassScrollEdge ref={topRef} edge="top" variant="soft" height={DEVICE.statusBar + 40} />

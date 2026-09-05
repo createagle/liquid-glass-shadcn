@@ -2,11 +2,11 @@
  * 最小 npm registry shim。
  *
  * 为什么需要它：registry 的 theme / glass-providers item 声明了
- * `dependencies: ["@glass/core"]`，`shadcn add` 会真的执行 `npm install @glass/core`。
- * 在 @glass/core 正式发布到 npm 之前，冒烟测试跑不下去。
+ * `dependencies: ["@createagle/glass-core"]`，`shadcn add` 会真的执行 `npm install @createagle/glass-core`。
+ * 在 @createagle/glass-core 正式发布到 npm 之前，冒烟测试跑不下去。
  *
  * 这个 shim 只服务一个本地打好的 tarball，让冒烟测试能覆盖**真实的依赖安装路径**，
- * 而不是绕过它。@glass/core 发布之后这个脚本就可以删掉。
+ * 而不是绕过它。@createagle/glass-core 发布之后这个脚本就可以删掉。
  *
  * 用法：
  *   node scripts/npm-registry-shim.mjs <tarball.tgz> [port]

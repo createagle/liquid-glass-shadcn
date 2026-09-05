@@ -40,7 +40,7 @@
 
 import * as React from 'react';
 import * as MenubarPrimitive from '@radix-ui/react-menubar';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { MENU_GEOMETRY } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 

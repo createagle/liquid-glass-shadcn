@@ -12,7 +12,7 @@
  */
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import { Calendar } from '../registry/glass/ui/calendar';
 import { DatePicker, DatePickerInline } from '../registry/glass/ui/date-picker';
 import { Combobox } from '../registry/glass/ui/combobox';

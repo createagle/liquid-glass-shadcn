@@ -3843,6 +3843,110 @@ https://createagle.github.io/liquid-glass-shadcn/r/{name}.json
 服务各跑一遍，都通过：7 个页面正文非空、`_next` 的 CSS 与 JS 都是 200、
 索引里 45 个 item **逐个取到 45 个**、安装页登的地址活着。
 
+## 0.84 发布前的准备 —— 顺便改了包名，以及两个 `@` 前缀根本不是一回事（2026-09-05）
+
+「发 `@glass/core` 到 npm」这条从 Phase 5 挂到现在。查了一圈，卡点有三个，
+其中**只有一个是我能做的**。
+
+### 一、包名必须改：npm 上的 `@glass` 拿不到
+
+发布 `@glass/core` 需要拥有名为 `glass` 的 npm 组织或用户。
+用户的 scope 是 **`@createagle`**，于是包名改成 **`@createagle/glass-core`**
+（跟 workspace 目录 `packages/glass-core` 对齐）。
+
+> ⚠️ **仓库里有两个 `@` 前缀，长得像，是两套互不相干的东西：**
+>
+> | 前缀 | 是什么 | 归谁管 |
+> |---|---|---|
+> | `@createagle/glass-core` | **npm 包名** | npm registry，决定 `npm install` 去哪儿取 |
+> | `@glass/button` … | **shadcn registry 命名空间** | 只是用户 `components.json` 里的一个 key，映射到一个 URL 模板，与 npm 毫无关系 |
+>
+> 改名时**只动前者**。`registry-smoke.yml` 里两者相邻出现
+> （`.npmrc` 的 `@createagle:registry=` 与 `components.json` 的 `registries['@glass']`），
+> 已在那儿写了注释，免得下次有人看着像就合并。
+
+改动范围：93 个文件、187 处。**三类文件刻意没动**：
+
+- `PROJECT_SPEC.md` / `LIQUID_GLASS_UI_PROMPT.md` —— 规格文档，不由实现去改。
+  🔴 **SPEC §4 / §5 仍写着 `@glass/core`，需要一次修订**，
+  但那是规格的事，按 §7.3（Switch 51×31）的先例不自作主张，等你点头。
+- `docs/research/STATUS.md` 等历史记录 —— 那些段落写下时包名就是 `@glass/core`，
+  回头改掉等于**篡改记录**。历史归历史，现状归现状。
+
+### 二、协议：MIT
+
+仓库此前**一个 LICENSE 文件都没有** —— 没有协议等于保留全部权利，
+别人在法律上不能用，而 registry 分发的恰恰是「给人抄进自己工程」的源码。
+根目录与包目录各放一份（npm 会把包里那份带进 tarball）。
+
+### 三、包的发布元数据
+
+`version` 从占位的 `0.0.0` 提到 **`0.1.0`**；补了
+`license` / `homepage` / `repository`（带 `directory`）/ `bugs` / `keywords` /
+`publishConfig.access: public`（scoped 包首发必须显式声明公开），
+以及一条 `prepublishOnly: npm run build` ——
+`dist/` 是 gitignore 的构建产物，不重新构建就发，**发出去的可能是旧的甚至是空的**。
+
+还写了 `packages/glass-core/README.md`（npm 包页面展示的就是它）。
+`npm pack --dry-run`：80 个文件 / 106.5 kB，`dist` + `src/tokens` + README + LICENSE。
+
+### 四、顺手修掉根 README 的两处陈旧断言
+
+仓库门面现在被线上站点直接链着，而它还停在很早以前：
+
+| 原文 | 事实 |
+|---|---|
+| 「Phase 3（P0 组件）待开始。**尚无 UI 组件**」 | 44 个 registry 组件、84 个示例，P1 / P2 全做完 |
+| 「当前有 **11 个测点**在暗色 + 亮背景下达不到 AA」 | 1512 次采样**全部达标**，最紧的一处 5.48:1 |
+
+第二条尤其要改 —— 它把项目说得比实际差，而且是在最显眼的位置。
+
+### 五、剩下的一步不在我这儿
+
+准备做完了，但**发布这一下必须你来**：本机没有 npm 登录态
+（`npm whoami` → `ENEEDAUTH`），而发布是不可逆的公开动作。
+
+⚠️ **还有一个坑，是这次误触碰出来的**：本机 `npm config get registry` 指向
+`https://registry.npmmirror.com` —— 那是**只读镜像，收不了发布**。
+不显式指定官方源的话，`npm publish` 会朝镜像发，然后报 `ENEEDAUTH`，
+而那个报错看起来像「你没登录」，很容易让人以为是登录的问题。
+
+```bash
+npm login --registry https://registry.npmjs.org      # createagle 账号
+cd packages/glass-core
+npm publish --access public --registry https://registry.npmjs.org
+```
+
+`prepublishOnly` 会先跑一次 `tsc`，所以 `dist/` 一定是新的。
+
+发完之后可以做的两件事（我来）：
+
+1. 删掉 `scripts/npm-registry-shim.mjs` 与 `registry-smoke.yml` 里那段本地 shim ——
+   冒烟测试就能走真实的 npm 安装路径了。
+2. 把安装页与 README 里「能取，装不上」那段红字撤掉。
+
+### 六、验证
+
+| 项 | 结果 |
+|---|---|
+| 行为测试 | **421 通过** |
+| 视觉快照 | **286 通过** |
+| 文档站测试 | **47 通过** |
+| registry-lint | 128 文件 · 2 规则 · 45 个 item 产物逐字核对 |
+| `shadcn registry validate` | 45 项 / 2 文件 |
+| typecheck | 干净 |
+| `npm pack --dry-run` | 80 文件 / 106.5 kB |
+
+### 七、`sheet` 甩动那条 flake 又红了一次（第二次）
+
+全量并行跑时红，单独重复跑 8/8 全绿。与 §0.79 记的是同一条，**仍然没修**。
+
+这次顺手确认了修法的可行性：速度来自 `motion` 的 `PanInfo.velocity`，
+是库**内部**按自己的时钟算的 —— 不是从事件的 `timeStamp` 读的。
+所以「给合成事件盖时间戳」这条路走不通，
+真要修得能注入 motion 的时钟，那会依赖库的内部实现。
+**记下来，别再重复试这条路。**
+
 ## 0.6 `pnpm dev` 从写下起就是坏的（2026-09-01）
 
 根 `dev` 脚本是 `pnpm --filter www dev`，而 **apps/www 没有 `dev` 脚本** ——
@@ -4622,11 +4726,14 @@ PROJECT_SPEC §2「材质属于控件层」此前一直只能靠推理，这次�
    （这里预测「很可能还会抓出别的东西」，**也错了**，一个都没抓到。）
 3. ✅ **文档站 + registry 已部署到 GitHub Pages** —— 见 §0.82。
    <https://createagle.github.io/liquid-glass-shadcn/>
-4. 🔴 **发布 `@glass/core` 到 npm** —— 这条从 Phase 5 挂到现在，
-   而且部署之后**更显眼了**：registry 现在真的能取
-   （`https://createagle.github.io/liquid-glass-shadcn/r/{name}.json`），
-   但每个组件都把 `@glass/core` 写在 dependencies 里，
-   `shadcn add` 会在装依赖那一步失败。**能取，装不上。**
+4. 🟡 **发布到 npm —— 准备做完了，就差你跑一条命令**（见 §0.84）。
+   包名已改成 `@createagle/glass-core`（npm 上 `@glass` 拿不到），
+   协议 MIT，版本 0.1.0，元数据与 README 都齐了。
+   本机没有 npm 登录态，而发布是不可逆的公开动作，所以这一下必须你来。
+   ⚠️ 本机 `npm config get registry` 指向 `https://registry.npmmirror.com`
+   —— 那是只读镜像，**发布必须显式指定官方源**：
+   `npm publish --access public --registry https://registry.npmjs.org`。
+   在那之前 `shadcn add` 仍会在装依赖那一步失败 —— **能取，装不上。**
 5. ✅ **线上冒烟检查已加**（`pages.yml` 的 smoke job）—— 见 §0.83。
 
 ### macOS 资源解锁之后，有几件旧事可以重做了

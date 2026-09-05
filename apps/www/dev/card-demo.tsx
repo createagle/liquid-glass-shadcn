@@ -6,7 +6,7 @@
  * screenshots/ios27-grouped-list-rows.png 并排比 —— 两边尺寸一致才比得了。
  */
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import {
   Card,
   CardHeader,

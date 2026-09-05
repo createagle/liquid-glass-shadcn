@@ -61,7 +61,7 @@ import {
   useIsCompact,
   usePunchState,
   type GlassPunch,
-} from '@glass/core';
+} from '@createagle/glass-core';
 import {
   Sheet,
   SheetTrigger,
@@ -322,7 +322,7 @@ function DropdownMenuContent({
          * x=0…218，项其实在 x=16…234。偏了之后仍有 ~90% 重叠，
          * 条纹清晰度照样翻倍，所以「有没有色散」量对了，
          * 「洞在不在位置上」却一直没人验。Select 那一批才查出来。
-         * 缩放补偿也在 measurePunch 里，理由见 @glass/core 的 punch.ts。
+         * 缩放补偿也在 measurePunch 里，理由见 @createagle/glass-core 的 punch.ts。
          */
         const surface = node.closest<HTMLElement>('.lg-surface');
         if (surface) setPunch(measurePunch(surface, item, MENU_GEOMETRY.itemRadius));

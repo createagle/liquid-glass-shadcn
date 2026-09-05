@@ -66,7 +66,7 @@ import {
   useIsCompact,
   usePunchState,
   type GlassPunch,
-} from '@glass/core';
+} from '@createagle/glass-core';
 import {
   Sheet,
   SheetTrigger,
@@ -620,7 +620,7 @@ function SelectContent({
    *     再把它滚进视野，两件事不在同一帧 —— 除了 MutationObserver 还要听滚动，
    *     并在下一帧再对一次。
    *   · 洞的坐标必须相对 **`.lg-surface` 本体**、且要除掉入场动画的缩放。
-   *     这两件事都交给 `measurePunch()`（原因写在 @glass/core 的 punch.ts 里，
+   *     这两件事都交给 `measurePunch()`（原因写在 @createagle/glass-core 的 punch.ts 里，
    *     DropdownMenu 原来就是在这上面偏了一个内边距）。
    */
   const observerRef = React.useRef<MutationObserver | null>(null);

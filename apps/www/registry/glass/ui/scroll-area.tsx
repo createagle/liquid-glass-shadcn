@@ -19,7 +19,7 @@
 //  1. **自定义滚动条**（上面那些实测值）—— 纯外观。
 //  2. **滚动边缘效果**（§13 的硬性要求）—— 内容滚到栏下面时，
 //     把**背景内容**模糊压暗，而不是把栏自己变实。
-//     这一层直接复用 `@glass/core` 的 `useScrollEdge` / `GlassScrollEdge`，
+//     这一层直接复用 `@createagle/glass-core` 的 `useScrollEdge` / `GlassScrollEdge`，
 //     那是 Phase 6 的 Hero 那批做的，不是这里新写的。
 //
 //   第 2 件默认**关着**（`edges={false}`）：它只有在「内容会滑到某条栏底下」
@@ -30,7 +30,7 @@
 
 import * as React from 'react';
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
-import { GlassScrollEdge, useScrollEdge } from '@glass/core';
+import { GlassScrollEdge, useScrollEdge } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 const GEOMETRY = {
@@ -98,7 +98,7 @@ function ScrollArea({
 }: GlassScrollAreaProps) {
   /*
    * ⚠️ `scrollRef` 是 **callback ref**，不能改成 RefObject ——
-   * 理由写在 @glass/core 的 scroll-edge.tsx 里（容器可能被整个换掉，
+   * 理由写在 @createagle/glass-core 的 scroll-edge.tsx 里（容器可能被整个换掉，
    * RefObject 的赋值不触发任何 effect，监听会留在已经离开文档的旧元素上）。
    */
   const { scrollRef, topRef, bottomRef } = useScrollEdge<HTMLDivElement>({

@@ -58,7 +58,7 @@
 
 import * as React from 'react';
 import { motion, type MotionStyle } from 'motion/react';
-import { transitionFor, useGlassOptional } from '@glass/core';
+import { transitionFor, useGlassOptional } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 const GEOMETRY = {
@@ -105,7 +105,7 @@ function Card({
     <div
       data-slot="card"
       data-variant={variant}
-      // `.lg-content` 由 @glass/core 的 theme.css 提供：四档标准材质 +
+      // `.lg-content` 由 @createagle/glass-core 的 theme.css 提供：四档标准材质 +
       // Tier A/B 上的 backdrop-filter + Tier C / reduced-transparency 的降级，
       // 全部已经在那里实现过了，组件不重复一遍。
       {...(variant === 'material' ? { 'data-material': material } : {})}

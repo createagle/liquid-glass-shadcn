@@ -1,10 +1,10 @@
 /**
- * `@glass/core/theme.css` —— 唯一入口，按顺序引入完整 token 体系与渲染路径。
+ * `@createagle/glass-core/theme.css` —— 唯一入口，按顺序引入完整 token 体系与渲染路径。
  *
  * 用法：
  * ```css
  * @import "tailwindcss";
- * @import "@glass/core/theme.css";
+ * @import "@createagle/glass-core/theme.css";
  * ```
  *
  * 三层严格分层（PROJECT_SPEC §6）：

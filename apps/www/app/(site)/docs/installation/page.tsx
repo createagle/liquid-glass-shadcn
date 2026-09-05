@@ -28,7 +28,7 @@ export default function InstallationPage() {
           滤镜工厂、能力分级、Provider、token 都在这个包里。它{' '}
           <strong className="font-medium">不进 registry</strong> —— 引擎需要能独立升级。
         </p>
-        <CodeBlock lang="bash" code={'pnpm add @glass/core'} />
+        <CodeBlock lang="bash" code={'pnpm add @createagle/glass-core'} />
         <p className="text-[13px] text-[var(--lg-label-tertiary)]">
           🔴 <strong className="font-medium">这个包目前还没发布到 npm。</strong>
           CI 里用的是本地打包 + 一个 npm shim 顶上去的，真实用户现在装不了 ——
@@ -42,7 +42,7 @@ export default function InstallationPage() {
           三层 token（原始值 / 材质与角色 / shadcn 兼容层）加三档渲染路径，
           一个入口全带上。
         </p>
-        <CodeBlock lang="css" code={"@import 'tailwindcss';\n@import '@glass/core/theme.css';"} />
+        <CodeBlock lang="css" code={"@import 'tailwindcss';\n@import '@createagle/glass-core/theme.css';"} />
       </section>
 
       <section className="flex flex-col gap-3">
@@ -68,7 +68,7 @@ export default function InstallationPage() {
           <strong className="font-medium">
             端到端的安装现在还走不通
           </strong>
-          ：每个组件都把 <code className="font-mono">@glass/core</code> 写在{' '}
+          ：每个组件都把 <code className="font-mono">@createagle/glass-core</code> 写在{' '}
           <code className="font-mono">dependencies</code> 里，而那个包还没发到 npm，
           <code className="font-mono">shadcn add</code> 会在装依赖这一步失败。
           registry 本身可以取、可以读、可以照着抄，但别指望一条命令装完。
@@ -85,7 +85,7 @@ export default function InstallationPage() {
         <CodeBlock lang="bash" code={'npx shadcn@latest add @glass/glass-providers'} />
         <CodeBlock
           lang="tsx"
-          code={`import { glassSsrScript } from '@glass/core';
+          code={`import { glassSsrScript } from '@createagle/glass-core';
 import { GlassProviders } from '@/components/glass-providers';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

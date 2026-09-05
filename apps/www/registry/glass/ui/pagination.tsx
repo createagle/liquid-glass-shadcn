@@ -49,7 +49,7 @@
 //   这是取舍，不是还原，如实写在这里。
 
 import * as React from 'react';
-import { GlassSurface } from '@glass/core';
+import { GlassSurface } from '@createagle/glass-core';
 import { cn } from '@/lib/utils';
 
 const GEOMETRY = {

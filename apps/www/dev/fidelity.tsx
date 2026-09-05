@@ -9,7 +9,7 @@
  * 两张参考图都是 1× 导出（1px = 1pt），所以右边按同样的 pt 数渲染即可 1:1 对齐。
  */
 import { createRoot } from 'react-dom/client';
-import { GlassProvider } from '@glass/core';
+import { GlassProvider } from '@createagle/glass-core';
 import { Slider } from '../registry/glass/ui/slider';
 import { Switch } from '../registry/glass/ui/switch';
 import { Button } from '../registry/glass/ui/button';

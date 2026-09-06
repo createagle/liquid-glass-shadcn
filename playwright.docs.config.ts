@@ -30,17 +30,20 @@ export default defineConfig({
     command: 'pnpm --filter www build && pnpm --filter www start',
     url: 'http://localhost:4200',
     /**
-     * ⚠️ **本地复用现有服务是个陷阱，踩过一次（2026-09-03）。**
+     * ⚠️ **不复用现有服务 —— 这条被踩过两次。**
      *
-     * `pnpm docs`（= `next dev`）监听的也是 4200。它开着的时候，
-     * 这里不会去构建生产版本，而是**直接连上那个 dev server** ——
-     * 于是上面那段注释里说的「dev 下这些断言没有意义」正好成立：
-     * Materials 页的 α 滑杆那条断言就这么稳定地红了 5/5 次，
-     * 看起来像 flaky，实际是在测另一个东西。
+     * 2026-09-03：`pnpm docs`（`next dev`）也监听 4200，复用它等于在 dev 模式下
+     * 跑「控制台必须干净」这类断言，Materials 页那条稳定红了 5/5 次。
      *
-     * 跑 `pnpm test:docs` 之前先把本地 dev server 停掉。
+     * 2026-09-06：这次是**上一轮 test:docs 留下的 `next start`**。
+     * 它跑得好好的，只是伺服的是**上一次的构建产物** —— 于是新改的组件根本没进去，
+     * 47 条里只跑起 32 条，其余在超时。看起来像测试挂了，实际是在测旧代码。
+     *
+     * 两次的形态是同一个：**「有个服务在那儿」不等于「它是对的那个」。**
+     * 所以干脆每次都自己构建自己起。代价是本地跑一轮多等一分钟左右，
+     * 换掉一个会让人误判的失败模式，值。
      */
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 300_000,
     stdout: 'pipe',
     stderr: 'pipe',
